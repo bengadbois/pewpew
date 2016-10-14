@@ -13,9 +13,9 @@ var cfgFile string
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "pewpew",
-	Short: "HTTP(S) & HTTP2 load tester",
-	Long: `HTTP(S) & HTTP2 load tester long description TODO fill out more
-	`, //TODO
+	Short: "HTTP load tester",
+	Long: `HTTP(S) & HTTP2 load tester for performance and stress testing
+	`,
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
@@ -35,9 +35,6 @@ func init() {
 	// will be global for your application.
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pewpew.yaml)")
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 // initConfig reads in config file and ENV variables if set.
