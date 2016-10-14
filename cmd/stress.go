@@ -15,6 +15,15 @@ type finishedStress struct{}
 
 type workerDone struct{}
 
+type requestStat struct {
+	duration int64 //milliseconds
+}
+type requestStatSummary struct {
+	avgDuration      int64 //milliseconds
+	longestDuration  int64 //milliseconds
+	shortestDuration int64 //milliseconds
+}
+
 //flags
 var (
 	numTests    int
@@ -49,12 +58,10 @@ var stressCmd = &cobra.Command{
 }
 
 func RunStress(cmd *cobra.Command, args []string) error {
+	//checks
 	if len(args) != 1 {
 		return errors.New("needs URL")
 	}
-	fmt.Println("running stress")
-
-	//checks
 	if numTests <= 0 {
 		return errors.New("number of requests must be one or more")
 	}
@@ -64,6 +71,8 @@ func RunStress(cmd *cobra.Command, args []string) error {
 	if timeout < 0 {
 		return errors.New("timeout must be zero or more")
 	}
+
+	fmt.Println("running stress")
 
 	//setup the queue of requests
 	requestChan := make(chan stressRequest, numTests+concurrency)
@@ -79,9 +88,9 @@ func RunStress(cmd *cobra.Command, args []string) error {
 		requestChan <- finishedStress{}
 	}
 
-	workerDoneChan := make(chan workerDone)
+	workerDoneChan := make(chan workerDone)   //workers use this to indicate they are done
+	requestStatChan := make(chan requestStat) //workers communicate each requests' info
 
-	fmt.Println("workers")
 	//workers
 	for i := 0; i < concurrency; i++ {
 		go func() {
@@ -91,14 +100,17 @@ func RunStress(cmd *cobra.Command, args []string) error {
 				case req := <-requestChan:
 					switch req.(type) {
 					case *http.Request:
-						fmt.Println("http request")
-						resp, err := client.Do(req.(*http.Request))
+						//run the acutal request
+						reqStartTime := time.Now()
+						_, err := client.Do(req.(*http.Request))
+						reqEndTime := time.Now()
 						if err != nil {
-							fmt.Errorf(err.Error())
+							fmt.Errorf(err.Error()) //TODO handle this further up
 						}
-						fmt.Printf("%+v\n", resp)
+						reqTimeMs := (reqEndTime.UnixNano() - reqStartTime.UnixNano()) / 1000000
+						fmt.Printf("request took %dms\n", reqTimeMs)
+						requestStatChan <- requestStat{duration: reqTimeMs}
 					case finishedStress:
-						fmt.Println("worker ending")
 						workerDoneChan <- workerDone{}
 						return
 					}
@@ -107,6 +119,8 @@ func RunStress(cmd *cobra.Command, args []string) error {
 		}()
 	}
 
+	allRequestStats := make([]requestStat, numTests)
+	requestsCompleteCount := 0
 	workersDoneCount := 0
 	//wait for all workers to finish
 	for {
@@ -114,10 +128,36 @@ func RunStress(cmd *cobra.Command, args []string) error {
 		case <-workerDoneChan:
 			workersDoneCount++
 			if workersDoneCount == concurrency {
+				//all workers are done
+				fmt.Println("%+v", createStats(allRequestStats))
 				return nil
 			}
+		case requestStat := <-requestStatChan:
+			allRequestStats[requestsCompleteCount] = requestStat
+			requestsCompleteCount++
 		}
 	}
 
 	return nil
+}
+
+func createStats(requestStats []requestStat) requestStatSummary {
+	if len(requestStats) == 0 {
+		return requestStatSummary{}
+	}
+
+	summary := requestStatSummary{longestDuration: requestStats[0].duration, shortestDuration: requestStats[0].duration}
+	var totalDurations int64
+	totalDurations = 0
+	for i := 0; i < len(requestStats); i++ {
+		if requestStats[i].duration > summary.longestDuration {
+			summary.longestDuration = requestStats[i].duration
+		}
+		if requestStats[i].duration < summary.shortestDuration {
+			summary.shortestDuration = requestStats[i].duration
+		}
+		totalDurations += requestStats[i].duration
+	}
+	summary.avgDuration = totalDurations / int64(len(requestStats))
+	return summary
 }
