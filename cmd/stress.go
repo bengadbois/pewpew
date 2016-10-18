@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -19,9 +20,9 @@ type requestStat struct {
 	duration int64 //milliseconds
 }
 type requestStatSummary struct {
-	avgDuration      int64 //milliseconds
-	longestDuration  int64 //milliseconds
-	shortestDuration int64 //milliseconds
+	avgDuration int64 //milliseconds
+	maxDuration int64 //milliseconds
+	minDuration int64 //milliseconds
 }
 
 //flags
@@ -72,13 +73,15 @@ func RunStress(cmd *cobra.Command, args []string) error {
 		return errors.New("timeout must be zero or more")
 	}
 
-	fmt.Println("running stress")
+	url := args[0]
+
+	fmt.Println("Stress testing " + url + "...")
 
 	//setup the queue of requests
 	requestChan := make(chan stressRequest, numTests+concurrency)
 	for i := 0; i < numTests; i++ {
 		//TODO optimize by not creating a new http request each time since it's the same thing
-		req, err := http.NewRequest("GET", args[0], nil)
+		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			return errors.New("failed to create request: " + err.Error())
 		}
@@ -129,7 +132,7 @@ func RunStress(cmd *cobra.Command, args []string) error {
 			workersDoneCount++
 			if workersDoneCount == concurrency {
 				//all workers are done
-				fmt.Println("%+v", createStats(allRequestStats))
+				fmt.Println(createTextSummary(createStats(allRequestStats)))
 				return nil
 			}
 		case requestStat := <-requestStatChan:
@@ -137,8 +140,6 @@ func RunStress(cmd *cobra.Command, args []string) error {
 			requestsCompleteCount++
 		}
 	}
-
-	return nil
 }
 
 func createStats(requestStats []requestStat) requestStatSummary {
@@ -146,18 +147,24 @@ func createStats(requestStats []requestStat) requestStatSummary {
 		return requestStatSummary{}
 	}
 
-	summary := requestStatSummary{longestDuration: requestStats[0].duration, shortestDuration: requestStats[0].duration}
+	summary := requestStatSummary{maxDuration: requestStats[0].duration, minDuration: requestStats[0].duration}
 	var totalDurations int64
 	totalDurations = 0
 	for i := 0; i < len(requestStats); i++ {
-		if requestStats[i].duration > summary.longestDuration {
-			summary.longestDuration = requestStats[i].duration
+		if requestStats[i].duration > summary.maxDuration {
+			summary.maxDuration = requestStats[i].duration
 		}
-		if requestStats[i].duration < summary.shortestDuration {
-			summary.shortestDuration = requestStats[i].duration
+		if requestStats[i].duration < summary.minDuration {
+			summary.minDuration = requestStats[i].duration
 		}
 		totalDurations += requestStats[i].duration
 	}
 	summary.avgDuration = totalDurations / int64(len(requestStats))
 	return summary
+}
+
+func createTextSummary(summary requestStatSummary) string {
+	return `Average: ` + strconv.Itoa(int(summary.avgDuration)) + "ms\n" +
+		`Max:     ` + strconv.Itoa(int(summary.maxDuration)) + "ms\n" +
+		`Min:     ` + strconv.Itoa(int(summary.minDuration)) + "ms"
 }
