@@ -57,10 +57,10 @@ var stressCmd = &cobra.Command{
 	Use:   "stress http[s]://hostname[:port]/path",
 	Short: "Run predefined load of requests",
 	Long:  `Run predefined load of requests`,
-	RunE:  RunStress,
+	RunE:  runStress,
 }
 
-func RunStress(cmd *cobra.Command, args []string) error {
+func runStress(cmd *cobra.Command, args []string) error {
 	//checks
 	if len(args) != 1 {
 		return errors.New("needs URL")
@@ -114,7 +114,7 @@ func RunStress(cmd *cobra.Command, args []string) error {
 						_, err := client.Do(req.(*http.Request))
 						reqEndTime := time.Now()
 						if err != nil {
-							fmt.Errorf(err.Error()) //TODO handle this further up
+							fmt.Printf(err.Error()) //TODO handle this further up
 						}
 						reqTimeNs := (reqEndTime.UnixNano() - reqStartTime.UnixNano())
 						fmt.Printf("request took %dms\n", reqTimeNs/1000000)
