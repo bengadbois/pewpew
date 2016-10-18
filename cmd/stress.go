@@ -17,12 +17,12 @@ type finishedStress struct{}
 type workerDone struct{}
 
 type requestStat struct {
-	duration int64 //milliseconds
+	duration int64 //nanoseconds
 }
 type requestStatSummary struct {
-	avgDuration int64 //milliseconds
-	maxDuration int64 //milliseconds
-	minDuration int64 //milliseconds
+	avgDuration int64 //nanoseconds
+	maxDuration int64 //nanoseconds
+	minDuration int64 //nanoseconds
 }
 
 //flags
@@ -98,6 +98,7 @@ func RunStress(cmd *cobra.Command, args []string) error {
 	requestStatChan := make(chan requestStat) //workers communicate each requests' info
 
 	//workers
+	totalStartTime := time.Now()
 	for i := 0; i < concurrency; i++ {
 		go func() {
 			client := &http.Client{Timeout: time.Duration(timeout) * time.Second}
@@ -113,9 +114,9 @@ func RunStress(cmd *cobra.Command, args []string) error {
 						if err != nil {
 							fmt.Errorf(err.Error()) //TODO handle this further up
 						}
-						reqTimeMs := (reqEndTime.UnixNano() - reqStartTime.UnixNano()) / 1000000
-						fmt.Printf("request took %dms\n", reqTimeMs)
-						requestStatChan <- requestStat{duration: reqTimeMs}
+						reqTimeNs := (reqEndTime.UnixNano() - reqStartTime.UnixNano())
+						fmt.Printf("request took %dms\n", reqTimeNs/1000000)
+						requestStatChan <- requestStat{duration: reqTimeNs}
 					case finishedStress:
 						workerDoneChan <- workerDone{}
 						return
@@ -135,7 +136,11 @@ func RunStress(cmd *cobra.Command, args []string) error {
 			workersDoneCount++
 			if workersDoneCount == concurrency {
 				//all workers are done
-				fmt.Println(createTextSummary(createStats(allRequestStats)))
+				totalEndTime := time.Now()
+
+				reqStats := createRequestsStats(allRequestStats)
+				totalTimeNs := totalEndTime.UnixNano() - totalStartTime.UnixNano()
+				fmt.Println(createTextSummary(reqStats, totalTimeNs))
 				return nil
 			}
 		case requestStat := <-requestStatChan:
@@ -145,7 +150,7 @@ func RunStress(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func createStats(requestStats []requestStat) requestStatSummary {
+func createRequestsStats(requestStats []requestStat) requestStatSummary {
 	if len(requestStats) == 0 {
 		return requestStatSummary{}
 	}
@@ -166,8 +171,11 @@ func createStats(requestStats []requestStat) requestStatSummary {
 	return summary
 }
 
-func createTextSummary(summary requestStatSummary) string {
-	return `Average: ` + strconv.Itoa(int(summary.avgDuration)) + "ms\n" +
-		`Max:     ` + strconv.Itoa(int(summary.maxDuration)) + "ms\n" +
-		`Min:     ` + strconv.Itoa(int(summary.minDuration)) + "ms"
+func createTextSummary(reqStatSummary requestStatSummary, totalTimeNs int64) string {
+	summary := "\n"
+	summary = summary + "Average:    " + strconv.Itoa(int(reqStatSummary.avgDuration/1000000)) + "ms\n"
+	summary = summary + "Max:        " + strconv.Itoa(int(reqStatSummary.maxDuration/1000000)) + "ms\n"
+	summary = summary + "Min:        " + strconv.Itoa(int(reqStatSummary.minDuration/1000000)) + "ms\n"
+	summary = summary + "Total Time: " + strconv.Itoa(int(totalTimeNs/1000000)) + "ms"
+	return summary
 }
