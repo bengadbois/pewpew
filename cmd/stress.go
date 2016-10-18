@@ -25,12 +25,21 @@ type requestStatSummary struct {
 	minDuration int64 //nanoseconds
 }
 
+//verbose levels
+const (
+	VerboseNone = iota
+	VerboseLow
+	VerboseMedium
+	VerboseHigh
+)
+
 //flags
 var (
 	numTests      int
 	timeout       int
 	concurrency   int
 	requestMethod string
+	verboseLevel  int
 )
 
 func init() {
@@ -50,6 +59,7 @@ func init() {
 	stressCmd.Flags().IntVarP(&concurrency, "concurrent", "c", 1, "Number of multiple requests to make")
 	stressCmd.Flags().IntVarP(&timeout, "timeout", "t", 0, "Maximum seconds to wait for response. 0 means unlimited")
 	stressCmd.Flags().StringVarP(&requestMethod, "requestMethod", "X", "GET", "Request type. GET, HEAD, POST, PUT, etc.")
+	stressCmd.Flags().IntVarP(&verboseLevel, "verbose", "v", 0, "Level of verbosity ("+strconv.Itoa(VerboseNone)+"-"+strconv.Itoa(VerboseHigh)+")")
 }
 
 // stressCmd represents the stress command
@@ -76,6 +86,9 @@ func runStress(cmd *cobra.Command, args []string) error {
 	}
 	if concurrency > numTests {
 		return errors.New("concurrency must be higher than number of requests")
+	}
+	if verboseLevel < VerboseNone || verboseLevel > VerboseHigh {
+		return errors.New("verbose level must be between " + strconv.Itoa(VerboseNone) + " and " + strconv.Itoa(VerboseHigh))
 	}
 
 	url := args[0]
@@ -111,13 +124,20 @@ func runStress(cmd *cobra.Command, args []string) error {
 					case *http.Request:
 						//run the acutal request
 						reqStartTime := time.Now()
-						_, err := client.Do(req.(*http.Request))
+						response, err := client.Do(req.(*http.Request))
 						reqEndTime := time.Now()
 						if err != nil {
 							fmt.Printf(err.Error()) //TODO handle this further up
 						}
 						reqTimeNs := (reqEndTime.UnixNano() - reqStartTime.UnixNano())
-						fmt.Printf("request took %dms\n", reqTimeNs/1000000)
+						if verboseLevel >= VerboseLow {
+							//request timing
+							fmt.Printf("request took %dms\n\n", reqTimeNs/1000000)
+						}
+						if verboseLevel >= VerboseHigh {
+							//reponse metadata
+							fmt.Printf("Response:\n%+v\n\n", response)
+						}
 						requestStatChan <- requestStat{duration: reqTimeNs}
 					case finishedStress:
 						workerDoneChan <- workerDone{}
