@@ -27,9 +27,10 @@ type requestStatSummary struct {
 
 //flags
 var (
-	numTests    int
-	timeout     int
-	concurrency int
+	numTests      int
+	timeout       int
+	concurrency   int
+	requestMethod string
 )
 
 func init() {
@@ -48,6 +49,7 @@ func init() {
 	stressCmd.Flags().IntVarP(&numTests, "num", "n", 100, "Number of requests to make")
 	stressCmd.Flags().IntVarP(&concurrency, "concurrent", "c", 1, "Number of multiple requests to make")
 	stressCmd.Flags().IntVarP(&timeout, "timeout", "t", 0, "Maximum seconds to wait for response. 0 means unlimited")
+	stressCmd.Flags().StringVarP(&requestMethod, "requestMethod", "X", "GET", "Request type. GET, HEAD, POST, PUT, etc.")
 }
 
 // stressCmd represents the stress command
@@ -84,7 +86,7 @@ func RunStress(cmd *cobra.Command, args []string) error {
 	requestChan := make(chan stressRequest, numTests+concurrency)
 	for i := 0; i < numTests; i++ {
 		//TODO optimize by not creating a new http request each time since it's the same thing
-		req, err := http.NewRequest("GET", url, nil)
+		req, err := http.NewRequest(requestMethod, url, nil)
 		if err != nil {
 			return errors.New("failed to create request: " + err.Error())
 		}
