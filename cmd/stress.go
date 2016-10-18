@@ -10,10 +10,6 @@ import (
 	"net/http"
 )
 
-type stressRequest interface{}
-
-type finishedStress struct{}
-
 type workerDone struct{}
 
 type requestStat struct {
@@ -96,7 +92,7 @@ func runStress(cmd *cobra.Command, args []string) error {
 	fmt.Println("Stress testing " + url + "...")
 
 	//setup the queue of requests
-	requestChan := make(chan stressRequest, numTests+concurrency)
+	requestChan := make(chan *http.Request, numTests)
 	for i := 0; i < numTests; i++ {
 		//TODO optimize by not creating a new http request each time since it's the same thing
 		req, err := http.NewRequest(requestMethod, url, nil)
@@ -105,9 +101,7 @@ func runStress(cmd *cobra.Command, args []string) error {
 		}
 		requestChan <- req
 	}
-	for i := 0; i < concurrency; i++ {
-		requestChan <- finishedStress{}
-	}
+	close(requestChan)
 
 	workerDoneChan := make(chan workerDone)   //workers use this to indicate they are done
 	requestStatChan := make(chan requestStat) //workers communicate each requests' info
@@ -119,30 +113,28 @@ func runStress(cmd *cobra.Command, args []string) error {
 			client := &http.Client{Timeout: time.Duration(timeout) * time.Second}
 			for {
 				select {
-				case req := <-requestChan:
-					switch req.(type) {
-					case *http.Request:
-						//run the acutal request
-						reqStartTime := time.Now()
-						response, err := client.Do(req.(*http.Request))
-						reqEndTime := time.Now()
-						if err != nil {
-							fmt.Printf(err.Error()) //TODO handle this further up
-						}
-						reqTimeNs := (reqEndTime.UnixNano() - reqStartTime.UnixNano())
-						if verboseLevel >= VerboseLow {
-							//request timing
-							fmt.Printf("request took %dms\n\n", reqTimeNs/1000000)
-						}
-						if verboseLevel >= VerboseHigh {
-							//reponse metadata
-							fmt.Printf("Response:\n%+v\n\n", response)
-						}
-						requestStatChan <- requestStat{duration: reqTimeNs}
-					case finishedStress:
+				case req, ok := <-requestChan:
+					if !ok {
 						workerDoneChan <- workerDone{}
 						return
 					}
+					//run the acutal request
+					reqStartTime := time.Now()
+					response, err := client.Do((*http.Request)(req))
+					reqEndTime := time.Now()
+					if err != nil {
+						fmt.Printf(err.Error()) //TODO handle this further up
+					}
+					reqTimeNs := (reqEndTime.UnixNano() - reqStartTime.UnixNano())
+					if verboseLevel >= VerboseLow {
+						//request timing
+						fmt.Printf("request took %dms\n\n", reqTimeNs/1000000)
+					}
+					if verboseLevel >= VerboseHigh {
+						//reponse metadata
+						fmt.Printf("Response:\n%+v\n\n", response)
+					}
+					requestStatChan <- requestStat{duration: reqTimeNs}
 				}
 			}
 		}()
