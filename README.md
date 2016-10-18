@@ -1,4 +1,4 @@
-#Pewpew
+#Pewpew [![Travis](https://img.shields.io/travis/bengadbois/pewpew.svg?branch=master)](https://travis-ci.org/bengadbois/pewpew) [![Go Report Card](https://goreportcard.com/badge/github.com/bengadbois/pewpew)](https://goreportcard.com/report/github.com/bengadbois/pewpew)
 
 HTTP(S) 1.1 and HTTP2 stress tester
 
