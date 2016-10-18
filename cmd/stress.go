@@ -72,6 +72,9 @@ func RunStress(cmd *cobra.Command, args []string) error {
 	if timeout < 0 {
 		return errors.New("timeout must be zero or more")
 	}
+	if concurrency > numTests {
+		return errors.New("concurrency must be higher than number of requests")
+	}
 
 	url := args[0]
 
