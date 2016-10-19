@@ -3,11 +3,12 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/spf13/cobra"
-	"net/http"
 )
 
 type workerDone struct{}
@@ -109,31 +110,48 @@ func runStress(cmd *cobra.Command, args []string) error {
 	//workers
 	totalStartTime := time.Now()
 	for i := 0; i < concurrency; i++ {
-		go func() {
+		//TODO handle the returned errors from this
+		go func() error {
 			client := &http.Client{Timeout: time.Duration(timeout) * time.Second}
 			for {
 				select {
 				case req, ok := <-requestChan:
 					if !ok {
 						workerDoneChan <- workerDone{}
-						return
+						return nil
 					}
 					//run the acutal request
 					reqStartTime := time.Now()
 					response, err := client.Do((*http.Request)(req))
 					reqEndTime := time.Now()
 					if err != nil {
-						fmt.Printf(err.Error()) //TODO handle this further up
+						return errors.New("Failed to make request:" + err.Error())
 					}
 					reqTimeNs := (reqEndTime.UnixNano() - reqStartTime.UnixNano())
+
+					var requestData string
+					if verboseLevel >= VerboseLow {
+						requestData = "--------\n\n"
+					}
 					if verboseLevel >= VerboseLow {
 						//request timing
-						fmt.Printf("request took %dms\n\n", reqTimeNs/1000000)
+						requestData = requestData + fmt.Sprintf("Request took %dms\n\n", reqTimeNs/1000000)
+					}
+					if verboseLevel >= VerboseMedium {
+						//reponse metadata
+						requestData = requestData + fmt.Sprintf("Response:\n%+v\n\n", response)
 					}
 					if verboseLevel >= VerboseHigh {
-						//reponse metadata
-						fmt.Printf("Response:\n%+v\n\n", response)
+						//reponse body
+						defer response.Body.Close()
+						body, err := ioutil.ReadAll(response.Body)
+						if err != nil {
+							return errors.New("Failed to read response body:" + err.Error())
+						}
+						requestData = requestData + fmt.Sprintf("Body:\n%s\n\n", body)
 					}
+
+					fmt.Println(requestData)
 					requestStatChan <- requestStat{duration: reqTimeNs}
 				}
 			}
