@@ -151,7 +151,9 @@ func runStress(cmd *cobra.Command, args []string) error {
 						requestData = requestData + fmt.Sprintf("Body:\n%s\n\n", body)
 					}
 
-					fmt.Println(requestData)
+					if requestData != "" {
+						fmt.Print(requestData)
+					}
 					requestStatChan <- requestStat{duration: reqTimeNs}
 				}
 			}
