@@ -99,6 +99,13 @@ func runStress(cmd *cobra.Command, args []string) error {
 		return errors.New("failed to create request: " + err.Error())
 	}
 
+	//info about the request
+	if verboseLevel >= VerboseMedium {
+		fmt.Println(req.Proto)
+		fmt.Println("Method: " + req.Method)
+		fmt.Println("Host: " + req.Host)
+	}
+
 	//setup the queue of requests
 	requestChan := make(chan *http.Request, numTests)
 	for i := 0; i < numTests; i++ {
