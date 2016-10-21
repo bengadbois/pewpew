@@ -17,9 +17,10 @@ type requestStat struct {
 	duration int64 //nanoseconds
 }
 type requestStatSummary struct {
-	avgDuration int64 //nanoseconds
-	maxDuration int64 //nanoseconds
-	minDuration int64 //nanoseconds
+	avgQps      float64 //per nanoseconds
+	avgDuration int64   //nanoseconds
+	maxDuration int64   //nanoseconds
+	minDuration int64   //nanoseconds
 }
 
 //verbose levels
@@ -172,8 +173,8 @@ func runStress(cmd *cobra.Command, args []string) error {
 				//all workers are done
 				totalEndTime := time.Now()
 
-				reqStats := createRequestsStats(allRequestStats)
 				totalTimeNs := totalEndTime.UnixNano() - totalStartTime.UnixNano()
+				reqStats := createRequestsStats(allRequestStats, totalTimeNs)
 				fmt.Println(createTextSummary(reqStats, totalTimeNs))
 				return nil
 			}
@@ -184,14 +185,15 @@ func runStress(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func createRequestsStats(requestStats []requestStat) requestStatSummary {
+//create statistical summary of all requests
+func createRequestsStats(requestStats []requestStat, totalTimeNs int64) requestStatSummary {
 	if len(requestStats) == 0 {
 		return requestStatSummary{}
 	}
 
 	summary := requestStatSummary{maxDuration: requestStats[0].duration, minDuration: requestStats[0].duration}
 	var totalDurations int64
-	totalDurations = 0
+	totalDurations = 0 //total time of all requests (concurrent is counted)
 	for i := 0; i < len(requestStats); i++ {
 		if requestStats[i].duration > summary.maxDuration {
 			summary.maxDuration = requestStats[i].duration
@@ -202,14 +204,21 @@ func createRequestsStats(requestStats []requestStat) requestStatSummary {
 		totalDurations += requestStats[i].duration
 	}
 	summary.avgDuration = totalDurations / int64(len(requestStats))
+	summary.avgQps = float64(len(requestStats)) / float64(totalTimeNs)
 	return summary
 }
 
+//creates nice readable summary of entire stress test
 func createTextSummary(reqStatSummary requestStatSummary, totalTimeNs int64) string {
 	summary := "\n"
-	summary = summary + "Average:    " + strconv.Itoa(int(reqStatSummary.avgDuration/1000000)) + "ms\n"
-	summary = summary + "Max:        " + strconv.Itoa(int(reqStatSummary.maxDuration/1000000)) + "ms\n"
-	summary = summary + "Min:        " + strconv.Itoa(int(reqStatSummary.minDuration/1000000)) + "ms\n"
-	summary = summary + "Total Time: " + strconv.Itoa(int(totalTimeNs/1000000)) + "ms"
+
+	summary = summary + "Runtime Statistics:\n"
+	summary = summary + "Total time:  " + strconv.Itoa(int(totalTimeNs/1000000)) + " ms\n"
+	summary = summary + "Mean QPS:    " + fmt.Sprintf("%.2f", reqStatSummary.avgQps*1000000000) + " req/sec\n"
+
+	summary = summary + "\nQuery Statistics\n"
+	summary = summary + "Mean query:     " + strconv.Itoa(int(reqStatSummary.avgDuration/1000000)) + " ms\n"
+	summary = summary + "Fastest query:  " + strconv.Itoa(int(reqStatSummary.minDuration/1000000)) + " ms\n"
+	summary = summary + "Slowest query:  " + strconv.Itoa(int(reqStatSummary.maxDuration/1000000)) + " ms\n"
 	return summary
 }
