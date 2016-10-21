@@ -93,14 +93,15 @@ func runStress(cmd *cobra.Command, args []string) error {
 
 	fmt.Println("Stress testing " + url + "...")
 
+	//setup the request
+	req, err := http.NewRequest(requestMethod, url, nil)
+	if err != nil {
+		return errors.New("failed to create request: " + err.Error())
+	}
+
 	//setup the queue of requests
 	requestChan := make(chan *http.Request, numTests)
 	for i := 0; i < numTests; i++ {
-		//TODO optimize by not creating a new http request each time since it's the same thing
-		req, err := http.NewRequest(requestMethod, url, nil)
-		if err != nil {
-			return errors.New("failed to create request: " + err.Error())
-		}
 		requestChan <- req
 	}
 	close(requestChan)
