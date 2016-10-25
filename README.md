@@ -8,6 +8,6 @@ Pewpew is designed as a tool to help those developing web services and websites.
 ##Installing
 Requires Golang 1.6+
 
-If your $GOPATH is set correctly, you can just
+If your `$GOPATH` is set correctly, you can just
 
 ```go get github.com/bengadbois/pewpew```
