@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -37,6 +38,7 @@ var (
 	timeout       int
 	concurrency   int
 	requestMethod string
+	requestBody   string
 	verboseLevel  int
 )
 
@@ -57,6 +59,7 @@ func init() {
 	stressCmd.Flags().IntVarP(&concurrency, "concurrent", "c", 1, "Number of multiple requests to make")
 	stressCmd.Flags().IntVarP(&timeout, "timeout", "t", 0, "Maximum seconds to wait for response. 0 means unlimited")
 	stressCmd.Flags().StringVarP(&requestMethod, "requestMethod", "X", "GET", "Request type. GET, HEAD, POST, PUT, etc.")
+	stressCmd.Flags().StringVarP(&requestBody, "body", "", "", "String to use as request body e.g. POST body.")
 	stressCmd.Flags().IntVarP(&verboseLevel, "verbose", "v", 0, "Level of verbosity ("+strconv.Itoa(VerboseNone)+"-"+strconv.Itoa(VerboseHigh)+")")
 }
 
@@ -94,7 +97,13 @@ func runStress(cmd *cobra.Command, args []string) error {
 	fmt.Println("Stress testing " + url + "...")
 
 	//setup the request
-	req, err := http.NewRequest(requestMethod, url, nil)
+	var req *http.Request
+	var err error
+	if requestBody != "" {
+		req, err = http.NewRequest(requestMethod, url, bytes.NewBuffer([]byte(requestBody)))
+	} else {
+		req, err = http.NewRequest(requestMethod, url, nil)
+	}
 	if err != nil {
 		return errors.New("failed to create request: " + err.Error())
 	}
