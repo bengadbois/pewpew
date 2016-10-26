@@ -10,6 +10,9 @@ install:
   - go get github.com/golang/lint/golint
   - go get github.com/gordonklaus/ineffassign
   - go get -u github.com/client9/misspell/cmd/misspell
+  - go get github.com/opennota/check/cmd/aligncheck
+  - go get github.com/opennota/check/cmd/structcheck
+  - go get github.com/opennota/check/cmd/varcheck
 
 script:
   - diff <(echo -n) <(gofmt -s -d .)
@@ -17,6 +20,9 @@ script:
   - go vet ./...
   - go test -race ./...
   - misspell .
+  - aligncheck .
+  - structcheck .
+  - varcheck .
 
 after_script:
   - golint ./...
