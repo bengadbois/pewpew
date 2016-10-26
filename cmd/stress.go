@@ -53,7 +53,7 @@ func init() {
 	// is called directly, e.g.:
 	// stressCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
-	stressCmd.Flags().IntVarP(&numTests, "num", "n", 100, "Number of requests to make")
+	stressCmd.Flags().IntVarP(&numTests, "num", "n", 1, "Number of requests to make")
 	stressCmd.Flags().IntVarP(&concurrency, "concurrent", "c", 1, "Number of multiple requests to make")
 	stressCmd.Flags().IntVarP(&timeout, "timeout", "t", 0, "Maximum seconds to wait for response. 0 means unlimited")
 	stressCmd.Flags().StringVarP(&requestMethod, "requestMethod", "X", "GET", "Request type. GET, HEAD, POST, PUT, etc.")
