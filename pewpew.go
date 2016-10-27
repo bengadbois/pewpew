@@ -12,7 +12,6 @@ import (
 )
 
 var (
-
 	//stress
 	stress            = kingpin.Command("stress", "Run predefined load of requests.").Alias("s")
 	stressCount       = stress.Flag("num", "Number of requests to make.").Short('n').Default("1").Int()
@@ -24,13 +23,11 @@ var (
 
 	//global flags
 	verbose = kingpin.Flag("verbose", "Print extra troubleshooting info").Short('v').Bool()
-
-	//help
-	help = kingpin.CommandLine.HelpFlag.Short('h')
 )
 
 func main() {
 	kingpin.CommandLine.Help = "HTTP(S) & HTTP2 load tester for performance and stress testing"
+	kingpin.CommandLine.HelpFlag.Short('h')
 	switch kingpin.Parse() {
 	case "stress":
 		kingpin.FatalIfError(runStress(), "stress failed")
