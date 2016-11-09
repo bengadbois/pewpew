@@ -19,6 +19,7 @@ var (
 	stressTimeout     = stress.Flag("timeout", "Maximum seconds to wait for response").Short('t').Default("10s").Duration()
 	stressReqMethod   = stress.Flag("requestMethod", "Request type. GET, HEAD, POST, PUT, etc.").Short('X').Default("GET").String()
 	stressReqBody     = stress.Flag("body", "String to use as request body e.g. POST body.").String()
+	stressHeaders     = HTTPHeader(stress.Flag("header", "Add arbitrary header line, eg. 'Accept-Encoding: gzip'").Short('H'))
 	stressUrl         = stress.Arg("url", "URL to stress, formatted http[s]://hostname[:port][/path]").String()
 
 	//global flags
@@ -78,6 +79,8 @@ func runStress() error {
 	if err != nil {
 		return errors.New("failed to create request: " + err.Error())
 	}
+	//add headers
+	req.Header = *stressHeaders
 
 	//setup the queue of requests
 	requestChan := make(chan *http.Request, *stressCount)
