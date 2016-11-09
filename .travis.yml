@@ -17,7 +17,6 @@ install:
 script:
   - diff <(echo -n) <(gofmt -s -d .)
   - ineffassign .
-  - go vet ./...
   - go test -race ./...
   - misspell .
   - aligncheck .
