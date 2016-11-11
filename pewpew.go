@@ -8,6 +8,7 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"io/ioutil"
 	"net/http"
+	"runtime"
 	"strconv"
 	"time"
 )
@@ -25,13 +26,22 @@ var (
 	stressUrl         = stress.Arg("url", "URL to stress, formatted http[s]://hostname[:port][/path]").String()
 
 	//global flags
-	verbose = kingpin.Flag("verbose", "Print extra troubleshooting info").Short('v').Bool()
+	verbose  = kingpin.Flag("verbose", "Print extra troubleshooting info").Short('v').Bool()
+	cpuCount = kingpin.Flag("cpu", "Number of CPUs to use.").Default(strconv.Itoa(runtime.GOMAXPROCS(0))).Int()
 )
 
 func main() {
 	kingpin.CommandLine.Help = "HTTP(S) & HTTP2 load tester for performance and stress testing"
 	kingpin.CommandLine.HelpFlag.Short('h')
-	switch kingpin.Parse() {
+
+	parseArgs := kingpin.Parse()
+
+	runtime.GOMAXPROCS(*cpuCount)
+	if *cpuCount < 1 {
+		kingpin.Fatalf("CPU count must be greater or equal to 1")
+	}
+
+	switch parseArgs {
 	case "stress":
 		kingpin.FatalIfError(runStress(), "stress failed")
 	}
