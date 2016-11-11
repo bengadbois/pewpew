@@ -21,7 +21,7 @@ var (
 	stressTimeout     = stress.Flag("timeout", "Maximum seconds to wait for response").Short('t').Default("10s").Duration()
 	stressReqMethod   = stress.Flag("requestMethod", "Request type. GET, HEAD, POST, PUT, etc.").Short('X').Default("GET").String()
 	stressReqBody     = stress.Flag("body", "String to use as request body e.g. POST body.").String()
-	stressHeaders     = HTTPHeader(stress.Flag("header", "Add arbitrary header line, eg. 'Accept-Encoding: gzip'").Short('H'))
+	stressHeaders     = HTTPHeader(stress.Flag("header", "Add arbitrary header line, eg. 'Accept-Encoding:gzip'").Short('H'))
 	stressHttp2       = stress.Flag("http2", "Use HTTP2.").Bool()
 	stressUrl         = stress.Arg("url", "URL to stress, formatted http[s]://hostname[:port][/path]").String()
 
