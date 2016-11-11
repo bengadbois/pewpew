@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -20,6 +21,7 @@ var (
 	stressReqMethod   = stress.Flag("requestMethod", "Request type. GET, HEAD, POST, PUT, etc.").Short('X').Default("GET").String()
 	stressReqBody     = stress.Flag("body", "String to use as request body e.g. POST body.").String()
 	stressHeaders     = HTTPHeader(stress.Flag("header", "Add arbitrary header line, eg. 'Accept-Encoding: gzip'").Short('H'))
+	stressHttp2       = stress.Flag("http2", "Use HTTP2.").Bool()
 	stressUrl         = stress.Arg("url", "URL to stress, formatted http[s]://hostname[:port][/path]").String()
 
 	//global flags
@@ -79,8 +81,7 @@ func runStress() error {
 	if err != nil {
 		return errors.New("failed to create request: " + err.Error())
 	}
-	//add headers
-	req.Header = *stressHeaders
+	req.Header = *stressHeaders //add headers
 
 	//setup the queue of requests
 	requestChan := make(chan *http.Request, *stressCount)
@@ -98,7 +99,12 @@ func runStress() error {
 	for i := 0; i < *stressConcurrency; i++ {
 		//TODO handle the returned errors from this
 		go func() error {
-			client := &http.Client{Timeout: time.Duration(*stressTimeout) * time.Second}
+			tr := &http.Transport{}
+			if !*stressHttp2 {
+				nilMap := make(map[string](func(authority string, c *tls.Conn) http.RoundTripper))
+				tr = &http.Transport{TLSNextProto: nilMap}
+			}
+			client := &http.Client{Timeout: time.Duration(*stressTimeout) * time.Second, Transport: tr}
 			for {
 				select {
 				case req, ok := <-requestChan:
@@ -166,11 +172,8 @@ WorkerLoop:
 	fmt.Println("----Summary----\n")
 
 	//info about the request
-	if *verbose {
-		fmt.Println(req.Proto)
-		fmt.Println("Method: " + req.Method)
-		fmt.Println("Host: " + req.Host)
-	}
+	fmt.Println("Method: " + req.Method)
+	fmt.Println("Host: " + req.Host)
 
 	totalTimeNs := totalEndTime.UnixNano() - totalStartTime.UnixNano()
 	reqStats := createRequestsStats(allRequestStats, totalTimeNs)
