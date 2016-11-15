@@ -22,6 +22,7 @@ var (
 	stressReqMethod   = stress.Flag("requestMethod", "Request type. GET, HEAD, POST, PUT, etc.").Short('X').Default("GET").String()
 	stressReqBody     = stress.Flag("body", "String to use as request body e.g. POST body.").String()
 	stressHeaders     = HTTPHeader(stress.Flag("header", "Add arbitrary header line, eg. 'Accept-Encoding:gzip'").Short('H'))
+	stressBasicAuth   = BasicAuth(stress.Flag("basicAuth", "Add HTTP basic authentication, eg. 'user123:password456'"))
 	stressHttp2       = stress.Flag("http2", "Use HTTP2.").Bool()
 	stressUrl         = stress.Arg("url", "URL to stress, formatted http[s]://hostname[:port][/path]").String()
 
@@ -92,6 +93,9 @@ func runStress() error {
 		return errors.New("failed to create request: " + err.Error())
 	}
 	req.Header = *stressHeaders //add headers
+	if (*stressBasicAuth).String() != "" {
+		req.SetBasicAuth((*stressBasicAuth).User, (*stressBasicAuth).Password)
+	}
 
 	//setup the queue of requests
 	requestChan := make(chan *http.Request, *stressCount)
