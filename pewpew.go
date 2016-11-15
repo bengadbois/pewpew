@@ -15,16 +15,20 @@ import (
 
 var (
 	//stress
-	stress            = kingpin.Command("stress", "Run predefined load of requests.").Alias("s")
+	stress = kingpin.Command("stress", "Run predefined load of requests.").Alias("s")
+
+	//stress flags
 	stressCount       = stress.Flag("num", "Number of requests to make.").Short('n').Default("1").Int()
 	stressConcurrency = stress.Flag("concurrent", "Number of multiple requests to make.").Short('c').Default("1").Int()
-	stressTimeout     = stress.Flag("timeout", "Maximum seconds to wait for response").Short('t').Default("10s").Duration()
-	stressReqMethod   = stress.Flag("requestMethod", "Request type. GET, HEAD, POST, PUT, etc.").Short('X').Default("GET").String()
-	stressReqBody     = stress.Flag("body", "String to use as request body e.g. POST body.").String()
-	stressHeaders     = HTTPHeader(stress.Flag("header", "Add arbitrary header line, eg. 'Accept-Encoding:gzip'").Short('H'))
-	stressBasicAuth   = BasicAuth(stress.Flag("basicAuth", "Add HTTP basic authentication, eg. 'user123:password456'"))
-	stressHttp2       = stress.Flag("http2", "Use HTTP2.").Bool()
-	stressUrl         = stress.Arg("url", "URL to stress, formatted http[s]://hostname[:port][/path]").String()
+
+	//request flags
+	stressTimeout   = stress.Flag("timeout", "Maximum seconds to wait for response").Short('t').Default("10s").Duration()
+	stressReqMethod = stress.Flag("request-method", "Request type. GET, HEAD, POST, PUT, etc.").Short('X').Default("GET").String()
+	stressReqBody   = stress.Flag("body", "String to use as request body e.g. POST body.").String()
+	stressHeaders   = HTTPHeader(stress.Flag("header", "Add arbitrary header line, eg. 'Accept-Encoding:gzip'").Short('H'))
+	stressBasicAuth = BasicAuth(stress.Flag("basic-auth", "Add HTTP basic authentication, eg. 'user123:password456'"))
+	stressHttp2     = stress.Flag("http2", "Use HTTP2.").Bool()
+	stressUrl       = stress.Arg("url", "URL to stress, formatted http[s]://hostname[:port][/path]").String()
 
 	//global flags
 	verbose  = kingpin.Flag("verbose", "Print extra troubleshooting info").Short('v').Bool()
