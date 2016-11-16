@@ -147,7 +147,7 @@ func runStress() error {
 						requestData = requestData + fmt.Sprintf("Request took %dms\n\n", reqTimeNs/1000000)
 
 						//reponse metadata
-						requestData = requestData + fmt.Sprintf("Response:\n%+v\n\n", response)
+						requestData = requestData + fmt.Sprintf("Response:\n%+v\n\n", *response)
 
 						//reponse body
 						defer response.Body.Close()
