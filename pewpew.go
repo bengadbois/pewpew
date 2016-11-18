@@ -28,6 +28,7 @@ var (
 	stressHeaders   = HTTPHeader(stress.Flag("header", "Add arbitrary header line, eg. 'Accept-Encoding:gzip'").Short('H'))
 	stressUserAgent = stress.Flag("user-agent", "Add User-Agent header.").Short('A').Default("pewpew").String()
 	stressBasicAuth = BasicAuth(stress.Flag("basic-auth", "Add HTTP basic authentication, eg. 'user123:password456'"))
+	stressCompress  = stress.Flag("compress", "Add Accept-Encoding: gzip header if Accept-Encoding isn't already present.").Short('C').Bool()
 	stressHttp2     = stress.Flag("http2", "Use HTTP2.").Bool()
 
 	//url
@@ -126,6 +127,7 @@ func runStress() error {
 				nilMap := make(map[string](func(authority string, c *tls.Conn) http.RoundTripper))
 				tr = &http.Transport{TLSNextProto: nilMap}
 			}
+			tr.DisableCompression = !*stressCompress
 			client := &http.Client{Timeout: time.Duration(*stressTimeout) * time.Second, Transport: tr}
 			for {
 				select {
