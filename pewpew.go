@@ -29,7 +29,9 @@ var (
 	stressUserAgent = stress.Flag("user-agent", "Add User-Agent header.").Short('A').Default("pewpew").String()
 	stressBasicAuth = BasicAuth(stress.Flag("basic-auth", "Add HTTP basic authentication, eg. 'user123:password456'"))
 	stressHttp2     = stress.Flag("http2", "Use HTTP2.").Bool()
-	stressUrl       = stress.Arg("url", "URL to stress, formatted http[s]://hostname[:port][/path]").String()
+
+	//url
+	stressUrl = stress.Arg("url", "URL to stress, formatted http[s]://hostname[:port][/path]").String()
 
 	//global flags
 	verbose  = kingpin.Flag("verbose", "Print extra troubleshooting info").Short('v').Bool()
