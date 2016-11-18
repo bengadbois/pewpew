@@ -149,6 +149,9 @@ func runStress() error {
 					if *verbose {
 						requestData = "----Request----\n\n"
 
+						//request details
+						requestData = requestData + fmt.Sprintf("Request:\n%+v\n\n", *req)
+
 						//request timing
 						requestData = requestData + fmt.Sprintf("Request took %dms\n\n", reqTimeNs/1000000)
 
