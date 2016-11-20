@@ -8,6 +8,7 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"runtime"
 	"strconv"
 	"time"
@@ -32,7 +33,7 @@ var (
 	stressHttp2     = stress.Flag("http2", "Use HTTP2.").Bool()
 
 	//url
-	stressUrl = stress.Arg("url", "URL to stress, formatted http[s]://hostname[:port][/path]").String()
+	stressUrl = stress.Arg("url", "URL to stress, formatted [http[s]://]hostname[:port][/path]").String()
 
 	//global flags
 	verbose  = kingpin.Flag("verbose", "Print extra troubleshooting info").Short('v').Bool()
@@ -70,8 +71,9 @@ type requestStatSummary struct {
 
 func runStress() error {
 	//checks
-	if *stressUrl == "" {
-		return errors.New("needs URL")
+	url, err := url.Parse(*stressUrl)
+	if err != nil || url.String() == "" {
+		return errors.New("invalid URL")
 	}
 	if *stressCount <= 0 {
 		return errors.New("number of requests must be one or more")
@@ -86,16 +88,21 @@ func runStress() error {
 		return errors.New("concurrency must be higher than number of requests")
 	}
 
-	fmt.Println("Stress testing " + *stressUrl + "...")
+	//clean up URL
+	//default to http if not specified
+	if url.Scheme == "" {
+		url.Scheme = "http"
+	}
+
+	fmt.Println("Stress testing " + url.String() + "...")
 	fmt.Printf("Running %d tests, %d at a time\n", *stressCount, *stressConcurrency)
 
 	//setup the request
 	var req *http.Request
-	var err error
 	if *stressReqBody != "" {
-		req, err = http.NewRequest(*stressReqMethod, *stressUrl, bytes.NewBuffer([]byte(*stressReqBody)))
+		req, err = http.NewRequest(*stressReqMethod, url.String(), bytes.NewBuffer([]byte(*stressReqBody)))
 	} else {
-		req, err = http.NewRequest(*stressReqMethod, *stressUrl, nil)
+		req, err = http.NewRequest(*stressReqMethod, url.String(), nil)
 	}
 	if err != nil {
 		return errors.New("failed to create request: " + err.Error())
