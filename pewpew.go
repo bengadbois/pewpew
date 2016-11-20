@@ -126,29 +126,30 @@ func runStress() error {
 	//workers
 	totalStartTime := time.Now()
 	var totalEndTime time.Time
+	workerErrChan := make(chan error)
 	for i := 0; i < *stressConcurrency; i++ {
-		//TODO handle the returned errors from this
-		go func() error {
+		go func(workerErrChan chan error) {
 			tr := &http.Transport{}
 			if !*stressHttp2 {
 				nilMap := make(map[string](func(authority string, c *tls.Conn) http.RoundTripper))
 				tr = &http.Transport{TLSNextProto: nilMap}
 			}
 			tr.DisableCompression = !*stressCompress
-			client := &http.Client{Timeout: time.Duration(*stressTimeout) * time.Second, Transport: tr}
+			client := &http.Client{Timeout: *stressTimeout, Transport: tr}
 			for {
 				select {
 				case req, ok := <-requestChan:
 					if !ok {
 						workerDoneChan <- workerDone{}
-						return nil
+						return
 					}
-					//run the acutal request
+					//run the actual request
 					reqStartTime := time.Now()
 					response, err := client.Do((*http.Request)(req))
 					reqEndTime := time.Now()
 					if err != nil {
-						return errors.New("Failed to make request:" + err.Error())
+						workerErrChan <- errors.New("Failed to make request:" + err.Error())
+						return
 					}
 					reqTimeNs := (reqEndTime.UnixNano() - reqStartTime.UnixNano())
 
@@ -169,7 +170,8 @@ func runStress() error {
 						defer response.Body.Close()
 						body, err := ioutil.ReadAll(response.Body)
 						if err != nil {
-							return errors.New("Failed to read response body:" + err.Error())
+							workerErrChan <- errors.New("Failed to read response body:" + err.Error())
+							return
 						}
 						requestData = requestData + fmt.Sprintf("Body:\n%s\n\n", body)
 					}
@@ -180,7 +182,7 @@ func runStress() error {
 					requestStatChan <- requestStat{duration: reqTimeNs}
 				}
 			}
-		}()
+		}(workerErrChan)
 	}
 
 	allRequestStats := make([]requestStat, *stressCount)
@@ -190,6 +192,8 @@ func runStress() error {
 WorkerLoop:
 	for {
 		select {
+		case workerErr := <-workerErrChan:
+			return workerErr
 		case <-workerDoneChan:
 			workersDoneCount++
 			if workersDoneCount == *stressConcurrency {
