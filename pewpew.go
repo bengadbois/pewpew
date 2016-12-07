@@ -23,14 +23,15 @@ var (
 	stressConcurrency = stress.Flag("concurrent", "Number of multiple requests to make.").Short('c').Default("1").Int()
 
 	//request flags
-	stressTimeout   = stress.Flag("timeout", "Maximum seconds to wait for response").Short('t').Default("10s").Duration()
-	stressReqMethod = stress.Flag("request-method", "Request type. GET, HEAD, POST, PUT, etc.").Short('X').Default("GET").String()
-	stressReqBody   = stress.Flag("body", "String to use as request body e.g. POST body.").String()
-	stressHeaders   = HTTPHeader(stress.Flag("header", "Add arbitrary header line, eg. 'Accept-Encoding:gzip'").Short('H'))
-	stressUserAgent = stress.Flag("user-agent", "Add User-Agent header.").Short('A').Default("pewpew").String()
-	stressBasicAuth = BasicAuth(stress.Flag("basic-auth", "Add HTTP basic authentication, eg. 'user123:password456'"))
-	stressCompress  = stress.Flag("compress", "Add Accept-Encoding: gzip header if Accept-Encoding isn't already present.").Short('C').Bool()
-	stressHttp2     = stress.Flag("http2", "Use HTTP2.").Bool()
+	stressTimeout         = stress.Flag("timeout", "Maximum seconds to wait for response").Short('t').Default("10s").Duration()
+	stressReqMethod       = stress.Flag("request-method", "Request type. GET, HEAD, POST, PUT, etc.").Short('X').Default("GET").String()
+	stressReqBody         = stress.Flag("body", "String to use as request body e.g. POST body.").String()
+	stressReqBodyFilename = stress.Flag("body-file", "Path to file to use as request body. Will overwrite --body if both are present.").String()
+	stressHeaders         = HTTPHeader(stress.Flag("header", "Add arbitrary header line, eg. 'Accept-Encoding:gzip'").Short('H'))
+	stressUserAgent       = stress.Flag("user-agent", "Add User-Agent header.").Short('A').Default("pewpew").String()
+	stressBasicAuth       = BasicAuth(stress.Flag("basic-auth", "Add HTTP basic authentication, eg. 'user123:password456'"))
+	stressCompress        = stress.Flag("compress", "Add Accept-Encoding: gzip header if Accept-Encoding isn't already present.").Short('C').Bool()
+	stressHttp2           = stress.Flag("http2", "Use HTTP2.").Bool()
 
 	//url
 	stressUrl = stress.Arg("url", "URL to stress, formatted [http[s]://]hostname[:port][/path]").String()
@@ -99,7 +100,13 @@ func runStress() error {
 
 	//setup the request
 	var req *http.Request
-	if *stressReqBody != "" {
+	if *stressReqBodyFilename != "" {
+		fileContents, err := ioutil.ReadFile(*stressReqBodyFilename)
+		if err != nil {
+			return errors.New("failed to read contents of file " + *stressReqBodyFilename + ": " + err.Error())
+		}
+		req, err = http.NewRequest(*stressReqMethod, url.String(), bytes.NewBuffer(fileContents))
+	} else if *stressReqBody != "" {
 		req, err = http.NewRequest(*stressReqMethod, url.String(), bytes.NewBuffer([]byte(*stressReqBody)))
 	} else {
 		req, err = http.NewRequest(*stressReqMethod, url.String(), nil)
