@@ -214,7 +214,7 @@ WorkerLoop:
 		}
 	}
 
-	fmt.Println("----Summary----\n")
+	fmt.Print("----Summary----\n\n")
 
 	//info about the request
 	fmt.Println("Method: " + req.Method)
