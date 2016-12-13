@@ -20,18 +20,18 @@ var (
 
 	//stress flags
 	stressCount       = stress.Flag("num", "Number of requests to make.").Short('n').Default("1").Int()
-	stressConcurrency = stress.Flag("concurrent", "Number of multiple requests to make.").Short('c').Default("1").Int()
+	stressConcurrency = stress.Flag("concurrent", "Number of concurrent requests to make.").Short('c').Default("1").Int()
 
 	//request flags
 	stressTimeout         = stress.Flag("timeout", "Maximum seconds to wait for response").Short('t').Default("10s").Duration()
 	stressReqMethod       = stress.Flag("request-method", "Request type. GET, HEAD, POST, PUT, etc.").Short('X').Default("GET").String()
 	stressReqBody         = stress.Flag("body", "String to use as request body e.g. POST body.").String()
 	stressReqBodyFilename = stress.Flag("body-file", "Path to file to use as request body. Will overwrite --body if both are present.").String()
-	stressHeaders         = HTTPHeader(stress.Flag("header", "Add arbitrary header line, eg. 'Accept-Encoding:gzip'").Short('H'))
-	stressUserAgent       = stress.Flag("user-agent", "Add User-Agent header.").Short('A').Default("pewpew").String()
-	stressBasicAuth       = BasicAuth(stress.Flag("basic-auth", "Add HTTP basic authentication, eg. 'user123:password456'"))
+	stressHeaders         = HTTPHeader(stress.Flag("header", "Add arbitrary header line, eg. 'Accept-Encoding:gzip'. Repeatable.").Short('H'))
+	stressUserAgent       = stress.Flag("user-agent", "Add User-Agent header. Can also be done with the arbitrary header flag.").Short('A').Default("pewpew").String()
+	stressBasicAuth       = BasicAuth(stress.Flag("basic-auth", "Add HTTP basic authentication, eg. 'user123:password456'."))
 	stressIgnoreSSL       = stress.Flag("ignore-ssl", "Ignore SSL certificate/hostname issues.").Bool()
-	stressCompress        = stress.Flag("compress", "Add Accept-Encoding: gzip header if Accept-Encoding isn't already present.").Short('C').Bool()
+	stressCompress        = stress.Flag("compress", "Add 'Accept-Encoding: gzip' header if Accept-Encoding is not already present.").Short('C').Bool()
 	stressHttp2           = stress.Flag("http2", "Use HTTP2.").Bool()
 
 	//url
