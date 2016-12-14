@@ -1,76 +1,22 @@
-hash: b07efde3ea191b1928e45af2eb93d3d6c86d926bb35baf4f646886b4febcfd4d
-updated: 2016-10-27T21:28:01.485591445+02:00
+hash: b7c74666cdf05d29871da9ffad2547f1ba35250c96521f3af31a0f1471aa8ad1
+updated: 2016-12-14T01:35:49.845358909+01:00
 imports:
-- name: github.com/alecthomas/kingpin
-  version: e9044be3ab2a8e11d4e1f418d12f0790d57e8d70
 - name: github.com/alecthomas/template
   version: a0175ee3bccc567396460bf5acd36800cb10c49c
   subpackages:
   - parse
 - name: github.com/alecthomas/units
   version: 2efee857e7cfd4f3d0138cc3cbb1b4966962b93a
-- name: github.com/fsnotify/fsnotify
-  version: fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197
-- name: github.com/hashicorp/hcl
-  version: 99ce73d4fe576449f7a689d4fc2b2ad09a86bdaa
-  subpackages:
-  - hcl/ast
-  - hcl/parser
-  - hcl/scanner
-  - hcl/strconv
-  - hcl/token
-  - json/parser
-  - json/scanner
-  - json/token
-- name: github.com/inconshreveable/mousetrap
-  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
-- name: github.com/kr/fs
-  version: 2788f0dbd16903de03cb8186e5c7d97b69ad387b
-- name: github.com/magiconair/properties
-  version: 0723e352fa358f9322c938cc2dadda874e9151a9
-- name: github.com/mitchellh/mapstructure
-  version: f3009df150dadf309fdee4a54ed65c124afad715
-- name: github.com/pelletier/go-buffruneio
-  version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
-- name: github.com/pelletier/go-toml
-  version: 45932ad32dfdd20826f5671da37a5f3ce9f26a8d
-- name: github.com/pkg/errors
-  version: 839d9e913e063e28dfd0e6c7b7512793e0a48be9
-- name: github.com/pkg/sftp
-  version: 4d0e916071f68db74f8a73926335f809396d6b42
-- name: github.com/spf13/afero
-  version: 52e4a6cfac46163658bd4f123c49b6ee7dc75f78
-  subpackages:
-  - mem
-  - sftp
-- name: github.com/spf13/cast
-  version: 2580bc98dc0e62908119e4737030cc2fdfc45e4c
-- name: github.com/spf13/cobra
-  version: ec2fe7859914a5106dcab4e7901633d959bfc2f4
-- name: github.com/spf13/jwalterweatherman
-  version: 33c24e77fb80341fe7130ee7c594256ff08ccc46
-- name: github.com/spf13/pflag
-  version: 5ccb023bc27df288a957c5e994cd44fd19619465
-- name: github.com/spf13/viper
-  version: 80ab6657f9ec7e5761f6603320d3d58dfe6970f6
-- name: golang.org/x/crypto
-  version: ca7e7f10cb9fd9c1a6ff7f60436c086d73714180
-  subpackages:
-  - curve25519
-  - ed25519
-  - ed25519/internal/edwards25519
-  - ssh
+- name: github.com/fatih/color
+  version: dea9d3a26a087187530244679c1cfb3a42937794
+- name: github.com/mattn/go-colorable
+  version: d228849504861217f796da67fae4f6e347643f15
+- name: github.com/mattn/go-isatty
+  version: 3a115632dcd687f9c8cd01679c83a06a0e21c1f3
 - name: golang.org/x/sys
   version: c200b10b5d5e122be351b67af224adc6128af5bf
   subpackages:
   - unix
-- name: golang.org/x/text
-  version: a8b38433e35b65ba247bb267317037dee1b70cea
-  subpackages:
-  - transform
-  - unicode/norm
 - name: gopkg.in/alecthomas/kingpin.v2
   version: e9044be3ab2a8e11d4e1f418d12f0790d57e8d70
-- name: gopkg.in/yaml.v2
-  version: a5b47d31c556af34a302ce5d659e6fea44d90de0
 testImports: []
