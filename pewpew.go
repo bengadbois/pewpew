@@ -5,14 +5,19 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	color "github.com/fatih/color"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"runtime"
 	"strconv"
+	"sync"
 	"time"
 )
+
+//so concurrent workers don't interlace messages
+var writeLock sync.Mutex
 
 var (
 	//stress
@@ -33,6 +38,7 @@ var (
 	stressIgnoreSSL       = stress.Flag("ignore-ssl", "Ignore SSL certificate/hostname issues.").Bool()
 	stressCompress        = stress.Flag("compress", "Add 'Accept-Encoding: gzip' header if Accept-Encoding is not already present.").Short('C').Bool()
 	stressHttp2           = stress.Flag("http2", "Use HTTP2.").Bool()
+	stressQuiet           = kingpin.Flag("quiet", "Do not print while requests are running.").Short('q').Bool()
 
 	//url
 	stressUrl = stress.Arg("url", "URL to stress, formatted [http[s]://]hostname[:port][/path]").String()
@@ -164,32 +170,42 @@ func runStress() error {
 					}
 					reqTimeNs := (reqEndTime.UnixNano() - reqStartTime.UnixNano())
 
-					var requestData string
-					if *verbose {
-						requestData = "----Request----\n\n"
-
-						//request details
-						requestData = requestData + fmt.Sprintf("Request:\n%+v\n\n", *req)
-
-						//request timing
-						requestData = requestData + fmt.Sprintf("Request took %dms\n\n", reqTimeNs/1000000)
-
-						//reponse metadata
-						requestData = requestData + fmt.Sprintf("Response:\n%+v\n\n", *response)
-
-						//reponse body
-						defer response.Body.Close()
-						body, err := ioutil.ReadAll(response.Body)
-						if err != nil {
-							workerErrChan <- errors.New("Failed to read response body:" + err.Error())
-							return
+					if !*stressQuiet {
+						writeLock.Lock()
+						if response.StatusCode >= 100 && response.StatusCode < 200 {
+							color.Set(color.FgBlue)
+						} else if response.StatusCode >= 200 && response.StatusCode < 300 {
+							color.Set(color.FgGreen)
+						} else if response.StatusCode >= 300 && response.StatusCode < 400 {
+							color.Set(color.FgCyan)
+						} else if response.StatusCode >= 400 && response.StatusCode < 500 {
+							color.Set(color.FgMagenta)
+						} else {
+							color.Set(color.FgRed)
 						}
-						requestData = requestData + fmt.Sprintf("Body:\n%s\n\n", body)
+						fmt.Printf("%s %d\t%dms\t-> %s %s\n", req.Proto, response.StatusCode, reqTimeNs/1000000, req.Method, req.URL)
+						color.Unset()
+						if *verbose {
+							var requestInfo string
+							//request details
+							requestInfo = requestInfo + fmt.Sprintf("Request:\n%+v\n\n", *req)
+
+							//reponse metadata
+							requestInfo = requestInfo + fmt.Sprintf("Response:\n%+v\n\n", *response)
+
+							//reponse body
+							defer response.Body.Close()
+							body, err := ioutil.ReadAll(response.Body)
+							if err != nil {
+								workerErrChan <- errors.New("Failed to read response body:" + err.Error())
+								return
+							}
+							requestInfo = requestInfo + fmt.Sprintf("Body:\n%s\n\n", body)
+							fmt.Println(requestInfo)
+						}
+						writeLock.Unlock()
 					}
 
-					if requestData != "" {
-						fmt.Print(requestData)
-					}
 					requestStatChan <- requestStat{duration: reqTimeNs}
 				}
 			}
