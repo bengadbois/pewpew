@@ -37,7 +37,7 @@ var (
 	stressBasicAuth       = BasicAuth(stress.Flag("basic-auth", "Add HTTP basic authentication, eg. 'user123:password456'."))
 	stressIgnoreSSL       = stress.Flag("ignore-ssl", "Ignore SSL certificate/hostname issues.").Bool()
 	stressCompress        = stress.Flag("compress", "Add 'Accept-Encoding: gzip' header if Accept-Encoding is not already present.").Short('C').Bool()
-	stressHttp2           = stress.Flag("http2", "Use HTTP2.").Bool()
+	stressNoH2            = stress.Flag("no-http2", "Disable HTTP2.").Bool()
 	stressQuiet           = kingpin.Flag("quiet", "Do not print while requests are running.").Short('q').Bool()
 
 	//url
@@ -144,13 +144,14 @@ func runStress() error {
 	for i := 0; i < *stressConcurrency; i++ {
 		go func(workerErrChan chan error) {
 			tr := &http.Transport{}
-			if !*stressHttp2 {
+			if *stressNoH2 {
 				nilMap := make(map[string](func(authority string, c *tls.Conn) http.RoundTripper))
 				tr = &http.Transport{
 					TLSNextProto: nilMap,
 					TLSClientConfig: &tls.Config{
 						InsecureSkipVerify: *stressIgnoreSSL}}
 			}
+			tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: *stressIgnoreSSL}
 			tr.DisableCompression = !*stressCompress
 			client := &http.Client{Timeout: *stressTimeout, Transport: tr}
 			for {
@@ -183,7 +184,7 @@ func runStress() error {
 						} else {
 							color.Set(color.FgRed)
 						}
-						fmt.Printf("%s %d\t%dms\t-> %s %s\n", req.Proto, response.StatusCode, reqTimeNs/1000000, req.Method, req.URL)
+						fmt.Printf("%s %d\t%dms\t-> %s %s\n", response.Proto, response.StatusCode, reqTimeNs/1000000, req.Method, req.URL)
 						color.Unset()
 						if *verbose {
 							var requestInfo string
