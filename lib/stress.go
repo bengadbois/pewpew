@@ -1,4 +1,4 @@
-package main
+package pewpew
 
 import (
 	"bytes"
@@ -6,11 +6,9 @@ import (
 	"errors"
 	"fmt"
 	color "github.com/fatih/color"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -19,81 +17,90 @@ import (
 //so concurrent workers don't interlace messages
 var writeLock sync.Mutex
 
-var (
-	//stress
-	stress = kingpin.Command("stress", "Run predefined load of requests.").Alias("s")
-
-	//stress flags
-	stressCount       = stress.Flag("num", "Number of requests to make.").Short('n').Default("1").Int()
-	stressConcurrency = stress.Flag("concurrent", "Number of concurrent requests to make.").Short('c').Default("1").Int()
-
-	//request flags
-	stressTimeout         = stress.Flag("timeout", "Maximum seconds to wait for response").Short('t').Default("10s").Duration()
-	stressReqMethod       = stress.Flag("request-method", "Request type. GET, HEAD, POST, PUT, etc.").Short('X').Default("GET").String()
-	stressReqBody         = stress.Flag("body", "String to use as request body e.g. POST body.").String()
-	stressReqBodyFilename = stress.Flag("body-file", "Path to file to use as request body. Will overwrite --body if both are present.").String()
-	stressHeaders         = HTTPHeader(stress.Flag("header", "Add arbitrary header line, eg. 'Accept-Encoding:gzip'. Repeatable.").Short('H'))
-	stressUserAgent       = stress.Flag("user-agent", "Add User-Agent header. Can also be done with the arbitrary header flag.").Short('A').Default("pewpew").String()
-	stressBasicAuth       = BasicAuth(stress.Flag("basic-auth", "Add HTTP basic authentication, eg. 'user123:password456'."))
-	stressIgnoreSSL       = stress.Flag("ignore-ssl", "Ignore SSL certificate/hostname issues.").Bool()
-	stressCompress        = stress.Flag("compress", "Add 'Accept-Encoding: gzip' header if Accept-Encoding is not already present.").Short('C').Bool()
-	stressNoH2            = stress.Flag("no-http2", "Disable HTTP2.").Bool()
-	stressQuiet           = kingpin.Flag("quiet", "Do not print while requests are running.").Short('q').Bool()
-
-	//url
-	stressUrl = stress.Arg("url", "URL to stress, formatted [http[s]://]hostname[:port][/path]").String()
-
-	//global flags
-	verbose  = kingpin.Flag("verbose", "Print extra troubleshooting info").Short('v').Bool()
-	cpuCount = kingpin.Flag("cpu", "Number of CPUs to use.").Default(strconv.Itoa(runtime.GOMAXPROCS(0))).Int()
-)
-
-func main() {
-	kingpin.CommandLine.Help = "HTTP(S) & HTTP2 load tester for performance and stress testing"
-	kingpin.CommandLine.HelpFlag.Short('h')
-
-	parseArgs := kingpin.Parse()
-
-	runtime.GOMAXPROCS(*cpuCount)
-	if *cpuCount < 1 {
-		kingpin.Fatalf("CPU count must be greater or equal to 1")
-	}
-
-	switch parseArgs {
-	case "stress":
-		kingpin.FatalIfError(runStress(), "stress failed")
-	}
-}
-
 type workerDone struct{}
 
 type requestStat struct {
 	duration int64 //nanoseconds
 }
 type requestStatSummary struct {
-	avgQps      float64 //per nanoseconds
+	avgQPS      float64 //per nanoseconds
 	avgDuration int64   //nanoseconds
 	maxDuration int64   //nanoseconds
 	minDuration int64   //nanoseconds
 }
 
-func runStress() error {
+type (
+	//Stress is the top level struct that contains the configuration of stress test
+	Stress struct {
+		URL             string
+		Count           int
+		Concurrency     int
+		Timeout         time.Duration
+		ReqMethod       string
+		ReqBody         string
+		ReqBodyFilename string
+		ReqHeaders      http.Header
+		UserAgent       string
+		BasicAuth       BasicAuth
+		IgnoreSSL       bool
+		Compress        bool
+		NoHTTP2         bool
+		Quiet           bool
+		Verbose         bool
+	}
+	//BasicAuth just wraps the user and password in a convenient struct
+	BasicAuth struct {
+		User     string
+		Password string
+	}
+)
+
+//defaults
+const (
+	DefaultCount       = 10
+	DefaultConcurrency = 1
+	DefaultTimeout     = 10 * time.Second
+	DefaultReqMethod   = "GET"
+	DefaultUserAgent   = "pewpew"
+)
+
+//NewStress creates a new Stress object
+//with reasonable defaults, but needs URL set
+func NewStress() (s *Stress) {
+	s = &Stress{
+		Count:       DefaultCount,
+		Concurrency: DefaultConcurrency,
+		Timeout:     DefaultTimeout,
+		ReqMethod:   DefaultReqMethod,
+		UserAgent:   DefaultUserAgent,
+	}
+	return
+}
+
+//SetURL sets the target URL
+func (s *Stress) SetURL(url string) {
+	s.URL = url
+	return
+}
+
+//Run starts the stress tests
+func (s *Stress) Run() error {
 	//checks
-	url, err := url.Parse(*stressUrl)
+	url, err := url.Parse(s.URL)
 	if err != nil || url.String() == "" {
 		return errors.New("invalid URL")
 	}
-	if *stressCount <= 0 {
-		return errors.New("number of requests must be one or more")
+	if s.Count <= 0 {
+		return errors.New("request count must be greater than zero")
 	}
-	if *stressConcurrency <= 0 {
-		return errors.New("concurrency must be one or more")
+	if s.Concurrency <= 0 {
+		return errors.New("concurrency must be greater than zero")
 	}
-	if *stressTimeout < 0 {
-		return errors.New("timeout must be zero or more")
+	if s.Timeout <= time.Millisecond {
+		return errors.New("timeout must be greater than one millisecond")
 	}
-	if *stressConcurrency > *stressCount {
-		return errors.New("concurrency must be higher than number of requests")
+	if s.Concurrency > s.Count {
+		return errors.New("concurrency must be higher than request count")
 	}
 
 	//clean up URL
@@ -103,33 +110,34 @@ func runStress() error {
 	}
 
 	fmt.Println("Stress testing " + url.String() + "...")
-	fmt.Printf("Running %d tests, %d at a time\n", *stressCount, *stressConcurrency)
+	fmt.Printf("Running %d tests, %d at a time\n", s.Count, s.Concurrency)
 
 	//setup the request
 	var req *http.Request
-	if *stressReqBodyFilename != "" {
-		fileContents, err := ioutil.ReadFile(*stressReqBodyFilename)
+	if s.ReqBodyFilename != "" {
+		fileContents, err := ioutil.ReadFile(s.ReqBodyFilename)
 		if err != nil {
-			return errors.New("failed to read contents of file " + *stressReqBodyFilename + ": " + err.Error())
+			return errors.New("failed to read contents of file " + s.ReqBodyFilename + ": " + err.Error())
 		}
-		req, err = http.NewRequest(*stressReqMethod, url.String(), bytes.NewBuffer(fileContents))
-	} else if *stressReqBody != "" {
-		req, err = http.NewRequest(*stressReqMethod, url.String(), bytes.NewBuffer([]byte(*stressReqBody)))
+		req, err = http.NewRequest(s.ReqMethod, url.String(), bytes.NewBuffer(fileContents))
+	} else if s.ReqBody != "" {
+		req, err = http.NewRequest(s.ReqMethod, url.String(), bytes.NewBuffer([]byte(s.ReqBody)))
 	} else {
-		req, err = http.NewRequest(*stressReqMethod, url.String(), nil)
+		req, err = http.NewRequest(s.ReqMethod, url.String(), nil)
 	}
 	if err != nil {
 		return errors.New("failed to create request: " + err.Error())
 	}
-	req.Header = *stressHeaders //add headers
-	req.Header.Set("User-Agent", *stressUserAgent)
-	if (*stressBasicAuth).String() != "" {
-		req.SetBasicAuth((*stressBasicAuth).User, (*stressBasicAuth).Password)
+	//add headers
+	req.Header = s.ReqHeaders
+	req.Header.Set("User-Agent", s.UserAgent)
+	if s.BasicAuth.User != "" {
+		req.SetBasicAuth(s.BasicAuth.User, s.BasicAuth.Password)
 	}
 
 	//setup the queue of requests
-	requestChan := make(chan *http.Request, *stressCount)
-	for i := 0; i < *stressCount; i++ {
+	requestChan := make(chan *http.Request, s.Count)
+	for i := 0; i < s.Count; i++ {
 		requestChan <- req
 	}
 	close(requestChan)
@@ -141,19 +149,19 @@ func runStress() error {
 	totalStartTime := time.Now()
 	var totalEndTime time.Time
 	workerErrChan := make(chan error)
-	for i := 0; i < *stressConcurrency; i++ {
+	for i := 0; i < s.Concurrency; i++ {
 		go func(workerErrChan chan error) {
 			tr := &http.Transport{}
-			if *stressNoH2 {
+			if s.NoHTTP2 {
 				nilMap := make(map[string](func(authority string, c *tls.Conn) http.RoundTripper))
 				tr = &http.Transport{
 					TLSNextProto: nilMap,
 					TLSClientConfig: &tls.Config{
-						InsecureSkipVerify: *stressIgnoreSSL}}
+						InsecureSkipVerify: s.IgnoreSSL}}
 			}
-			tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: *stressIgnoreSSL}
-			tr.DisableCompression = !*stressCompress
-			client := &http.Client{Timeout: *stressTimeout, Transport: tr}
+			tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: s.IgnoreSSL}
+			tr.DisableCompression = !s.Compress
+			client := &http.Client{Timeout: s.Timeout, Transport: tr}
 			for {
 				select {
 				case req, ok := <-requestChan:
@@ -171,7 +179,7 @@ func runStress() error {
 					}
 					reqTimeNs := (reqEndTime.UnixNano() - reqStartTime.UnixNano())
 
-					if !*stressQuiet {
+					if !s.Quiet {
 						writeLock.Lock()
 						if response.StatusCode >= 100 && response.StatusCode < 200 {
 							color.Set(color.FgBlue)
@@ -186,7 +194,7 @@ func runStress() error {
 						}
 						fmt.Printf("%s %d\t%dms\t-> %s %s\n", response.Proto, response.StatusCode, reqTimeNs/1000000, req.Method, req.URL)
 						color.Unset()
-						if *verbose {
+						if s.Verbose {
 							var requestInfo string
 							//request details
 							requestInfo = requestInfo + fmt.Sprintf("Request:\n%+v\n\n", *req)
@@ -213,7 +221,7 @@ func runStress() error {
 		}(workerErrChan)
 	}
 
-	allRequestStats := make([]requestStat, *stressCount)
+	allRequestStats := make([]requestStat, s.Count)
 	requestsCompleteCount := 0
 	workersDoneCount := 0
 	//wait for all workers to finish
@@ -224,7 +232,7 @@ WorkerLoop:
 			return workerErr
 		case <-workerDoneChan:
 			workersDoneCount++
-			if workersDoneCount == *stressConcurrency {
+			if workersDoneCount == s.Concurrency {
 				//all workers are done
 				totalEndTime = time.Now()
 				break WorkerLoop
@@ -267,7 +275,7 @@ func createRequestsStats(requestStats []requestStat, totalTimeNs int64) requestS
 		totalDurations += requestStats[i].duration
 	}
 	summary.avgDuration = totalDurations / int64(len(requestStats))
-	summary.avgQps = float64(len(requestStats)) / float64(totalTimeNs)
+	summary.avgQPS = float64(len(requestStats)) / float64(totalTimeNs)
 	return summary
 }
 
@@ -277,7 +285,7 @@ func createTextSummary(reqStatSummary requestStatSummary, totalTimeNs int64) str
 
 	summary = summary + "Runtime Statistics:\n"
 	summary = summary + "Total time:  " + strconv.Itoa(int(totalTimeNs/1000000)) + " ms\n"
-	summary = summary + "Mean QPS:    " + fmt.Sprintf("%.2f", reqStatSummary.avgQps*1000000000) + " req/sec\n"
+	summary = summary + "Mean QPS:    " + fmt.Sprintf("%.2f", reqStatSummary.avgQPS*1000000000) + " req/sec\n"
 
 	summary = summary + "\nQuery Statistics\n"
 	summary = summary + "Mean query:     " + strconv.Itoa(int(reqStatSummary.avgDuration/1000000)) + " ms\n"

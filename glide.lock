@@ -1,22 +1,16 @@
-hash: b7c74666cdf05d29871da9ffad2547f1ba35250c96521f3af31a0f1471aa8ad1
-updated: 2016-12-14T01:35:49.845358909+01:00
+hash: 2c80d711379b47ec821855e83c6ec87366d0ec4f64c642f4abdc0c1eb86992b7
+updated: 2016-12-16T01:15:00.153949988+01:00
 imports:
-- name: github.com/alecthomas/template
-  version: a0175ee3bccc567396460bf5acd36800cb10c49c
-  subpackages:
-  - parse
-- name: github.com/alecthomas/units
-  version: 2efee857e7cfd4f3d0138cc3cbb1b4966962b93a
 - name: github.com/fatih/color
   version: dea9d3a26a087187530244679c1cfb3a42937794
 - name: github.com/mattn/go-colorable
   version: d228849504861217f796da67fae4f6e347643f15
 - name: github.com/mattn/go-isatty
   version: 3a115632dcd687f9c8cd01679c83a06a0e21c1f3
+- name: github.com/spf13/cobra
+  version: ec2fe7859914a5106dcab4e7901633d959bfc2f4
 - name: golang.org/x/sys
   version: c200b10b5d5e122be351b67af224adc6128af5bf
   subpackages:
   - unix
-- name: gopkg.in/alecthomas/kingpin.v2
-  version: e9044be3ab2a8e11d4e1f418d12f0790d57e8d70
 testImports: []
