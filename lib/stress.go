@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -20,13 +21,15 @@ var writeLock sync.Mutex
 type workerDone struct{}
 
 type requestStat struct {
-	duration int64 //nanoseconds
+	duration   int64 //nanoseconds
+	statusCode int   //200, 404, etc.
 }
 type requestStatSummary struct {
-	avgQPS      float64 //per nanoseconds
-	avgDuration int64   //nanoseconds
-	maxDuration int64   //nanoseconds
-	minDuration int64   //nanoseconds
+	avgQPS      float64     //per nanoseconds
+	avgDuration int64       //nanoseconds
+	maxDuration int64       //nanoseconds
+	minDuration int64       //nanoseconds
+	statusCodes map[int]int //counts of each code
 }
 
 type (
@@ -215,7 +218,7 @@ func (s *Stress) Run() error {
 						writeLock.Unlock()
 					}
 
-					requestStatChan <- requestStat{duration: reqTimeNs}
+					requestStatChan <- requestStat{duration: reqTimeNs, statusCode: response.StatusCode}
 				}
 			}
 		}(workerErrChan)
@@ -262,7 +265,8 @@ func createRequestsStats(requestStats []requestStat, totalTimeNs int64) requestS
 		return requestStatSummary{}
 	}
 
-	summary := requestStatSummary{maxDuration: requestStats[0].duration, minDuration: requestStats[0].duration}
+	requestCodes := make(map[int]int)
+	summary := requestStatSummary{maxDuration: requestStats[0].duration, minDuration: requestStats[0].duration, statusCodes: requestCodes}
 	var totalDurations int64
 	totalDurations = 0 //total time of all requests (concurrent is counted)
 	for i := 0; i < len(requestStats); i++ {
@@ -273,6 +277,7 @@ func createRequestsStats(requestStats []requestStat, totalTimeNs int64) requestS
 			summary.minDuration = requestStats[i].duration
 		}
 		totalDurations += requestStats[i].duration
+		summary.statusCodes[requestStats[i].statusCode]++
 	}
 	summary.avgDuration = totalDurations / int64(len(requestStats))
 	summary.avgQPS = float64(len(requestStats)) / float64(totalTimeNs)
@@ -291,5 +296,16 @@ func createTextSummary(reqStatSummary requestStatSummary, totalTimeNs int64) str
 	summary = summary + "Mean query:     " + strconv.Itoa(int(reqStatSummary.avgDuration/1000000)) + " ms\n"
 	summary = summary + "Fastest query:  " + strconv.Itoa(int(reqStatSummary.minDuration/1000000)) + " ms\n"
 	summary = summary + "Slowest query:  " + strconv.Itoa(int(reqStatSummary.maxDuration/1000000)) + " ms\n"
+
+	summary = summary + "\nResponse Codes\n"
+	//sort the status codes
+	var codes []int
+	for key := range reqStatSummary.statusCodes {
+		codes = append(codes, key)
+	}
+	sort.Ints(codes)
+	for _, code := range codes {
+		summary = summary + fmt.Sprintf("%d", code) + ": " + fmt.Sprintf("%d", reqStatSummary.statusCodes[code]) + " responses\n"
+	}
 	return summary
 }
