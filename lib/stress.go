@@ -3,6 +3,7 @@ package pewpew
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	color "github.com/fatih/color"
@@ -21,8 +22,9 @@ var writeLock sync.Mutex
 type workerDone struct{}
 
 type requestStat struct {
-	duration   int64 //nanoseconds
-	statusCode int   //200, 404, etc.
+	Duration   int64     `json:"duration"` //nanoseconds
+	StartTime  time.Time `json:"startTime"`
+	StatusCode int       `json:"statusCode"` //200, 404, etc.
 }
 type requestStatSummary struct {
 	avgQPS      float64     //per nanoseconds
@@ -35,21 +37,22 @@ type requestStatSummary struct {
 type (
 	//Stress is the top level struct that contains the configuration of stress test
 	Stress struct {
-		URL             string
-		Count           int
-		Concurrency     int
-		Timeout         time.Duration
-		ReqMethod       string
-		ReqBody         string
-		ReqBodyFilename string
-		ReqHeaders      http.Header
-		UserAgent       string
-		BasicAuth       BasicAuth
-		IgnoreSSL       bool
-		Compress        bool
-		NoHTTP2         bool
-		Quiet           bool
-		Verbose         bool
+		URL                string
+		Count              int
+		Concurrency        int
+		Timeout            time.Duration
+		ReqMethod          string
+		ReqBody            string
+		ReqBodyFilename    string
+		ReqHeaders         http.Header
+		UserAgent          string
+		BasicAuth          BasicAuth
+		IgnoreSSL          bool
+		Compress           bool
+		NoHTTP2            bool
+		ResultFilenameJSON string
+		Quiet              bool
+		Verbose            bool
 	}
 	//BasicAuth just wraps the user and password in a convenient struct
 	BasicAuth struct {
@@ -218,7 +221,7 @@ func (s *Stress) Run() error {
 						writeLock.Unlock()
 					}
 
-					requestStatChan <- requestStat{duration: reqTimeNs, statusCode: response.StatusCode}
+					requestStatChan <- requestStat{Duration: reqTimeNs, StartTime: reqStartTime, StatusCode: response.StatusCode}
 				}
 			}
 		}(workerErrChan)
@@ -256,6 +259,16 @@ WorkerLoop:
 	reqStats := createRequestsStats(allRequestStats, totalTimeNs)
 	fmt.Println(createTextSummary(reqStats, totalTimeNs))
 
+	if s.ResultFilenameJSON != "" {
+		fmt.Print("Writing full result data to: " + s.ResultFilenameJSON + " ...")
+		json, _ := json.MarshalIndent(allRequestStats, "", "    ")
+		err = ioutil.WriteFile(s.ResultFilenameJSON, json, 0644)
+		if err != nil {
+			return errors.New("failed to write full result data to " + s.ResultFilenameJSON + ": " + err.Error())
+		}
+		fmt.Println("finished!")
+	}
+
 	return nil
 }
 
@@ -266,18 +279,18 @@ func createRequestsStats(requestStats []requestStat, totalTimeNs int64) requestS
 	}
 
 	requestCodes := make(map[int]int)
-	summary := requestStatSummary{maxDuration: requestStats[0].duration, minDuration: requestStats[0].duration, statusCodes: requestCodes}
+	summary := requestStatSummary{maxDuration: requestStats[0].Duration, minDuration: requestStats[0].Duration, statusCodes: requestCodes}
 	var totalDurations int64
 	totalDurations = 0 //total time of all requests (concurrent is counted)
 	for i := 0; i < len(requestStats); i++ {
-		if requestStats[i].duration > summary.maxDuration {
-			summary.maxDuration = requestStats[i].duration
+		if requestStats[i].Duration > summary.maxDuration {
+			summary.maxDuration = requestStats[i].Duration
 		}
-		if requestStats[i].duration < summary.minDuration {
-			summary.minDuration = requestStats[i].duration
+		if requestStats[i].Duration < summary.minDuration {
+			summary.minDuration = requestStats[i].Duration
 		}
-		totalDurations += requestStats[i].duration
-		summary.statusCodes[requestStats[i].statusCode]++
+		totalDurations += requestStats[i].Duration
+		summary.statusCodes[requestStats[i].StatusCode]++
 	}
 	summary.avgDuration = totalDurations / int64(len(requestStats))
 	summary.avgQPS = float64(len(requestStats)) / float64(totalTimeNs)

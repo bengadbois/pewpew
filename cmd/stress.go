@@ -44,6 +44,7 @@ var stressCmd = &cobra.Command{
 		s.Compress = compressFlag
 		s.NoHTTP2 = ignoreSSLFlag
 		s.Quiet = quietFlag
+		s.ResultFilenameJSON = resultFileJSONFlag
 		s.Verbose = verboseFlag
 
 		s.Run()
@@ -67,6 +68,7 @@ func init() {
 	stressCmd.Flags().BoolVar(&ignoreSSLFlag, "ignore-ssl", true, "Ignore SSL certificate/hostname issues.")
 	stressCmd.Flags().BoolVarP(&compressFlag, "compress", "C", true, "Add 'Accept-Encoding: gzip' header if Accept-Encoding is not already present.")
 	stressCmd.Flags().BoolVar(&noHTTP2Flag, "no-http2", false, "Disable HTTP2.")
+	stressCmd.Flags().StringVar(&resultFileJSONFlag, "output-json", "", "Path to file to write full data as JSON")
 	stressCmd.Flags().BoolVarP(&quietFlag, "quiet", "q", false, "Do not print while requests are running.")
 }
 
@@ -82,6 +84,7 @@ var basicAuthFlag string
 var ignoreSSLFlag bool
 var compressFlag bool
 var noHTTP2Flag bool
+var resultFileJSONFlag string
 var quietFlag bool
 
 // custom implementation of repeated header flag parsing
