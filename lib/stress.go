@@ -3,6 +3,7 @@ package pewpew
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"sort"
 	"strconv"
 	"sync"
@@ -22,8 +24,8 @@ var writeLock sync.Mutex
 type workerDone struct{}
 
 type requestStat struct {
-	Duration   int64     `json:"duration"` //nanoseconds
 	StartTime  time.Time `json:"startTime"`
+	Duration   int64     `json:"duration"`   //nanoseconds
 	StatusCode int       `json:"statusCode"` //200, 404, etc.
 }
 type requestStatSummary struct {
@@ -51,6 +53,7 @@ type (
 		Compress           bool
 		NoHTTP2            bool
 		ResultFilenameJSON string
+		ResultFilenameCSV  string
 		Quiet              bool
 		Verbose            bool
 	}
@@ -259,13 +262,41 @@ WorkerLoop:
 	reqStats := createRequestsStats(allRequestStats, totalTimeNs)
 	fmt.Println(createTextSummary(reqStats, totalTimeNs))
 
+	//write out json
 	if s.ResultFilenameJSON != "" {
 		fmt.Print("Writing full result data to: " + s.ResultFilenameJSON + " ...")
 		json, _ := json.MarshalIndent(allRequestStats, "", "    ")
 		err = ioutil.WriteFile(s.ResultFilenameJSON, json, 0644)
 		if err != nil {
-			return errors.New("failed to write full result data to " + s.ResultFilenameJSON + ": " + err.Error())
+			return errors.New("failed to write full result data to " +
+				s.ResultFilenameJSON + ": " + err.Error())
 		}
+		fmt.Println("finished!")
+	}
+	//write out csv
+	if s.ResultFilenameCSV != "" {
+		fmt.Print("Writing full result data to: " + s.ResultFilenameCSV + " ...")
+		file, err := os.Create(s.ResultFilenameCSV)
+		if err != nil {
+			return errors.New("failed to write full result data to " +
+				s.ResultFilenameCSV + ": " + err.Error())
+		}
+		defer file.Close()
+
+		writer := csv.NewWriter(file)
+
+		for _, req := range allRequestStats {
+			line := []string{
+				req.StartTime.String(),
+				fmt.Sprintf("%d", req.Duration),
+				fmt.Sprintf("%d", req.StatusCode)}
+			err := writer.Write(line)
+			if err != nil {
+				return errors.New("failed to write full result data to " +
+					s.ResultFilenameCSV + ": " + err.Error())
+			}
+		}
+		defer writer.Flush()
 		fmt.Println("finished!")
 	}
 
