@@ -38,7 +38,7 @@ type requestStatSummary struct {
 
 type (
 	//Stress is the top level struct that contains the configuration of stress test
-	Stress struct {
+	StressConfig struct {
 		URL                string
 		Count              int
 		Concurrency        int
@@ -75,8 +75,8 @@ const (
 
 //NewStress creates a new Stress object
 //with reasonable defaults, but needs URL set
-func NewStress() (s *Stress) {
-	s = &Stress{
+func NewStressConfig() (s *StressConfig) {
+	s = &StressConfig{
 		Count:       DefaultCount,
 		Concurrency: DefaultConcurrency,
 		Timeout:     DefaultTimeout,
@@ -86,14 +86,8 @@ func NewStress() (s *Stress) {
 	return
 }
 
-//SetURL sets the target URL
-func (s *Stress) SetURL(url string) {
-	s.URL = url
-	return
-}
-
 //Run starts the stress tests
-func (s *Stress) Run() error {
+func RunStress(s StressConfig) error {
 	//checks
 	url, err := url.Parse(s.URL)
 	if err != nil || url.String() == "" {
