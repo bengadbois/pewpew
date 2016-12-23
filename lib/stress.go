@@ -12,8 +12,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"sort"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -24,16 +22,12 @@ var writeLock sync.Mutex
 type workerDone struct{}
 
 type requestStat struct {
-	StartTime  time.Time `json:"startTime"`
-	Duration   int64     `json:"duration"`   //nanoseconds
-	StatusCode int       `json:"statusCode"` //200, 404, etc.
-}
-type requestStatSummary struct {
-	avgQPS      float64     //per nanoseconds
-	avgDuration int64       //nanoseconds
-	maxDuration int64       //nanoseconds
-	minDuration int64       //nanoseconds
-	statusCodes map[int]int //counts of each code
+	StartTime time.Time `json:"startTime"`
+	EndTime   time.Time `json:"endTime"`
+	//equivalent to the difference between StartTime and EndTime
+	Duration time.Duration `json:"duration"`
+	//HTTP Status Code, e.g. 200, 404, 503
+	StatusCode int `json:"statusCode"`
 }
 
 type (
@@ -149,8 +143,6 @@ func RunStress(s StressConfig) error {
 	requestStatChan := make(chan requestStat) //workers communicate each requests' info
 
 	//workers
-	totalStartTime := time.Now()
-	var totalEndTime time.Time
 	workerErrChan := make(chan error)
 	for i := 0; i < s.Concurrency; i++ {
 		go func(workerErrChan chan error) {
@@ -180,7 +172,6 @@ func RunStress(s StressConfig) error {
 						workerErrChan <- errors.New("Failed to make request:" + err.Error())
 						return
 					}
-					reqTimeNs := (reqEndTime.UnixNano() - reqStartTime.UnixNano())
 
 					if !s.Quiet {
 						writeLock.Lock()
@@ -195,7 +186,12 @@ func RunStress(s StressConfig) error {
 						} else {
 							color.Set(color.FgRed)
 						}
-						fmt.Printf("%s %d\t%dms\t-> %s %s\n", response.Proto, response.StatusCode, reqTimeNs/1000000, req.Method, req.URL)
+						fmt.Printf("%s %d\t%dms\t-> %s %s\n",
+							response.Proto,
+							response.StatusCode,
+							reqEndTime.Sub(reqStartTime).Nanoseconds()/1000000,
+							req.Method,
+							req.URL)
 						color.Unset()
 						if s.Verbose {
 							var requestInfo string
@@ -218,7 +214,11 @@ func RunStress(s StressConfig) error {
 						writeLock.Unlock()
 					}
 
-					requestStatChan <- requestStat{Duration: reqTimeNs, StartTime: reqStartTime, StatusCode: response.StatusCode}
+					requestStatChan <- requestStat{
+						StartTime:  reqStartTime,
+						EndTime:    reqEndTime,
+						Duration:   reqEndTime.Sub(reqStartTime),
+						StatusCode: response.StatusCode}
 				}
 			}
 		}(workerErrChan)
@@ -237,7 +237,6 @@ WorkerLoop:
 			workersDoneCount++
 			if workersDoneCount == s.Concurrency {
 				//all workers are done
-				totalEndTime = time.Now()
 				break WorkerLoop
 			}
 		case requestStat := <-requestStatChan:
@@ -252,9 +251,8 @@ WorkerLoop:
 	fmt.Println("Method: " + req.Method)
 	fmt.Println("Host: " + req.Host)
 
-	totalTimeNs := totalEndTime.UnixNano() - totalStartTime.UnixNano()
-	reqStats := createRequestsStats(allRequestStats, totalTimeNs)
-	fmt.Println(createTextSummary(reqStats, totalTimeNs))
+	reqStats := createRequestsStats(allRequestStats)
+	fmt.Println(createTextSummary(reqStats))
 
 	//write out json
 	if s.ResultFilenameJSON != "" {
@@ -295,55 +293,4 @@ WorkerLoop:
 	}
 
 	return nil
-}
-
-//create statistical summary of all requests
-func createRequestsStats(requestStats []requestStat, totalTimeNs int64) requestStatSummary {
-	if len(requestStats) == 0 {
-		return requestStatSummary{}
-	}
-
-	requestCodes := make(map[int]int)
-	summary := requestStatSummary{maxDuration: requestStats[0].Duration, minDuration: requestStats[0].Duration, statusCodes: requestCodes}
-	var totalDurations int64
-	totalDurations = 0 //total time of all requests (concurrent is counted)
-	for i := 0; i < len(requestStats); i++ {
-		if requestStats[i].Duration > summary.maxDuration {
-			summary.maxDuration = requestStats[i].Duration
-		}
-		if requestStats[i].Duration < summary.minDuration {
-			summary.minDuration = requestStats[i].Duration
-		}
-		totalDurations += requestStats[i].Duration
-		summary.statusCodes[requestStats[i].StatusCode]++
-	}
-	summary.avgDuration = totalDurations / int64(len(requestStats))
-	summary.avgQPS = float64(len(requestStats)) / float64(totalTimeNs)
-	return summary
-}
-
-//creates nice readable summary of entire stress test
-func createTextSummary(reqStatSummary requestStatSummary, totalTimeNs int64) string {
-	summary := "\n"
-
-	summary = summary + "Runtime Statistics:\n"
-	summary = summary + "Total time:  " + strconv.Itoa(int(totalTimeNs/1000000)) + " ms\n"
-	summary = summary + "Mean QPS:    " + fmt.Sprintf("%.2f", reqStatSummary.avgQPS*1000000000) + " req/sec\n"
-
-	summary = summary + "\nQuery Statistics\n"
-	summary = summary + "Mean query:     " + strconv.Itoa(int(reqStatSummary.avgDuration/1000000)) + " ms\n"
-	summary = summary + "Fastest query:  " + strconv.Itoa(int(reqStatSummary.minDuration/1000000)) + " ms\n"
-	summary = summary + "Slowest query:  " + strconv.Itoa(int(reqStatSummary.maxDuration/1000000)) + " ms\n"
-
-	summary = summary + "\nResponse Codes\n"
-	//sort the status codes
-	var codes []int
-	for key := range reqStatSummary.statusCodes {
-		codes = append(codes, key)
-	}
-	sort.Ints(codes)
-	for _, code := range codes {
-		summary = summary + fmt.Sprintf("%d", code) + ": " + fmt.Sprintf("%d", reqStatSummary.statusCodes[code]) + " responses\n"
-	}
-	return summary
 }
