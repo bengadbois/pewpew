@@ -51,19 +51,19 @@ import (
 )
 
 func main() {
-	stress := pewpew.NewStress()
+	stressCfg := pewpew.NewStressConfig()
 
-	//configure
-	stress.URL = "https://127.0.0.1:443/uri"
-	stress.Count = 10000
-	stress.Concurrency = 10
-	stress.Timeout = time.Duration(2) * time.Second
-	stress.ReqMethod = "POST"
-	stress.ReqBody = `{"field": "data", "work": true}`
+	//configure non-default settings
+	stressCfg.URL = "https://127.0.0.1:443/uri"
+	stressCfg.Count = 10000
+	stressCfg.Concurrency = 10
+	stressCfg.Timeout = time.Duration(2) * time.Second
+	stressCfg.ReqMethod = "POST"
+	stressCfg.ReqBody = `{"field": "data", "work": true}`
 
-	err := stress.Run()
+	err := stress.RunStress(*stressCfg)
 	if err != nil {
-		fmt.Println("pewpew failed:  %s", err.Error())
+		fmt.Println("pewpew stress failed:  %s", err.Error())
 	}
 }
 ```

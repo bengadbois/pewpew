@@ -21,35 +21,35 @@ var stressCmd = &cobra.Command{
 			return errors.New("requires URL")
 		}
 
-		s := pewpew.NewStress()
-		s.SetURL(args[0])
+		stressCfg := pewpew.NewStressConfig()
+		stressCfg.URL = args[0]
 
 		//parse flags into config
-		s.Count = numFlag
-		s.Concurrency = concurrentFlag
-		s.Timeout = (time.Duration(timeoutFlag) * time.Second)
-		s.ReqMethod = requestMethodFlag
-		s.ReqBody = bodyFlag
-		s.ReqBodyFilename = bodyFileFlag
-		s.ReqHeaders = headerFlag.Header
-		s.UserAgent = userAgentFlag
+		stressCfg.Count = numFlag
+		stressCfg.Concurrency = concurrentFlag
+		stressCfg.Timeout = (time.Duration(timeoutFlag) * time.Second)
+		stressCfg.ReqMethod = requestMethodFlag
+		stressCfg.ReqBody = bodyFlag
+		stressCfg.ReqBodyFilename = bodyFileFlag
+		stressCfg.ReqHeaders = headerFlag.Header
+		stressCfg.UserAgent = userAgentFlag
 		if basicAuthFlag != "" {
 			key, val, err := parseKeyValString(basicAuthFlag, ":")
 			if err != nil {
 				return errors.New("failed to parse basic auth")
 			}
-			s.BasicAuth = pewpew.BasicAuth{User: key, Password: val}
+			stressCfg.BasicAuth = pewpew.BasicAuth{User: key, Password: val}
 		}
-		s.IgnoreSSL = ignoreSSLFlag
-		s.Compress = compressFlag
-		s.NoHTTP2 = ignoreSSLFlag
-		s.Quiet = quietFlag
-		s.ResultFilenameJSON = resultFileJSONFlag
-		s.ResultFilenameCSV = resultFileCSVFlag
-		s.Verbose = verboseFlag
+		stressCfg.IgnoreSSL = ignoreSSLFlag
+		stressCfg.Compress = compressFlag
+		stressCfg.NoHTTP2 = ignoreSSLFlag
+		stressCfg.Quiet = quietFlag
+		stressCfg.ResultFilenameJSON = resultFileJSONFlag
+		stressCfg.ResultFilenameCSV = resultFileCSVFlag
+		stressCfg.Verbose = verboseFlag
 
-		s.Run()
-		return nil
+		err := pewpew.RunStress(*stressCfg)
+		return err
 	},
 }
 
