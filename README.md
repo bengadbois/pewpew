@@ -1,4 +1,4 @@
-# Pewpew [![Travis](https://img.shields.io/travis/bengadbois/pewpew.svg?branch=master)](https://travis-ci.org/bengadbois/pewpew) [![Go Report Card](https://goreportcard.com/badge/github.com/bengadbois/pewpew)](https://goreportcard.com/report/github.com/bengadbois/pewpew)
+# Pewpew [![Travis](https://img.shields.io/travis/bengadbois/pewpew.svg?branch=master)](https://travis-ci.org/bengadbois/pewpew) [![Go Report Card](https://goreportcard.com/badge/github.com/bengadbois/pewpew)](https://goreportcard.com/report/github.com/bengadbois/pewpew) [![GoDoc](https://godoc.org/github.com/bengadbois/pewpew?status.svg)](https://godoc.org/github.com/bengadbois/pewpew/lib)
 
 Flexible HTTP stress tester
 
