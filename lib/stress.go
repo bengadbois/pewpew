@@ -28,6 +28,7 @@ type requestStat struct {
 	Duration time.Duration `json:"duration"`
 	//HTTP Status Code, e.g. 200, 404, 503
 	StatusCode int `json:"statusCode"`
+	Error      bool
 }
 
 type (
@@ -161,55 +162,60 @@ func RunStress(s StressConfig) error {
 				select {
 				case req, ok := <-requestChan:
 					if !ok {
+						//queue is empty
 						workerDoneChan <- workerDone{}
 						return
 					}
 					//run the actual request
 					reqStartTime := time.Now()
-					response, err := client.Do((*http.Request)(req))
+					response, responseErr := client.Do((*http.Request)(req))
 					reqEndTime := time.Now()
-					if err != nil {
-						workerErrChan <- errors.New("Failed to make request:" + err.Error())
-						return
-					}
 
 					if !s.Quiet {
 						writeLock.Lock()
-						if response.StatusCode >= 100 && response.StatusCode < 200 {
-							color.Set(color.FgBlue)
-						} else if response.StatusCode >= 200 && response.StatusCode < 300 {
-							color.Set(color.FgGreen)
-						} else if response.StatusCode >= 300 && response.StatusCode < 400 {
-							color.Set(color.FgCyan)
-						} else if response.StatusCode >= 400 && response.StatusCode < 500 {
-							color.Set(color.FgMagenta)
-						} else {
+						if responseErr != nil {
 							color.Set(color.FgRed)
-						}
-						fmt.Printf("%s %d\t%dms\t-> %s %s\n",
-							response.Proto,
-							response.StatusCode,
-							reqEndTime.Sub(reqStartTime).Nanoseconds()/1000000,
-							req.Method,
-							req.URL)
-						color.Unset()
-						if s.Verbose {
-							var requestInfo string
-							//request details
-							requestInfo = requestInfo + fmt.Sprintf("Request:\n%+v\n\n", *req)
-
-							//reponse metadata
-							requestInfo = requestInfo + fmt.Sprintf("Response:\n%+v\n\n", *response)
-
-							//reponse body
-							defer response.Body.Close()
-							body, err := ioutil.ReadAll(response.Body)
-							if err != nil {
-								workerErrChan <- errors.New("Failed to read response body:" + err.Error())
-								return
+							fmt.Println("Failed to make request: " + responseErr.Error())
+							response = &http.Response{StatusCode: 0}
+							color.Unset()
+						} else {
+							if response.StatusCode >= 100 && response.StatusCode < 200 {
+								color.Set(color.FgBlue)
+							} else if response.StatusCode >= 200 && response.StatusCode < 300 {
+								color.Set(color.FgGreen)
+							} else if response.StatusCode >= 300 && response.StatusCode < 400 {
+								color.Set(color.FgCyan)
+							} else if response.StatusCode >= 400 && response.StatusCode < 500 {
+								color.Set(color.FgMagenta)
+							} else {
+								color.Set(color.FgRed)
 							}
-							requestInfo = requestInfo + fmt.Sprintf("Body:\n%s\n\n", body)
-							fmt.Println(requestInfo)
+							fmt.Printf("%s %d\t%dms\t-> %s %s\n",
+								response.Proto,
+								response.StatusCode,
+								reqEndTime.Sub(reqStartTime).Nanoseconds()/1000000,
+								req.Method,
+								req.URL)
+							color.Unset()
+
+							if s.Verbose {
+								var requestInfo string
+								//request details
+								requestInfo = requestInfo + fmt.Sprintf("Request:\n%+v\n\n", *req)
+
+								//reponse metadata
+								requestInfo = requestInfo + fmt.Sprintf("Response:\n%+v\n\n", *response)
+
+								//reponse body
+								defer response.Body.Close()
+								body, err := ioutil.ReadAll(response.Body)
+								if err != nil {
+									requestInfo = requestInfo + fmt.Sprintf("Body: Failed to read response body: %s\n", err.Error())
+								} else {
+									requestInfo = requestInfo + fmt.Sprintf("Body:\n%s\n\n", body)
+								}
+								fmt.Println(requestInfo)
+							}
 						}
 						writeLock.Unlock()
 					}
@@ -218,7 +224,9 @@ func RunStress(s StressConfig) error {
 						StartTime:  reqStartTime,
 						EndTime:    reqEndTime,
 						Duration:   reqEndTime.Sub(reqStartTime),
-						StatusCode: response.StatusCode}
+						StatusCode: response.StatusCode,
+						Error:      responseErr != nil,
+					}
 				}
 			}
 		}(workerErrChan)
@@ -231,8 +239,6 @@ func RunStress(s StressConfig) error {
 WorkerLoop:
 	for {
 		select {
-		case workerErr := <-workerErrChan:
-			return workerErr
 		case <-workerDoneChan:
 			workersDoneCount++
 			if workersDoneCount == s.Concurrency {

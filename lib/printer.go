@@ -26,7 +26,11 @@ func createTextSummary(reqStatSummary requestStatSummary) string {
 	}
 	sort.Ints(codes)
 	for _, code := range codes {
+		if code == 0 {
+			continue
+		}
 		summary = summary + fmt.Sprintf("%d", code) + ": " + fmt.Sprintf("%d", reqStatSummary.statusCodes[code]) + " responses\n"
 	}
+	summary = summary + "Failed: " + fmt.Sprintf("%d", reqStatSummary.statusCodes[0]) + " requests\n"
 	return summary
 }

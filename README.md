@@ -36,7 +36,9 @@ Requires Golang 1.6+
 
 If your `$GOPATH` is set correctly, you can just
 
-```go get github.com/bengadbois/pewpew```
+```
+go get github.com/bengadbois/pewpew
+```
 
 Will publish prebuilt binaries once first release is ready
 
@@ -68,3 +70,7 @@ func main() {
 }
 ```
 Full package documentation at [godoc.org](https://godoc.org/github.com/bengadbois/pewpew/lib)
+
+## Hints
+
+If you receive a lot of "socket: too many open files" errors while running many concurrent requests, try increasing your ulimit.
