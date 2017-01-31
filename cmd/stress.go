@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 )
 
 var stressCmd = &cobra.Command{
-	Use:   "stress URL",
+	Use:   "stress URL...",
 	Short: "Run stress tests",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -22,31 +23,38 @@ var stressCmd = &cobra.Command{
 		}
 
 		stressCfg := pewpew.NewStressConfig()
-		stressCfg.URL = args[0]
-
-		//parse flags into config
-		stressCfg.Count = numFlag
-		stressCfg.Concurrency = concurrentFlag
-		stressCfg.Timeout = (time.Duration(timeoutFlag*1000) * time.Millisecond) //preserve float's decimal
-		stressCfg.ReqMethod = requestMethodFlag
-		stressCfg.ReqBody = bodyFlag
-		stressCfg.ReqBodyFilename = bodyFileFlag
-		stressCfg.ReqHeaders = headerFlag.Header
-		stressCfg.UserAgent = userAgentFlag
-		if basicAuthFlag != "" {
-			key, val, err := parseKeyValString(basicAuthFlag, ":")
-			if err != nil {
-				return errors.New("failed to parse basic auth")
-			}
-			stressCfg.BasicAuth = pewpew.BasicAuth{User: key, Password: val}
-		}
-		stressCfg.IgnoreSSL = ignoreSSLFlag
-		stressCfg.Compress = compressFlag
-		stressCfg.NoHTTP2 = ignoreSSLFlag
-		stressCfg.Quiet = quietFlag
 		stressCfg.ResultFilenameJSON = resultFileJSONFlag
 		stressCfg.ResultFilenameCSV = resultFileCSVFlag
+		stressCfg.Quiet = quietFlag
 		stressCfg.Verbose = verboseFlag
+
+		//per target config
+		stressCfg.Targets = make([]pewpew.Target, len(args))
+		for i := range stressCfg.Targets {
+			parsedURL, err := url.Parse(args[i])
+			if err != nil {
+				return errors.New("cannot parse url " + args[i])
+			}
+			stressCfg.Targets[i].URL = *parsedURL
+			stressCfg.Targets[i].Count = numFlag
+			stressCfg.Targets[i].Concurrency = concurrentFlag
+			stressCfg.Targets[i].Timeout = (time.Duration(timeoutFlag*1000) * time.Millisecond) //preserve float's decimal
+			stressCfg.Targets[i].ReqMethod = requestMethodFlag
+			stressCfg.Targets[i].ReqBody = bodyFlag
+			stressCfg.Targets[i].ReqBodyFilename = bodyFileFlag
+			stressCfg.Targets[i].ReqHeaders = headerFlag.Header
+			stressCfg.Targets[i].UserAgent = userAgentFlag
+			if basicAuthFlag != "" {
+				key, val, err := parseKeyValString(basicAuthFlag, ":")
+				if err != nil {
+					return errors.New("failed to parse basic auth")
+				}
+				stressCfg.Targets[i].BasicAuth = pewpew.BasicAuth{User: key, Password: val}
+			}
+			stressCfg.Targets[i].IgnoreSSL = ignoreSSLFlag
+			stressCfg.Targets[i].Compress = compressFlag
+			stressCfg.Targets[i].NoHTTP2 = ignoreSSLFlag
+		}
 
 		err := pewpew.RunStress(*stressCfg)
 		return err
