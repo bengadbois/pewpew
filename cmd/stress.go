@@ -27,7 +27,7 @@ var stressCmd = &cobra.Command{
 		//parse flags into config
 		stressCfg.Count = numFlag
 		stressCfg.Concurrency = concurrentFlag
-		stressCfg.Timeout = (time.Duration(timeoutFlag) * time.Second)
+		stressCfg.Timeout = (time.Duration(timeoutFlag*1000) * time.Millisecond) //preserve float's decimal
 		stressCfg.ReqMethod = requestMethodFlag
 		stressCfg.ReqBody = bodyFlag
 		stressCfg.ReqBodyFilename = bodyFileFlag
@@ -58,7 +58,7 @@ func init() {
 	RootCmd.AddCommand(stressCmd)
 	stressCmd.Flags().IntVarP(&numFlag, "num", "n", 10, "Number of total requests to make.")
 	stressCmd.Flags().IntVarP(&concurrentFlag, "concurrent", "c", 1, "Number of concurrent requests to make.")
-	stressCmd.Flags().IntVarP(&timeoutFlag, "timeout", "t", 10, "Maximum seconds to wait for response")
+	stressCmd.Flags().Float64VarP(&timeoutFlag, "timeout", "t", 10, "Maximum seconds to wait for response")
 	stressCmd.Flags().StringVarP(&requestMethodFlag, "request-method", "X", "GET", "Request type. GET, HEAD, POST, PUT, etc.")
 	stressCmd.Flags().StringVar(&bodyFlag, "body", "", "String to use as request body e.g. POST body.")
 	stressCmd.Flags().StringVar(&bodyFileFlag, "body-file", "", "Path to file to use as request body. Will overwrite --body if both are present.")
@@ -76,7 +76,7 @@ func init() {
 
 var numFlag int
 var concurrentFlag int
-var timeoutFlag int
+var timeoutFlag float64
 var requestMethodFlag string
 var bodyFlag string
 var bodyFileFlag string
