@@ -1,16 +1,12 @@
 package cmd
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"net/http"
-	"net/url"
-	"strings"
-	"time"
 
 	pewpew "github.com/bengadbois/pewpew/lib"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var stressCmd = &cobra.Command{
@@ -18,122 +14,139 @@ var stressCmd = &cobra.Command{
 	Short: "Run stress tests",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		if len(args) < 1 {
+		stressCfg := pewpew.StressConfig{}
+		err := viper.Unmarshal(&stressCfg)
+		if err != nil {
+			fmt.Println(err)
+			return errors.New("could not parse config file")
+		}
+
+		//global configs
+		stressCfg.NoHTTP2 = viper.GetBool("noHTTP2")
+		stressCfg.EnforceSSL = viper.GetBool("enforceSSL")
+		stressCfg.ResultFilenameJSON = viper.GetString("outputJSON")
+		stressCfg.ResultFilenameCSV = viper.GetString("outputCSV")
+		stressCfg.Quiet = viper.GetBool("quiet")
+		stressCfg.Verbose = viper.GetBool("verbose")
+
+		//URLs are handled differently that other config options
+		//command line specifying URLs take higher precedence than config URLs
+
+		//check either set via config or command line
+		if len(stressCfg.Targets) == 0 && len(args) < 1 {
 			return errors.New("requires URL")
 		}
 
-		stressCfg := pewpew.NewStressConfig()
-		stressCfg.ResultFilenameJSON = resultFileJSONFlag
-		stressCfg.ResultFilenameCSV = resultFileCSVFlag
-		stressCfg.Quiet = quietFlag
-		stressCfg.Verbose = verboseFlag
-
-		//per target config
-		stressCfg.Targets = make([]pewpew.Target, len(args))
-		for i := range stressCfg.Targets {
-			parsedURL, err := url.Parse(args[i])
-			if err != nil {
-				return errors.New("cannot parse url " + args[i])
+		//if URLs are set on command line, use that for Targets instead of config
+		if len(args) >= 1 {
+			stressCfg.Targets = make([]pewpew.Target, len(args))
+			for i := range stressCfg.Targets {
+				stressCfg.Targets[i].URL = args[i]
+				//use global configs instead of the config file's individual target settings
+				stressCfg.Targets[i].Count = viper.GetInt("globalCount")
+				stressCfg.Targets[i].Concurrency = viper.GetInt("globalConcurrency")
+				stressCfg.Targets[i].Timeout = viper.GetString("globalTimeout")
+				stressCfg.Targets[i].Method = viper.GetString("globalMethod")
+				stressCfg.Targets[i].Body = viper.GetString("globalBody")
+				stressCfg.Targets[i].BodyFilename = viper.GetString("globalBodyFile")
+				stressCfg.Targets[i].Headers = viper.GetString("globalHeaders")
+				stressCfg.Targets[i].UserAgent = viper.GetString("globalUserAgent")
+				stressCfg.Targets[i].BasicAuth = viper.GetString("globalBasicAuth")
+				stressCfg.Targets[i].Compress = viper.GetBool("globalCompress")
 			}
-			stressCfg.Targets[i].URL = *parsedURL
-			stressCfg.Targets[i].Count = numFlag
-			stressCfg.Targets[i].Concurrency = concurrentFlag
-			stressCfg.Targets[i].Timeout = (time.Duration(timeoutFlag*1000) * time.Millisecond) //preserve float's decimal
-			stressCfg.Targets[i].ReqMethod = requestMethodFlag
-			stressCfg.Targets[i].ReqBody = bodyFlag
-			stressCfg.Targets[i].ReqBodyFilename = bodyFileFlag
-			stressCfg.Targets[i].ReqHeaders = headerFlag.Header
-			stressCfg.Targets[i].UserAgent = userAgentFlag
-			if basicAuthFlag != "" {
-				key, val, err := parseKeyValString(basicAuthFlag, ":")
-				if err != nil {
-					return errors.New("failed to parse basic auth")
+		} else {
+			//set non-URL target settings
+			//walk through viper.Get() because that will show which were
+			//explictly set instead of guessing at zero-valued defaults
+			for i, target := range viper.Get("targets").([]interface{}) {
+				fmt.Printf("%+v", viper.Get("targets").([]interface{}))
+				targetMapVals := target.(map[string]interface{})
+				if _, set := targetMapVals["Count"]; !set {
+					stressCfg.Targets[i].Count = viper.GetInt("globalCount")
 				}
-				stressCfg.Targets[i].BasicAuth = pewpew.BasicAuth{User: key, Password: val}
+				if _, set := targetMapVals["Concurrency"]; !set {
+					stressCfg.Targets[i].Concurrency = viper.GetInt("globalConcurrency")
+				}
+				if _, set := targetMapVals["Timeout"]; !set {
+					stressCfg.Targets[i].Timeout = viper.GetString("globalTimeout")
+				}
+				if _, set := targetMapVals["Method"]; !set {
+					stressCfg.Targets[i].Method = viper.GetString("globalMethod")
+				}
+				if _, set := targetMapVals["Body"]; !set {
+					stressCfg.Targets[i].Body = viper.GetString("globalBody")
+				}
+				if _, set := targetMapVals["BodyFilename"]; !set {
+					stressCfg.Targets[i].BodyFilename = viper.GetString("globalBodyFile")
+				}
+				if _, set := targetMapVals["Headers"]; !set {
+					stressCfg.Targets[i].Headers = viper.GetString("globalHeaders")
+				}
+				if _, set := targetMapVals["UserAgent"]; !set {
+					stressCfg.Targets[i].UserAgent = viper.GetString("globalUserAgent")
+				}
+				if _, set := targetMapVals["BasicAuth"]; !set {
+					stressCfg.Targets[i].BasicAuth = viper.GetString("globalBasicAuth")
+				}
+				if _, set := targetMapVals["Compress"]; !set {
+					stressCfg.Targets[i].Compress = viper.GetBool("globalCompress")
+				}
 			}
-			stressCfg.Targets[i].IgnoreSSL = ignoreSSLFlag
-			stressCfg.Targets[i].Compress = compressFlag
-			stressCfg.Targets[i].NoHTTP2 = ignoreSSLFlag
 		}
 
-		err := pewpew.RunStress(*stressCfg)
+		err = pewpew.RunStress(stressCfg)
 		return err
 	},
 }
 
 func init() {
-	headerFlag = headers{http.Header{}}
 	RootCmd.AddCommand(stressCmd)
-	stressCmd.Flags().IntVarP(&numFlag, "num", "n", 10, "Number of total requests to make.")
-	stressCmd.Flags().IntVarP(&concurrentFlag, "concurrent", "c", 1, "Number of concurrent requests to make.")
-	stressCmd.Flags().Float64VarP(&timeoutFlag, "timeout", "t", 10, "Maximum seconds to wait for response")
-	stressCmd.Flags().StringVarP(&requestMethodFlag, "request-method", "X", "GET", "Request type. GET, HEAD, POST, PUT, etc.")
-	stressCmd.Flags().StringVar(&bodyFlag, "body", "", "String to use as request body e.g. POST body.")
-	stressCmd.Flags().StringVar(&bodyFileFlag, "body-file", "", "Path to file to use as request body. Will overwrite --body if both are present.")
-	stressCmd.Flags().VarP(&headerFlag, "header", "H", "Add arbitrary header line, eg. 'Accept-Encoding:gzip'. Repeatable.")
-	stressCmd.Flags().StringVarP(&userAgentFlag, "user-agent", "A", "pewpew", "Add User-Agent header. Can also be done with the arbitrary header flag.")
-	stressCmd.Flags().StringVar(&basicAuthFlag, "basic-auth", "", "Add HTTP basic authentication, eg. 'user123:password456'.")
+	stressCmd.Flags().IntP("num", "n", 10, "Number of total requests to make.")
+	viper.BindPFlag("globalCount", stressCmd.Flags().Lookup("num"))
 
-	stressCmd.Flags().BoolVar(&ignoreSSLFlag, "ignore-ssl", true, "Ignore SSL certificate/hostname issues.")
-	stressCmd.Flags().BoolVarP(&compressFlag, "compress", "C", true, "Add 'Accept-Encoding: gzip' header if Accept-Encoding is not already present.")
-	stressCmd.Flags().BoolVar(&noHTTP2Flag, "no-http2", false, "Disable HTTP2.")
-	stressCmd.Flags().StringVar(&resultFileJSONFlag, "output-json", "", "Path to file to write full data as JSON")
-	stressCmd.Flags().StringVar(&resultFileCSVFlag, "output-csv", "", "Path to file to write full data as CSV")
-	stressCmd.Flags().BoolVarP(&quietFlag, "quiet", "q", false, "Do not print while requests are running.")
-}
+	stressCmd.Flags().IntP("concurrent", "c", 1, "Number of concurrent requests to make.")
+	viper.BindPFlag("globalConcurrency", stressCmd.Flags().Lookup("concurrent"))
 
-var numFlag int
-var concurrentFlag int
-var timeoutFlag float64
-var requestMethodFlag string
-var bodyFlag string
-var bodyFileFlag string
-var headerFlag headers
-var userAgentFlag string
-var basicAuthFlag string
-var ignoreSSLFlag bool
-var compressFlag bool
-var noHTTP2Flag bool
-var resultFileJSONFlag string
-var resultFileCSVFlag string
-var quietFlag bool
+	stressCmd.Flags().StringP("timeout", "t", "10s", "Maximum seconds to wait for response")
+	viper.BindPFlag("globalTimeout", stressCmd.Flags().Lookup("timeout"))
 
-// custom implementation of repeated header flag parsing
+	stressCmd.Flags().StringP("request-method", "X", "GET", "Request type. GET, HEAD, POST, PUT, etc.")
+	viper.BindPFlag("globalMethod", stressCmd.Flags().Lookup("request-method"))
 
-type headers struct{ http.Header }
+	stressCmd.Flags().String("body", "", "String to use as request body e.g. POST body.")
+	viper.BindPFlag("globalBody", stressCmd.Flags().Lookup("body"))
 
-func (h *headers) String() string {
-	buf := &bytes.Buffer{}
-	if err := h.Write(buf); err != nil {
-		return ""
-	}
-	return buf.String()
-}
+	stressCmd.Flags().String("body-file", "", "Path to file to use as request body. Will overwrite --body if both are present.")
+	viper.BindPFlag("globalBodyFile", stressCmd.Flags().Lookup("body-file"))
 
-func (h *headers) Set(headerString string) error {
-	key, val, err := parseKeyValString(headerString, ":")
-	if err != nil {
-		return fmt.Errorf("invalid header %s: %s", headerString, err.Error())
-	}
-	h.Add(key, val)
-	return nil
-}
+	stressCmd.Flags().StringP("headers", "H", "", "Add arbitrary header line, eg. 'Accept-Encoding:gzip, Content-Type:application/json'")
+	viper.BindPFlag("globalHeaders", stressCmd.Flags().Lookup("headers"))
 
-//required by pflag.Value interface
-func (h *headers) Type() string {
-	return "headers"
-}
+	stressCmd.Flags().StringP("user-agent", "A", "pewpew", "Add User-Agent header. Can also be done with the arbitrary header flag.")
+	viper.BindPFlag("globalUserAgent", stressCmd.Flags().Lookup("user-agent"))
 
-//splits on delim into parts, trims whitespace,
-//like "key:val", "key: val", "key : val ", etc.
-func parseKeyValString(keyValStr, delim string) (string, string, error) {
-	parts := strings.SplitN(keyValStr, delim, 2)
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("failed to parse into two parts")
-	}
-	key, val := strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])
-	if key == "" || val == "" {
-		return "", "", fmt.Errorf("key or value is empty")
-	}
-	return key, val, nil
+	stressCmd.Flags().String("basic-auth", "", "Add HTTP basic authentication, eg. 'user123:password456'.")
+	viper.BindPFlag("globalBasicAuth", stressCmd.Flags().Lookup("basic-auth"))
+
+	stressCmd.Flags().BoolP("compress", "C", true, "Add 'Accept-Encoding: gzip' header if Accept-Encoding is not already present.")
+	viper.BindPFlag("globalCompress", stressCmd.Flags().Lookup("compress"))
+
+	stressCmd.Flags().Bool("no-http2", false, "Disable HTTP2.")
+	viper.BindPFlag("noHTTP2", stressCmd.Flags().Lookup("no-http2"))
+
+	stressCmd.Flags().Bool("ignore-ssl", false, "Enfore SSL certificate/hostname correctness.")
+	viper.BindPFlag("enforceSSL", stressCmd.Flags().Lookup("ignore-ssl"))
+
+	stressCmd.Flags().String("output-json", "", "Path to file to write full data as JSON")
+	viper.BindPFlag("outputJSON", stressCmd.Flags().Lookup("output-json"))
+
+	stressCmd.Flags().String("output-csv", "", "Path to file to write full data as CSV")
+	viper.BindPFlag("outputCSV", stressCmd.Flags().Lookup("output-csv"))
+
+	stressCmd.Flags().BoolP("quiet", "q", false, "Do not print while requests are running.")
+	viper.BindPFlag("quiet", stressCmd.Flags().Lookup("quiet"))
+
+	stressCmd.Flags().BoolP("verbose", "v", false, "Print extra info for debugging.")
+	viper.BindPFlag("verbose", stressCmd.Flags().Lookup("verbose"))
+
 }

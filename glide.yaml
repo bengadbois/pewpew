@@ -3,3 +3,4 @@ import:
 - package: github.com/fatih/color
   version: ^1.1.0
 - package: github.com/spf13/cobra
+- package: github.com/spf13/viper
