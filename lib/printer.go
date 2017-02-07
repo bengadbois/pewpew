@@ -11,7 +11,7 @@ func createTextSummary(reqStatSummary requestStatSummary) string {
 
 	summary = summary + "Runtime Statistics:\n"
 	summary = summary + "Total time:  " + fmt.Sprintf("%d", reqStatSummary.endTime.Sub(reqStatSummary.startTime).Nanoseconds()/1000000) + " ms\n"
-	summary = summary + "Mean QPS:    " + fmt.Sprintf("%.2f", reqStatSummary.avgQPS*1000000000) + " req/sec\n"
+	summary = summary + "Mean RPS:    " + fmt.Sprintf("%.2f", reqStatSummary.avgRPS*1000000000) + " req/sec\n"
 
 	summary = summary + "\nQuery Statistics\n"
 	summary = summary + "Mean query:     " + fmt.Sprintf("%d", reqStatSummary.avgDuration/1000000) + " ms\n"
