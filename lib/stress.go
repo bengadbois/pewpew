@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -36,41 +37,49 @@ type (
 	//Stress is the top level struct that contains the configuration of stress test
 	StressConfig struct {
 		Targets            []Target
+		Verbose            bool
+		Quiet              bool
+		NoHTTP2            bool
+		EnforceSSL         bool
 		ResultFilenameJSON string
 		ResultFilenameCSV  string
-		Quiet              bool
-		Verbose            bool
+
+		//global target settings
+
+		GlobalCount        int
+		GlobalConcurrency  int
+		GlobalTimeout      string
+		GlobalMethod       string
+		GlobalBody         string
+		GlobalBodyFilename string
+		GlobalHeaders      string
+		GlobalUserAgent    string
+		GlobalBasicAuth    string
+		GlobalCompress     bool
 	}
 	Target struct {
-		URL             url.URL
-		Count           int //how many total requests to make
-		Concurrency     int
-		Timeout         time.Duration
-		ReqMethod       string
-		ReqBody         string
-		ReqBodyFilename string
-		ReqHeaders      http.Header
-		UserAgent       string
-		BasicAuth       BasicAuth
-		IgnoreSSL       bool
-		Compress        bool
-		NoHTTP2         bool
-	}
-	//BasicAuth just wraps the user and password in a convenient struct
-	BasicAuth struct {
-		User     string
-		Password string
+		URL          string
+		Count        int //how many total requests to make
+		Concurrency  int
+		Timeout      string
+		Method       string
+		Body         string
+		BodyFilename string
+		Headers      string
+		UserAgent    string
+		BasicAuth    string
+		Compress     bool
 	}
 )
 
 //defaults
-var DefaultURL = url.URL{Scheme: "http", Host: "localhost"}
+var DefaultURL = "http://localhost"
 
 const (
 	DefaultCount       = 10
 	DefaultConcurrency = 1
-	DefaultTimeout     = 10 * time.Second
-	DefaultReqMethod   = "GET"
+	DefaultTimeout     = "10s"
+	DefaultMethod      = "GET"
 	DefaultUserAgent   = "pewpew"
 )
 
@@ -84,7 +93,7 @@ func NewStressConfig() (s *StressConfig) {
 				Count:       DefaultCount,
 				Concurrency: DefaultConcurrency,
 				Timeout:     DefaultTimeout,
-				ReqMethod:   DefaultReqMethod,
+				Method:      DefaultMethod,
 				UserAgent:   DefaultUserAgent,
 			},
 		},
@@ -100,20 +109,6 @@ func RunStress(s StressConfig) error {
 		return errors.New("invalid configuration")
 	}
 	targetCount := len(s.Targets)
-
-	//clean up URL
-	for i := 0; i < len(s.Targets); i++ {
-		//default to http if not specified
-		if s.Targets[i].URL.Scheme == "" {
-			s.Targets[i].URL.Scheme = "http"
-		}
-	}
-
-	if targetCount == 1 {
-		fmt.Printf("Stress testing %d target\n", targetCount)
-	} else {
-		fmt.Printf("Stress testing %d targets\n", targetCount)
-	}
 
 	requests := make([]*http.Request, targetCount)
 	for i, target := range s.Targets {
@@ -135,11 +130,17 @@ func RunStress(s StressConfig) error {
 		close(requestQueues[idx])
 	}
 
+	if targetCount == 1 {
+		fmt.Printf("Stress testing %d target:\n", targetCount)
+	} else {
+		fmt.Printf("Stress testing %d targets:\n", targetCount)
+	}
+
 	//when a target is finished, send all stats into this
 	targetStats := make(chan []requestStat)
 	for idx, target := range s.Targets {
 		go func(target Target, requestQueue chan *http.Request, targetStats chan []requestStat) {
-			fmt.Printf("Running %d tests at %s, %d at a time\n", target.Count, target.URL.String(), target.Concurrency)
+			fmt.Printf("- Running %d tests at %s, %d at a time\n", target.Count, target.URL, target.Concurrency)
 
 			workerDoneChan := make(chan workerDone)   //workers use this to indicate they are done
 			requestStatChan := make(chan requestStat) //workers communicate each requests' info
@@ -148,16 +149,22 @@ func RunStress(s StressConfig) error {
 			for i := 0; i < target.Concurrency; i++ {
 				go func() {
 					tr := &http.Transport{}
-					if target.NoHTTP2 {
+					if s.NoHTTP2 {
 						nilMap := make(map[string](func(authority string, c *tls.Conn) http.RoundTripper))
 						tr = &http.Transport{
 							TLSNextProto: nilMap,
 							TLSClientConfig: &tls.Config{
-								InsecureSkipVerify: target.IgnoreSSL}}
+								InsecureSkipVerify: !s.EnforceSSL}}
 					}
-					tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: target.IgnoreSSL}
+					tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: !s.EnforceSSL}
 					tr.DisableCompression = !target.Compress
-					client := &http.Client{Timeout: target.Timeout, Transport: tr}
+					var timeout time.Duration
+					if target.Timeout != "" {
+						timeout, _ = time.ParseDuration(target.Timeout)
+					} else {
+						timeout = time.Duration(0)
+					}
+					client := &http.Client{Timeout: timeout, Transport: tr}
 
 					for {
 						select {
@@ -279,7 +286,7 @@ func RunStress(s StressConfig) error {
 
 	for idx, target := range s.Targets {
 		//info about the request
-		fmt.Printf("----Target %d: %s %s\n", idx+1, target.ReqMethod, target.URL.String())
+		fmt.Printf("----Target %d: %s %s\n", idx+1, target.Method, target.URL)
 		reqStats := createRequestsStats(targetRequestStats[idx])
 		fmt.Println(createTextSummary(reqStats))
 	}
@@ -341,7 +348,7 @@ func ValidateTargets(s StressConfig) error {
 	}
 	for _, target := range s.Targets {
 		//checks
-		if target.URL.String() == "" {
+		if target.URL == "" {
 			return errors.New("empty URL")
 		}
 		if target.Count <= 0 {
@@ -350,8 +357,16 @@ func ValidateTargets(s StressConfig) error {
 		if target.Concurrency <= 0 {
 			return errors.New("concurrency must be greater than zero")
 		}
-		if target.Timeout <= time.Millisecond {
-			return errors.New("timeout must be greater than one millisecond")
+		if target.Timeout != "" {
+			//TODO should save this parsed duration so don't have to inefficiently reparse later
+			timeout, err := time.ParseDuration(target.Timeout)
+			if err != nil {
+				fmt.Println(err)
+				return errors.New("failed to parse timeout: " + target.Timeout)
+			}
+			if timeout <= time.Millisecond {
+				return errors.New("timeout must be greater than one millisecond")
+			}
 		}
 		if target.Concurrency > target.Count {
 			return errors.New("concurrency must be higher than request count")
@@ -362,28 +377,75 @@ func ValidateTargets(s StressConfig) error {
 
 //build the http request out of the target's config
 func buildRequest(t Target) (*http.Request, error) {
+	URL, err := url.Parse(t.URL)
+	//default to http if not specified
+	if URL.Scheme == "" {
+		URL.Scheme = "http"
+	}
+
 	//setup the request
 	var req *http.Request
-	var err error
-	if t.ReqBodyFilename != "" {
-		fileContents, err := ioutil.ReadFile(t.ReqBodyFilename)
+	if t.BodyFilename != "" {
+		fileContents, err := ioutil.ReadFile(t.BodyFilename)
 		if err != nil {
-			return nil, errors.New("failed to read contents of file " + t.ReqBodyFilename + ": " + err.Error())
+			return nil, errors.New("failed to read contents of file " + t.BodyFilename + ": " + err.Error())
 		}
-		req, err = http.NewRequest(t.ReqMethod, t.URL.String(), bytes.NewBuffer(fileContents))
-	} else if t.ReqBody != "" {
-		req, err = http.NewRequest(t.ReqMethod, t.URL.String(), bytes.NewBuffer([]byte(t.ReqBody)))
+		req, err = http.NewRequest(t.Method, URL.String(), bytes.NewBuffer(fileContents))
+	} else if t.Body != "" {
+		req, err = http.NewRequest(t.Method, URL.String(), bytes.NewBuffer([]byte(t.Body)))
 	} else {
-		req, err = http.NewRequest(t.ReqMethod, t.URL.String(), nil)
+		req, err = http.NewRequest(t.Method, URL.String(), nil)
 	}
 	if err != nil {
 		return nil, errors.New("failed to create request: " + err.Error())
 	}
 	//add headers
-	req.Header = t.ReqHeaders
+	if t.Headers != "" {
+		headerMap, err := parseKeyValString(t.Headers, ",", ":")
+		if err != nil {
+			fmt.Println(err)
+			return nil, errors.New("could not parse headers")
+		}
+		for key, val := range headerMap {
+			req.Header.Add(key, val)
+		}
+	}
+
 	req.Header.Set("User-Agent", t.UserAgent)
-	if t.BasicAuth.User != "" {
-		req.SetBasicAuth(t.BasicAuth.User, t.BasicAuth.Password)
+
+	if t.BasicAuth != "" {
+		authMap, err := parseKeyValString(t.BasicAuth, ",", ":")
+		if err != nil {
+			fmt.Println(err)
+			return nil, errors.New("could not parse basic auth")
+		}
+		for key, val := range authMap {
+			req.SetBasicAuth(key, val)
+			break
+		}
 	}
 	return req, nil
+}
+
+//splits on delim into parts and trims whitespace
+//delim1 splits the pairs, delim2 splits amongst the pairs
+//like parseKeyValString("key1: val2, key3 : val4,key5:key6 ", ",", ":") becomes
+//["key1"]->"val2"
+//["key3"]->"val4"
+//["key5"]->"val6"
+func parseKeyValString(keyValStr, delim1, delim2 string) (map[string]string, error) {
+	m := make(map[string]string)
+	pairs := strings.SplitN(keyValStr, delim1, -1)
+	for _, pair := range pairs {
+		parts := strings.SplitN(pair, delim2, 2)
+		if len(parts) != 2 {
+			return m, fmt.Errorf("failed to parse into two parts")
+		}
+		key, val := strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])
+		if key == "" || val == "" {
+			return m, fmt.Errorf("key or value is empty")
+		}
+		m[key] = val
+	}
+	return m, nil
 }
