@@ -59,10 +59,10 @@ pewpew stress
 Here is an example `config.toml`. There are more examples in `examples/`.
 ```toml
 Quiet = false
-GlobalCompress = true
-GlobalUserAgent = "pewpewpewpewpew"
-GlobalTimeout = "1.75s"
-GlobalHeaders = "Accept-Encoding:gzip"
+Compress = true
+UserAgent = "pewpewpewpewpew"
+Timeout = "1.75s"
+Headers = "Accept-Encoding:gzip"
 
 [[Targets]]
 URL = "http://127.0.0.1/home"
@@ -80,10 +80,10 @@ UserAgent = "notpewpew"
 ```
 Pewpew allows for cascading settings, to maximize flexibility and readability.
 Precedence (highest first):
-- Individual target settings from config file, such as `Count: 40`.
-- Command line settings (which are global), such as `-n 30`.
-- Global settings from config file, such as `GlobalCount: 20`.
-- Default global settings, such as `GlobalCount: 10`.
+- Individual target setting from config file, such as `Count: 40`.
+- Command line setting (which are global), such as `-n 30`.
+- Global setting from config file, such as `[[Targets]] Count: 20`.
+- Default global setting.
 
 All command line options are treated as global settings, and URLs specified on the command line overwrite all Targets set config files.
 
@@ -96,16 +96,16 @@ Global settings:
 - ResultFilenameCSV (default empty, so skipped)
 - Quiet (default false)
 - Verbose (default false)
-- GlobalCount (default defer to Target)
-- GlobalConcurrency (default defer to Target)
-- GlobalTimeout (default defer to Target)
-- GlobalMethod (default defer to Target)
-- GlobalBody (default defer to Target)
-- GlobalBodyFilename (default defer to Target)
-- GlobalHeaders (default defer to Target)
-- GlobalUserAgent (default defer to Target)
-- GlobalBasicAuth (default defer to Target)
-- GlobalCompress (default defer to Target)
+- Count (default defer to Target)
+- Concurrency (default defer to Target)
+- Timeout (default defer to Target)
+- Method (default defer to Target)
+- Body (default defer to Target)
+- BodyFilename (default defer to Target)
+- Headers (default defer to Target)
+- UserAgent (default defer to Target)
+- BasicAuth (default defer to Target)
+- Compress (default defer to Target)
 
 Individual target settings:
 - URL (default "http://localhost")
