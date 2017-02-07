@@ -46,16 +46,16 @@ type (
 
 		//global target settings
 
-		GlobalCount        int
-		GlobalConcurrency  int
-		GlobalTimeout      string
-		GlobalMethod       string
-		GlobalBody         string
-		GlobalBodyFilename string
-		GlobalHeaders      string
-		GlobalUserAgent    string
-		GlobalBasicAuth    string
-		GlobalCompress     bool
+		Count        int
+		Concurrency  int
+		Timeout      string
+		Method       string
+		Body         string
+		BodyFilename string
+		Headers      string
+		UserAgent    string
+		BasicAuth    string
+		Compress     bool
 	}
 	Target struct {
 		URL          string

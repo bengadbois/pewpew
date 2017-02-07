@@ -1,9 +1,9 @@
 {
   "Quiet": false,
-  "GlobalCompress": true,
-  "GlobalUserAgent": "pewpewpewpewpew",
-  "GlobalTimeout": "1.75s",
-  "GlobalHeaders": "Accept-Encoding:gzip",
+  "Compress": true,
+  "UserAgent": "pewpewpewpewpew",
+  "Timeout": "1.75s",
+  "Headers": "Accept-Encoding:gzip",
   "Targets": [
     {
       "URL": "http://127.0.0.1/home",
