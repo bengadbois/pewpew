@@ -6,7 +6,7 @@ import (
 )
 
 type requestStatSummary struct {
-	avgQPS      float64 //per nanoseconds
+	avgRPS      float64 //requests per nanoseconds
 	avgDuration time.Duration
 	maxDuration time.Duration
 	minDuration time.Duration
@@ -51,6 +51,6 @@ func createRequestsStats(requestStats []requestStat) requestStatSummary {
 	newAvg, _ := time.ParseDuration(fmt.Sprintf("%d", avgNs) + "ns")
 	summary.avgDuration = newAvg
 
-	summary.avgQPS = float64(len(requestStats)) / float64(summary.endTime.Sub(summary.startTime))
+	summary.avgRPS = float64(len(requestStats)) / float64(summary.endTime.Sub(summary.startTime))
 	return summary
 }
