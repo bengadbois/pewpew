@@ -110,22 +110,17 @@ func RunStress(s StressConfig) error {
 	}
 	targetCount := len(s.Targets)
 
-	requests := make([]*http.Request, targetCount)
-	for i, target := range s.Targets {
-		req, err := buildRequest(target)
-		if err != nil {
-			fmt.Println(err.Error())
-			return errors.New("failed to create request with target configuration")
-		}
-		requests[i] = req
-	}
-
-	//setup the queue of requests, one per target
-	requestQueues := make([](chan *http.Request), targetCount)
+	//setup the queue of requests, one queue per target
+	requestQueues := make([](chan http.Request), targetCount)
 	for idx, target := range s.Targets {
-		requestQueues[idx] = make(chan *http.Request, target.Count)
+		requestQueues[idx] = make(chan http.Request, target.Count)
 		for i := 0; i < target.Count; i++ {
-			requestQueues[idx] <- requests[idx]
+			req, err := buildRequest(target)
+			if err != nil {
+				fmt.Println(err.Error())
+				return errors.New("failed to create request with target configuration")
+			}
+			requestQueues[idx] <- req
 		}
 		close(requestQueues[idx])
 	}
@@ -139,7 +134,7 @@ func RunStress(s StressConfig) error {
 	//when a target is finished, send all stats into this
 	targetStats := make(chan []requestStat)
 	for idx, target := range s.Targets {
-		go func(target Target, requestQueue chan *http.Request, targetStats chan []requestStat) {
+		go func(target Target, requestQueue chan http.Request, targetStats chan []requestStat) {
 			fmt.Printf("- Running %d tests at %s, %d at a time\n", target.Count, target.URL, target.Concurrency)
 
 			workerDoneChan := make(chan workerDone)   //workers use this to indicate they are done
@@ -176,7 +171,7 @@ func RunStress(s StressConfig) error {
 							}
 							//run the actual request
 							reqStartTime := time.Now()
-							response, responseErr := client.Do(req)
+							response, responseErr := client.Do(&req)
 							reqEndTime := time.Now()
 
 							if !s.Quiet {
@@ -209,7 +204,7 @@ func RunStress(s StressConfig) error {
 									if s.Verbose {
 										var requestInfo string
 										//request details
-										requestInfo = requestInfo + fmt.Sprintf("Request:\n%+v\n\n", *req)
+										requestInfo = requestInfo + fmt.Sprintf("Request:\n%+v\n\n", &req)
 
 										//reponse metadata
 										requestInfo = requestInfo + fmt.Sprintf("Response:\n%+v\n\n", *response)
@@ -376,7 +371,8 @@ func ValidateTargets(s StressConfig) error {
 }
 
 //build the http request out of the target's config
-func buildRequest(t Target) (*http.Request, error) {
+//TODO this should be called for every req
+func buildRequest(t Target) (http.Request, error) {
 	URL, err := url.Parse(t.URL)
 	//default to http if not specified
 	if URL.Scheme == "" {
@@ -388,7 +384,7 @@ func buildRequest(t Target) (*http.Request, error) {
 	if t.BodyFilename != "" {
 		fileContents, err := ioutil.ReadFile(t.BodyFilename)
 		if err != nil {
-			return nil, errors.New("failed to read contents of file " + t.BodyFilename + ": " + err.Error())
+			return http.Request{}, errors.New("failed to read contents of file " + t.BodyFilename + ": " + err.Error())
 		}
 		req, err = http.NewRequest(t.Method, URL.String(), bytes.NewBuffer(fileContents))
 	} else if t.Body != "" {
@@ -397,14 +393,14 @@ func buildRequest(t Target) (*http.Request, error) {
 		req, err = http.NewRequest(t.Method, URL.String(), nil)
 	}
 	if err != nil {
-		return nil, errors.New("failed to create request: " + err.Error())
+		return http.Request{}, errors.New("failed to create request: " + err.Error())
 	}
 	//add headers
 	if t.Headers != "" {
 		headerMap, err := parseKeyValString(t.Headers, ",", ":")
 		if err != nil {
 			fmt.Println(err)
-			return nil, errors.New("could not parse headers")
+			return http.Request{}, errors.New("could not parse headers")
 		}
 		for key, val := range headerMap {
 			req.Header.Add(key, val)
@@ -417,14 +413,14 @@ func buildRequest(t Target) (*http.Request, error) {
 		authMap, err := parseKeyValString(t.BasicAuth, ",", ":")
 		if err != nil {
 			fmt.Println(err)
-			return nil, errors.New("could not parse basic auth")
+			return http.Request{}, errors.New("could not parse basic auth")
 		}
 		for key, val := range authMap {
 			req.SetBasicAuth(key, val)
 			break
 		}
 	}
-	return req, nil
+	return *req, nil
 }
 
 //splits on delim into parts and trims whitespace
