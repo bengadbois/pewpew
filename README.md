@@ -109,16 +109,16 @@ Global settings:
 
 Individual target settings:
 - URL (default "http://localhost")
-- GlobalCount (default 10)
-- GlobalConcurrency (default 1)
-- GlobalTimeout (default 10s)
-- GlobalMethod (default GET)
-- GlobalBody (default empty)
-- GlobalBodyFilename (default none)
-- GlobalHeaders (default none)
-- GlobalUserAgent (default "pewpew")
-- GlobalBasicAuth (default none)
-- GlobalCompress (default false)
+- Count (default 10)
+- Concurrency (default 1)
+- Timeout (default 10s)
+- Method (default GET)
+- Body (default empty)
+- BodyFilename (default none)
+- Headers (default none)
+- UserAgent (default "pewpew")
+- BasicAuth (default none)
+- Compress (default false)
 
 ## Using as a Golang library
 ```go
