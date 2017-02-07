@@ -2,8 +2,18 @@
 
 Flexible HTTP stress tester
 
-## Disclaimer
-Pewpew is designed as a tool to help those developing web services and websites. Please use responsibly.
+**Disclaimer**: Pewpew is designed as a tool to help those developing web services and websites. Please use responsibly.
+
+## Features
+- Command line and/or config file options
+- Multiple targets
+- Zero dependencies, single binary
+- Statistics
+- Export raw data as TSV and/or JSON
+- HTTP2 support
+- IPV6 support
+- Use as a Go library
+- Tons of configuration options (arbitrary headers, keepalive, user agent, timeouts, ignore SSL certs, HTTP authentication, and more)
 
 ## Status
 Pewpew is under active development. Building from master should generally work, but the API is not solidified yet. Don't rely on it for anything important yet.
@@ -20,13 +30,11 @@ go get github.com/bengadbois/pewpew
 Will publish prebuilt binaries once first release is ready
 
 ## Usage
-Simple example:
 ```
 pewpew stress http://www.example.com
 ```
 This makes ten requests to http://www.example.com
 
-Complex example with multiple options and multiple targets:
 ```
 pewpew stress -X POST --body '{"hello": "world"}' -n 100 -c 5 -t 2.5 -H Accept-Encoding:gzip -H Content-Type:application/json https://www.example.com:443/path localhost 127.0.0.1/api
 ```
@@ -41,7 +49,14 @@ For the full list of command line options, run `pewpew help` or `pewpew help str
 
 ---
 
-Pewpew supports complex configurations using a config file. Pewpew expects the config file is in the current directory and named `config.json` or `config.toml`. There are more examples in `examples/`.
+Pewpew supports complex configurations with a config file. You can define one or more targets each with their own settings.
+
+Pewpew expects the config file is in the current directory and named `config.json` or `config.toml`. Then just run:
+```
+pewpew stress
+```
+
+Here is an example `config.toml`. There are more examples in `examples/`.
 ```toml
 Quiet = false
 GlobalCompress = true
@@ -63,12 +78,12 @@ Compress = true
 Timeout = "500ms"
 UserAgent = "notpewpew"
 ```
-Pewpew's config allows for cascading settings.
-Precedence (from high to low):
-- Command line settings, such as `-n 40`
-- Config file global settings, such as `GlobalCount: 30`
-- Config file individual target settings, such as `Count: 20`
-- Default global settings, such as `GlobalCount: 10`
+Pewpew allows for cascading settings, to maximize flexibility and readability.
+Precedence (highest first):
+- Individual target settings from config file, such as `Count: 40`.
+- Command line settings (which are global), such as `-n 30`.
+- Global settings from config file, such as `GlobalCount: 20`.
+- Default global settings, such as `GlobalCount: 10`.
 
 All command line options are treated as global settings, and URLs specified on the command line overwrite all Targets set config files.
 
