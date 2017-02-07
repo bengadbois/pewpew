@@ -36,7 +36,7 @@ pewpew stress http://www.example.com
 This makes ten requests to http://www.example.com
 
 ```
-pewpew stress -X POST --body '{"hello": "world"}' -n 100 -c 5 -t 2.5 -H Accept-Encoding:gzip -H Content-Type:application/json https://www.example.com:443/path localhost 127.0.0.1/api
+pewpew stress -X POST --body '{"hello": "world"}' -n 100 -c 5 -t 2.5 -H "Accept-Encoding:gzip, Content-Type:application/json" https://www.example.com:443/path localhost 127.0.0.1/api
 ```
 Each of the three targets https://www.example.com:443/path, http://localhost, http://127.0.0.1/api
  - 100 requests total requests per target (300 total)
