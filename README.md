@@ -22,15 +22,15 @@ Will publish prebuilt binaries once first release is ready
 ## Usage
 Simple example:
 ```
-pewpew http://www.example.com
+pewpew stress http://www.example.com
 ```
 This makes ten requests to http://www.example.com
 
 Complex example with multiple options and multiple targets:
 ```
-pewpew -X POST --body '{"hello": "world"}' -n 100 -c 5 -t 2.5 -H Accept-Encoding:gzip -H Content-Type:application/json https://www.example.com:443/path localhost 123.456.78.9/api
+pewpew stress -X POST --body '{"hello": "world"}' -n 100 -c 5 -t 2.5 -H Accept-Encoding:gzip -H Content-Type:application/json https://www.example.com:443/path localhost 127.0.0.1/api
 ```
-Each of the three targets https://www.example.com:443/path, http://localhost, http://123.456.78.9/api
+Each of the three targets https://www.example.com:443/path, http://localhost, http://127.0.0.1/api
  - 100 requests total requests per target (300 total)
  - 5 concurrent requests per target (15 simultaneous)
  - POST with body `{"hello": "world"}`
