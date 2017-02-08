@@ -58,24 +58,26 @@ pewpew stress
 
 Here is an example `config.toml`. There are more examples in `examples/`.
 ```toml
+#Global settings
 Quiet = false
 Compress = true
 UserAgent = "pewpewpewpewpew"
 Timeout = "1.75s"
 Headers = "Accept-Encoding:gzip"
 
+#Settings for each of the two Targets
 [[Targets]]
 URL = "http://127.0.0.1/home"
 Count = 15
 Concurrency = 3
 [[Targets]]
 URL = "https://127.0.0.1/api/user"
-Count = 1
+Count = 1 #this overwrites the default global Count (10) for this target
 Method = "POST"
 Body = "{\"username\": \"newuser1\", \"email\": \"newuser1@domain.com\"}"
 Headers = "Accept-Encoding:gzip, Content-Type:application/json"
-Compress = true
-Timeout = "500ms"
+Compress = true #redundant with the global which is fine
+Timeout = "500ms" #this overwrites the explicitly set global Timeout for this target
 UserAgent = "notpewpew"
 ```
 Pewpew allows for cascading settings, to maximize flexibility and readability.
