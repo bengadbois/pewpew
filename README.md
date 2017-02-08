@@ -82,10 +82,10 @@ UserAgent = "notpewpew"
 ```
 Pewpew allows for cascading settings, to maximize flexibility and readability.
 Precedence (highest first):
-- Individual target setting from config file, such as `Count: 40`.
-- Command line setting (which are global), such as `-n 30`.
-- Global setting from config file, such as `[[Targets]] Count: 20`.
-- Default global setting.
+- Individual target setting from config file
+- Command line setting (which are global)
+- Global setting from config file
+- Default global setting
 
 All command line options are treated as global settings, and URLs specified on the command line overwrite all Targets set config files.
 
