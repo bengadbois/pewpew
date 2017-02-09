@@ -24,8 +24,8 @@ var stressCmd = &cobra.Command{
 		//global configs
 		stressCfg.NoHTTP2 = viper.GetBool("noHTTP2")
 		stressCfg.EnforceSSL = viper.GetBool("enforceSSL")
-		stressCfg.ResultFilenameJSON = viper.GetString("outputJSON")
-		stressCfg.ResultFilenameCSV = viper.GetString("outputCSV")
+		stressCfg.ResultFilenameJSON = viper.GetString("ResultFilenameJSON")
+		stressCfg.ResultFilenameCSV = viper.GetString("ResultFilenameCSV")
 		stressCfg.Quiet = viper.GetBool("quiet")
 		stressCfg.Verbose = viper.GetBool("verbose")
 
@@ -138,10 +138,10 @@ func init() {
 	viper.BindPFlag("enforceSSL", stressCmd.Flags().Lookup("ignore-ssl"))
 
 	stressCmd.Flags().String("output-json", "", "Path to file to write full data as JSON")
-	viper.BindPFlag("outputJSON", stressCmd.Flags().Lookup("output-json"))
+	viper.BindPFlag("ResultFilenameJSON", stressCmd.Flags().Lookup("output-json"))
 
 	stressCmd.Flags().String("output-csv", "", "Path to file to write full data as CSV")
-	viper.BindPFlag("outputCSV", stressCmd.Flags().Lookup("output-csv"))
+	viper.BindPFlag("ResultFilenameCSV", stressCmd.Flags().Lookup("output-csv"))
 
 	stressCmd.Flags().BoolP("quiet", "q", false, "Do not print while requests are running.")
 	viper.BindPFlag("quiet", stressCmd.Flags().Lookup("quiet"))

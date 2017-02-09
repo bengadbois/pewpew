@@ -24,6 +24,8 @@ var writeLock sync.Mutex
 type workerDone struct{}
 
 type requestStat struct {
+	URL       string
+	Method    string
 	StartTime time.Time `json:"startTime"`
 	EndTime   time.Time `json:"endTime"`
 	//equivalent to the difference between StartTime and EndTime
@@ -224,6 +226,8 @@ func RunStress(s StressConfig) error {
 							}
 							if responseErr == nil {
 								requestStatChan <- requestStat{
+									URL:        req.URL.String(),
+									Method:     req.Method,
 									StartTime:  reqStartTime,
 									EndTime:    reqEndTime,
 									Duration:   reqEndTime.Sub(reqStartTime),
@@ -232,6 +236,8 @@ func RunStress(s StressConfig) error {
 								}
 							} else {
 								requestStatChan <- requestStat{
+									URL:        req.URL.String(),
+									Method:     req.Method,
 									StartTime:  reqStartTime,
 									EndTime:    reqEndTime,
 									Duration:   reqEndTime.Sub(reqStartTime),
