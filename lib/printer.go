@@ -31,6 +31,8 @@ func createTextSummary(reqStatSummary requestStatSummary) string {
 		}
 		summary = summary + fmt.Sprintf("%d", code) + ": " + fmt.Sprintf("%d", reqStatSummary.statusCodes[code]) + " responses\n"
 	}
-	summary = summary + "Failed: " + fmt.Sprintf("%d", reqStatSummary.statusCodes[0]) + " requests\n"
+	if reqStatSummary.statusCodes[0] > 0 {
+		summary = summary + "Failed: " + fmt.Sprintf("%d", reqStatSummary.statusCodes[0]) + " requests\n"
+	}
 	return summary
 }
