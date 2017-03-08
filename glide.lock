@@ -1,8 +1,8 @@
-hash: 46fab9f3b6ccbfb874bcbb5540a16b017460ce768e967f040393f28c91937307
-updated: 2017-02-03T22:34:07.293900225+01:00
+hash: ad3e3a525126c47bf5b0aed68f3f6ac066aa2a02e965f0f4d09418eeee131881
+updated: 2017-03-07T22:50:36.480238753+01:00
 imports:
 - name: github.com/fatih/color
-  version: 34e4ee095d12986a2cef5ddb9aeb3b8cfcfea17c
+  version: 9131ab34cf20d2f6d83fdc67168a5430d1c7dc23
 - name: github.com/fsnotify/fsnotify
   version: a904159b9206978bb6d53fcc7a769e5cd726c737
 - name: github.com/hashicorp/hcl
@@ -18,6 +18,8 @@ imports:
   - json/token
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+- name: github.com/lucasjones/reggen
+  version: bed4659921747845e0ff3be0d18a66778c87edfc
 - name: github.com/magiconair/properties
   version: b3b15ef068fd0b17ddf408a23669f20811d194d2
 - name: github.com/mattn/go-colorable

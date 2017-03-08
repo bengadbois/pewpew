@@ -16,6 +16,7 @@ import (
 	"time"
 
 	color "github.com/fatih/color"
+	reggen "github.com/lucasjones/reggen"
 )
 
 //so concurrent workers don't interlace messages
@@ -61,6 +62,7 @@ type (
 	}
 	Target struct {
 		URL          string
+		RegexURL     bool
 		Count        int //how many total requests to make
 		Concurrency  int
 		Timeout      string
@@ -377,9 +379,22 @@ func ValidateTargets(s StressConfig) error {
 }
 
 //build the http request out of the target's config
-//TODO this should be called for every req
 func buildRequest(t Target) (http.Request, error) {
-	URL, err := url.Parse(t.URL)
+	var urlStr string
+	var err error
+	//when regex set, generate urls
+	if t.RegexURL {
+		urlStr, err = reggen.Generate(t.URL, 10)
+		if err != nil {
+			return http.Request{}, errors.New("failed to parse regex: " + err.Error())
+		}
+	} else {
+		urlStr = t.URL
+	}
+	URL, err := url.Parse(urlStr)
+	if err != nil {
+		return http.Request{}, errors.New("failed to parse URL " + urlStr + " : " + err.Error())
+	}
 	//default to http if not specified
 	if URL.Scheme == "" {
 		URL.Scheme = "http"
