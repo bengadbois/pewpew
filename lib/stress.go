@@ -17,6 +17,7 @@ import (
 
 	color "github.com/fatih/color"
 	reggen "github.com/lucasjones/reggen"
+	http2 "golang.org/x/net/http2"
 )
 
 //so concurrent workers don't interlace messages
@@ -147,16 +148,14 @@ func RunStress(s StressConfig) error {
 			requestStatChan := make(chan requestStat) //workers communicate each requests' info
 
 			tr := &http.Transport{}
-			if s.NoHTTP2 {
-				nilMap := make(map[string](func(authority string, c *tls.Conn) http.RoundTripper))
-				tr = &http.Transport{
-					TLSNextProto: nilMap,
-					TLSClientConfig: &tls.Config{
-						InsecureSkipVerify: !s.EnforceSSL}}
-			}
 			tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: !s.EnforceSSL}
 			tr.DisableCompression = !target.Compress
 			tr.DisableKeepAlives = !target.KeepAlive
+			if s.NoHTTP2 {
+				tr.TLSNextProto = make(map[string](func(string, *tls.Conn) http.RoundTripper))
+			} else {
+				http2.ConfigureTransport(tr)
+			}
 			var timeout time.Duration
 			if target.Timeout != "" {
 				timeout, _ = time.ParseDuration(target.Timeout)
