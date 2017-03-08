@@ -43,6 +43,7 @@ var stressCmd = &cobra.Command{
 			for i := range stressCfg.Targets {
 				stressCfg.Targets[i].URL = args[i]
 				//use global configs instead of the config file's individual target settings
+				stressCfg.Targets[i].RegexURL = viper.GetBool("regex")
 				stressCfg.Targets[i].Count = viper.GetInt("count")
 				stressCfg.Targets[i].Concurrency = viper.GetInt("concurrency")
 				stressCfg.Targets[i].Timeout = viper.GetString("timeout")
@@ -61,6 +62,9 @@ var stressCmd = &cobra.Command{
 			for i, target := range viper.Get("targets").([]interface{}) {
 				fmt.Printf("%+v", viper.Get("targets").([]interface{}))
 				targetMapVals := target.(map[string]interface{})
+				if _, set := targetMapVals["RegexURL"]; !set {
+					stressCfg.Targets[i].RegexURL = viper.GetBool("regex")
+				}
 				if _, set := targetMapVals["Count"]; !set {
 					stressCfg.Targets[i].Count = viper.GetInt("count")
 				}
@@ -101,6 +105,9 @@ var stressCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(stressCmd)
+	stressCmd.Flags().BoolP("regex", "r", false, "Interpret URLs as regular expressions.")
+	viper.BindPFlag("regex", stressCmd.Flags().Lookup("regex"))
+
 	stressCmd.Flags().IntP("num", "n", 10, "Number of total requests to make.")
 	viper.BindPFlag("count", stressCmd.Flags().Lookup("num"))
 

@@ -5,15 +5,15 @@ Flexible HTTP stress tester
 **Disclaimer**: Pewpew is designed as a tool to help those developing web services and websites. Please use responsibly.
 
 ## Features
-- Command line and/or config file options
+- Regular expression defined targets
 - Multiple targets
 - Zero dependencies, single binary
 - Statistics
 - Export raw data as TSV and/or JSON
 - HTTP2 support
 - IPV6 support
-- Use as a Go library
-- Tons of configuration options (arbitrary headers, keepalive, user agent, timeouts, ignore SSL certs, HTTP authentication, and more)
+- Available as a Go library
+- Tons of command line and/or config file options (arbitrary headers, user agent, timeouts, ignore SSL certs, HTTP authentication, and more)
 
 ## Status
 Pewpew is under active development. Building from master should generally work, but the API is not solidified yet. Don't rely on it for anything important yet.
@@ -47,9 +47,40 @@ Each of the three targets https://www.example.com:443/path, http://localhost, ht
 
 For the full list of command line options, run `pewpew help` or `pewpew help stress`
 
----
+### Using Regular Expression Targets
+```
+pewpew stress -r "http://localhost/pages/[0-9]{1,3}"
+```
+The URL is parsed as a regular expression (Perl syntax) and will nondeterministically make requests to matching URLs, such as:
+ - http://localhost/pages/309
+ - http://localhost/pages/390
+ - http://localhost/pages/008
+ - http://localhost/pages/8
+ - http://localhost/pages/39
+ - http://localhost/pages/104
+ - http://localhost/pages/642
+ - http://localhost/pages/479
+ - http://localhost/pages/82
+ - http://localhost/pages/3
 
-Pewpew supports complex configurations with a config file. You can define one or more targets each with their own settings.
+```
+pewpew stress -r "http://localhost/pages/[0-9]+\?cache=(true|false)(\&referrer=[0-9]{3})?"
+```
+This more complex example may target URLs such as:
+- http://localhost/pages/278613?cache=false
+- http://localhost/pages/736?cache=false
+- http://localhost/pages/255?cache=false
+- http://localhost/pages/25042766?cache=false
+- http://localhost/pages/61?cache=true
+- http://localhost/pages/4561?cache=true&referrer=966
+- http://localhost/pages/7?cache=false&referrer=048
+- http://localhost/pages/01?cache=true
+- http://localhost/pages/767911706?cache=false&referrer=642
+- http://localhost/pages/68780?cache=true
+
+### Using Config Files
+
+Pewpew supports complex configurations more easily managed with a config file. You can define one or more targets each with their own settings.
 
 Pewpew expects the config file is in the current directory and named `config.json` or `config.toml`. Then just run:
 ```
@@ -79,6 +110,10 @@ Headers = "Accept-Encoding:gzip, Content-Type:application/json"
 Compress = true #redundant with the global which is fine
 Timeout = "500ms" #this overwrites the explicitly set global Timeout for this target
 UserAgent = "notpewpew"
+[[Targets]]
+URL = "https://127\\.0\\.0\\.1/api/user/[0-9]{1,4}" #double \\ to escape both the '.' and TOML
+RegexURL = true #parse URL with Perl syntax regex
+Count = 5
 ```
 Pewpew allows for cascading settings, to maximize flexibility and readability.
 Precedence (highest first):
@@ -111,6 +146,7 @@ Global settings:
 
 Individual target settings:
 - URL (default "http://localhost")
+- RegexURL (default false)
 - Count (default 10)
 - Concurrency (default 1)
 - Timeout (default 10s)
