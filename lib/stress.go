@@ -59,6 +59,7 @@ type (
 		UserAgent    string
 		BasicAuth    string
 		Compress     bool
+		KeepAlive    bool
 	}
 	Target struct {
 		URL          string
@@ -73,6 +74,7 @@ type (
 		UserAgent    string
 		BasicAuth    string
 		Compress     bool
+		KeepAlive    bool
 	}
 )
 
@@ -144,27 +146,28 @@ func RunStress(s StressConfig) error {
 			workerDoneChan := make(chan workerDone)   //workers use this to indicate they are done
 			requestStatChan := make(chan requestStat) //workers communicate each requests' info
 
+			tr := &http.Transport{}
+			if s.NoHTTP2 {
+				nilMap := make(map[string](func(authority string, c *tls.Conn) http.RoundTripper))
+				tr = &http.Transport{
+					TLSNextProto: nilMap,
+					TLSClientConfig: &tls.Config{
+						InsecureSkipVerify: !s.EnforceSSL}}
+			}
+			tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: !s.EnforceSSL}
+			tr.DisableCompression = !target.Compress
+			tr.DisableKeepAlives = !target.KeepAlive
+			var timeout time.Duration
+			if target.Timeout != "" {
+				timeout, _ = time.ParseDuration(target.Timeout)
+			} else {
+				timeout = time.Duration(0)
+			}
+			client := &http.Client{Timeout: timeout, Transport: tr}
+
 			//start up the workers
 			for i := 0; i < target.Concurrency; i++ {
 				go func() {
-					tr := &http.Transport{}
-					if s.NoHTTP2 {
-						nilMap := make(map[string](func(authority string, c *tls.Conn) http.RoundTripper))
-						tr = &http.Transport{
-							TLSNextProto: nilMap,
-							TLSClientConfig: &tls.Config{
-								InsecureSkipVerify: !s.EnforceSSL}}
-					}
-					tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: !s.EnforceSSL}
-					tr.DisableCompression = !target.Compress
-					var timeout time.Duration
-					if target.Timeout != "" {
-						timeout, _ = time.ParseDuration(target.Timeout)
-					} else {
-						timeout = time.Duration(0)
-					}
-					client := &http.Client{Timeout: timeout, Transport: tr}
-
 					for {
 						select {
 						case req, ok := <-requestQueue:
