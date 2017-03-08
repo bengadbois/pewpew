@@ -13,7 +13,7 @@ Flexible HTTP stress tester
 - HTTP2 support
 - IPV6 support
 - Available as a Go library
-- Tons of command line and/or config file options (arbitrary headers, user agent, timeouts, ignore SSL certs, HTTP authentication, and more)
+- Tons of command line and/or config file options (arbitrary headers, user agent, timeouts, ignore SSL certs, HTTP authentication, keepalive and more)
 
 ## Status
 Pewpew is under active development. Building from master should generally work, but the API is not solidified yet. Don't rely on it for anything important yet.
@@ -143,6 +143,7 @@ Global settings:
 - UserAgent (default defer to Target)
 - BasicAuth (default defer to Target)
 - Compress (default defer to Target)
+- KeepAlive (default defer to Target)
 
 Individual target settings:
 - URL (default "http://localhost")
@@ -157,6 +158,7 @@ Individual target settings:
 - UserAgent (default "pewpew")
 - BasicAuth (default none)
 - Compress (default false)
+- KeepAlive (default false)
 
 ## Using as a Golang library
 ```go

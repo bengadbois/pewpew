@@ -54,6 +54,7 @@ var stressCmd = &cobra.Command{
 				stressCfg.Targets[i].UserAgent = viper.GetString("userAgent")
 				stressCfg.Targets[i].BasicAuth = viper.GetString("basicAuth")
 				stressCfg.Targets[i].Compress = viper.GetBool("compress")
+				stressCfg.Targets[i].KeepAlive = viper.GetBool("keepalive")
 			}
 		} else {
 			//set non-URL target settings
@@ -94,6 +95,9 @@ var stressCmd = &cobra.Command{
 				}
 				if _, set := targetMapVals["Compress"]; !set {
 					stressCfg.Targets[i].Compress = viper.GetBool("compress")
+				}
+				if _, set := targetMapVals["KeepAlive"]; !set {
+					stressCfg.Targets[i].KeepAlive = viper.GetBool("keepalive")
 				}
 			}
 		}
@@ -137,6 +141,9 @@ func init() {
 
 	stressCmd.Flags().BoolP("compress", "C", true, "Add 'Accept-Encoding: gzip' header if Accept-Encoding is not already present.")
 	viper.BindPFlag("compress", stressCmd.Flags().Lookup("compress"))
+
+	stressCmd.Flags().BoolP("keepalive", "k", true, "Enable HTTP KeepAlive.")
+	viper.BindPFlag("keepalive", stressCmd.Flags().Lookup("keepalive"))
 
 	stressCmd.Flags().Bool("no-http2", false, "Disable HTTP2.")
 	viper.BindPFlag("noHTTP2", stressCmd.Flags().Lookup("no-http2"))
