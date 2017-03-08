@@ -61,7 +61,6 @@ var stressCmd = &cobra.Command{
 			//walk through viper.Get() because that will show which were
 			//explictly set instead of guessing at zero-valued defaults
 			for i, target := range viper.Get("targets").([]interface{}) {
-				fmt.Printf("%+v", viper.Get("targets").([]interface{}))
 				targetMapVals := target.(map[string]interface{})
 				if _, set := targetMapVals["RegexURL"]; !set {
 					stressCfg.Targets[i].RegexURL = viper.GetBool("regex")
