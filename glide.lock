@@ -1,5 +1,5 @@
-hash: ad3e3a525126c47bf5b0aed68f3f6ac066aa2a02e965f0f4d09418eeee131881
-updated: 2017-03-07T22:50:36.480238753+01:00
+hash: 819b239471bd47b00fe0d8f6985617d6bae0e8654d5f7a9d78408767ae8210a5
+updated: 2017-03-08T20:14:27.319008767+01:00
 imports:
 - name: github.com/fatih/color
   version: 9131ab34cf20d2f6d83fdc67168a5430d1c7dc23
@@ -23,9 +23,11 @@ imports:
 - name: github.com/magiconair/properties
   version: b3b15ef068fd0b17ddf408a23669f20811d194d2
 - name: github.com/mattn/go-colorable
-  version: d228849504861217f796da67fae4f6e347643f15
+  version: 5411d3eea5978e6cdc258b30de592b60df6aba96
+  repo: https://github.com/mattn/go-colorable
 - name: github.com/mattn/go-isatty
-  version: 3a115632dcd687f9c8cd01679c83a06a0e21c1f3
+  version: 57fdcb988a5c543893cc61bce354a6e24ab70022
+  repo: https://github.com/mattn/go-isatty
 - name: github.com/mitchellh/mapstructure
   version: db1efb556f84b25a0a13a04aad883943538ad2e0
 - name: github.com/pelletier/go-buffruneio
@@ -46,8 +48,16 @@ imports:
   version: 9ff6c6923cfffbcd502984b8e0c80539a94968b7
 - name: github.com/spf13/viper
   version: 5ed0fc31f7f453625df314d8e66b9791e8d13003
+- name: golang.org/x/net
+  version: 7bf7a75e312ea2853f1050e8b1057b4949f90010
+  subpackages:
+  - http2
+  - http2/hpack
+  - idna
+  - lex/httplex
 - name: golang.org/x/sys
-  version: c200b10b5d5e122be351b67af224adc6128af5bf
+  version: e24f485414aeafb646f6fca458b0bf869c0880a1
+  repo: https://go.googlesource.com/sys
   subpackages:
   - unix
 - name: golang.org/x/text
