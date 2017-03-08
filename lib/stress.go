@@ -287,11 +287,14 @@ func RunStress(s StressConfig) error {
 
 	fmt.Print("\n----Summary----\n\n")
 
-	for idx, target := range s.Targets {
-		//info about the request
-		fmt.Printf("----Target %d: %s %s\n", idx+1, target.Method, target.URL)
-		reqStats := createRequestsStats(targetRequestStats[idx])
-		fmt.Println(createTextSummary(reqStats))
+	//only print individual target data if multiple targets
+	if len(s.Targets) > 1 {
+		for idx, target := range s.Targets {
+			//info about the request
+			fmt.Printf("----Target %d: %s %s\n", idx+1, target.Method, target.URL)
+			reqStats := createRequestsStats(targetRequestStats[idx])
+			fmt.Println(createTextSummary(reqStats))
+		}
 	}
 
 	//combine individual targets to a total one
@@ -301,7 +304,9 @@ func RunStress(s StressConfig) error {
 			globalStats = append(globalStats, targetRequestStats[i][j])
 		}
 	}
-	fmt.Println("----Global----")
+	if len(s.Targets) > 1 {
+		fmt.Println("----Global----")
+	}
 	reqStats := createRequestsStats(globalStats)
 	fmt.Println(createTextSummary(reqStats))
 
