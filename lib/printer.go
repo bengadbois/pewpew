@@ -18,6 +18,9 @@ func createTextSummary(reqStatSummary requestStatSummary) string {
 	summary = summary + "Fastest query:  " + fmt.Sprintf("%d", reqStatSummary.minDuration/1000000) + " ms\n"
 	summary = summary + "Slowest query:  " + fmt.Sprintf("%d", reqStatSummary.maxDuration/1000000) + " ms\n"
 
+	summary = summary + "Total Data Transferred: " + fmt.Sprintf("%d", reqStatSummary.totalDataTransferred) + " bytes\n"
+	summary = summary + "Average Data Transferred:  " + fmt.Sprintf("%d", reqStatSummary.avgDataTransferred) + " bytes\n"
+
 	summary = summary + "\nResponse Codes\n"
 	//sort the status codes
 	var codes []int
