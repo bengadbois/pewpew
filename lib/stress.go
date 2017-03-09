@@ -9,14 +9,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"os"
 	"strings"
 	"sync"
 	"time"
 
-	color "github.com/fatih/color"
 	reggen "github.com/lucasjones/reggen"
 	http2 "golang.org/x/net/http2"
 )
@@ -27,6 +25,7 @@ var writeLock sync.Mutex
 type workerDone struct{}
 
 type requestStat struct {
+	Proto     string
 	URL       string
 	Method    string
 	StartTime time.Time `json:"startTime"`
@@ -34,9 +33,9 @@ type requestStat struct {
 	//equivalent to the difference between StartTime and EndTime
 	Duration time.Duration `json:"duration"`
 	//HTTP Status Code, e.g. 200, 404, 503
-	StatusCode      int  `json:"statusCode"`
-	Error           bool `json:"error"`
-	DataTransferred int  //bytes
+	StatusCode      int   `json:"statusCode"`
+	Error           error `json:"error"`
+	DataTransferred int   //bytes
 }
 
 type (
@@ -177,90 +176,18 @@ func RunStress(s StressConfig) error {
 								workerDoneChan <- workerDone{}
 								return
 							}
-							//run the actual request
-							reqStartTime := time.Now()
-							response, responseErr := client.Do(&req)
-							reqEndTime := time.Now()
 
-							//get size of request
-							reqDump, _ := httputil.DumpRequestOut(&req, true)
-							respDump, _ := httputil.DumpResponse(response, true)
-							totalSizeSentBytes := len(reqDump)
-							totalSizeReceivedBytes := len(respDump)
-							totalSizeBytes := totalSizeSentBytes + totalSizeReceivedBytes
-
+							response, stat := runRequest(req, client)
 							if !s.Quiet {
 								writeLock.Lock()
-								if responseErr != nil {
-									color.Set(color.FgRed)
-									fmt.Println("Failed to make request: " + responseErr.Error())
-									response = &http.Response{StatusCode: 0}
-									color.Unset()
-								} else {
-									if response.StatusCode >= 100 && response.StatusCode < 200 {
-										color.Set(color.FgBlue)
-									} else if response.StatusCode >= 200 && response.StatusCode < 300 {
-										color.Set(color.FgGreen)
-									} else if response.StatusCode >= 300 && response.StatusCode < 400 {
-										color.Set(color.FgCyan)
-									} else if response.StatusCode >= 400 && response.StatusCode < 500 {
-										color.Set(color.FgMagenta)
-									} else {
-										color.Set(color.FgRed)
-									}
-									fmt.Printf("%s %d\t%d bytes\t%d ms\t-> %s %s\n",
-										response.Proto,
-										response.StatusCode,
-										totalSizeBytes,
-										reqEndTime.Sub(reqStartTime).Nanoseconds()/1000000,
-										req.Method,
-										req.URL)
-									color.Unset()
-
-									if s.Verbose {
-										var requestInfo string
-										//request details
-										requestInfo = requestInfo + fmt.Sprintf("Request:\n%+v\n\n", &req)
-
-										//reponse metadata
-										requestInfo = requestInfo + fmt.Sprintf("Response:\n%+v\n\n", *response)
-
-										//reponse body
-										defer response.Body.Close()
-										body, err := ioutil.ReadAll(response.Body)
-										if err != nil {
-											requestInfo = requestInfo + fmt.Sprintf("Body: Failed to read response body: %s\n", err.Error())
-										} else {
-											requestInfo = requestInfo + fmt.Sprintf("Body:\n%s\n\n", body)
-										}
-										fmt.Println(requestInfo)
-									}
+								printStat(stat)
+								if s.Verbose {
+									printVerbose(&req, response)
 								}
 								writeLock.Unlock()
 							}
-							if responseErr == nil {
-								requestStatChan <- requestStat{
-									URL:             req.URL.String(),
-									Method:          req.Method,
-									StartTime:       reqStartTime,
-									EndTime:         reqEndTime,
-									Duration:        reqEndTime.Sub(reqStartTime),
-									StatusCode:      response.StatusCode,
-									Error:           false,
-									DataTransferred: totalSizeBytes,
-								}
-							} else {
-								requestStatChan <- requestStat{
-									URL:             req.URL.String(),
-									Method:          req.Method,
-									StartTime:       reqStartTime,
-									EndTime:         reqEndTime,
-									Duration:        reqEndTime.Sub(reqStartTime),
-									StatusCode:      0,
-									Error:           true,
-									DataTransferred: totalSizeBytes,
-								}
-							}
+
+							requestStatChan <- stat
 						}
 					}
 				}()
