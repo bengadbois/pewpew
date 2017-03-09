@@ -90,13 +90,14 @@ pewpew stress
 Here is an example `config.toml`. There are more examples in `examples/`.
 ```toml
 #Global settings
+Count = 10
 Quiet = false
 Compress = true
 UserAgent = "pewpewpewpewpew"
 Timeout = "1.75s"
 Headers = "Accept-Encoding:gzip"
 
-#Settings for each of the two Targets
+#Settings for each of the three Targets
 [[Targets]]
 URL = "http://127.0.0.1/home"
 Count = 15
