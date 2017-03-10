@@ -14,17 +14,18 @@ import (
 func CreateTextSummary(reqStatSummary requestStatSummary) string {
 	summary := "\n"
 
-	summary = summary + "Runtime Statistics:\n"
-	summary = summary + "Total time:  " + fmt.Sprintf("%d", reqStatSummary.endTime.Sub(reqStatSummary.startTime).Nanoseconds()/1000000) + " ms\n"
-	summary = summary + "Mean RPS:    " + fmt.Sprintf("%.2f", reqStatSummary.avgRPS*1000000000) + " req/sec\n"
+	summary = summary + "Timing\n"
+	summary = summary + "Mean query speed:     " + fmt.Sprintf("%d", reqStatSummary.avgDuration/1000000) + " ms\n"
+	summary = summary + "Fastest query speed:  " + fmt.Sprintf("%d", reqStatSummary.minDuration/1000000) + " ms\n"
+	summary = summary + "Slowest query speed:  " + fmt.Sprintf("%d", reqStatSummary.maxDuration/1000000) + " ms\n"
+	summary = summary + "Mean RPS:             " + fmt.Sprintf("%.2f", reqStatSummary.avgRPS*1000000000) + " req/sec\n"
+	summary = summary + "Total time:           " + fmt.Sprintf("%d", reqStatSummary.endTime.Sub(reqStatSummary.startTime).Nanoseconds()/1000000) + " ms\n"
 
-	summary = summary + "\nQuery Statistics\n"
-	summary = summary + "Mean query:     " + fmt.Sprintf("%d", reqStatSummary.avgDuration/1000000) + " ms\n"
-	summary = summary + "Fastest query:  " + fmt.Sprintf("%d", reqStatSummary.minDuration/1000000) + " ms\n"
-	summary = summary + "Slowest query:  " + fmt.Sprintf("%d", reqStatSummary.maxDuration/1000000) + " ms\n"
-
-	summary = summary + "Total Data Transferred: " + fmt.Sprintf("%d", reqStatSummary.totalDataTransferred) + " bytes\n"
-	summary = summary + "Average Data Transferred:  " + fmt.Sprintf("%d", reqStatSummary.avgDataTransferred) + " bytes\n"
+	summary = summary + "\nData Transferred\n"
+	summary = summary + "Mean query:      " + fmt.Sprintf("%d", reqStatSummary.avgDataTransferred) + " bytes\n"
+	summary = summary + "Largest query:   " + fmt.Sprintf("%d", reqStatSummary.maxDataTransferred) + " bytes\n"
+	summary = summary + "Smallest query:  " + fmt.Sprintf("%d", reqStatSummary.minDataTransferred) + " bytes\n"
+	summary = summary + "Total:           " + fmt.Sprintf("%d", reqStatSummary.totalDataTransferred) + " bytes\n"
 
 	summary = summary + "\nResponse Codes\n"
 	//sort the status codes
