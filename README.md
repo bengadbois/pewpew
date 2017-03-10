@@ -4,7 +4,7 @@ Flexible HTTP stress tester
 
 **Disclaimer**: Pewpew is designed as a tool to help those developing web services and websites. Please use responsibly.
 
-## [Demo](https://asciinema.org/a/aiy9llwcg3y6821vqkspblk0c)
+## [Demo](https://asciinema.org/a/aofi4icywu6zz6nn1ytirb3vv)
 
 ## Features
 - Regular expression defined targets
