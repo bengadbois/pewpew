@@ -32,6 +32,7 @@ func createRequestsStats(requestStats []requestStat) requestStatSummary {
 		totalDataTransferred: 0,
 	}
 	var totalDurations time.Duration //total time of all requests (concurrent is counted)
+	nonErrCount := 0
 	for i := 0; i < len(requestStats); i++ {
 		if requestStats[i].Duration > summary.maxDuration {
 			summary.maxDuration = requestStats[i].Duration
@@ -49,13 +50,16 @@ func createRequestsStats(requestStats []requestStat) requestStatSummary {
 		totalDurations += requestStats[i].Duration
 		summary.statusCodes[requestStats[i].StatusCode]++
 		summary.totalDataTransferred += requestStats[i].DataTransferred
+		if requestStats[i].Error == nil {
+			nonErrCount++
+		}
 	}
 	//kinda ugly to calculate average, then convert into nanoseconds
-	avgNs := totalDurations.Nanoseconds() / int64(len(requestStats))
+	avgNs := totalDurations.Nanoseconds() / int64(nonErrCount)
 	newAvg, _ := time.ParseDuration(fmt.Sprintf("%d", avgNs) + "ns")
 	summary.avgDuration = newAvg
 
-	summary.avgDataTransferred = summary.totalDataTransferred / len(requestStats)
+	summary.avgDataTransferred = summary.totalDataTransferred / nonErrCount
 
 	summary.avgRPS = float64(len(requestStats)) / float64(summary.endTime.Sub(summary.startTime))
 	return summary
