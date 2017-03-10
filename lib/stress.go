@@ -3,14 +3,12 @@ package pewpew
 import (
 	"bytes"
 	"crypto/tls"
-	"encoding/csv"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -24,7 +22,7 @@ var writeLock sync.Mutex
 
 type workerDone struct{}
 
-type requestStat struct {
+type RequestStat struct {
 	Proto     string
 	URL       string
 	Method    string
@@ -41,13 +39,11 @@ type requestStat struct {
 type (
 	//Stress is the top level struct that contains the configuration of stress test
 	StressConfig struct {
-		Targets            []Target
-		Verbose            bool
-		Quiet              bool
-		NoHTTP2            bool
-		EnforceSSL         bool
-		ResultFilenameJSON string
-		ResultFilenameCSV  string
+		Targets    []Target
+		Verbose    bool
+		Quiet      bool
+		NoHTTP2    bool
+		EnforceSSL bool
 
 		//global target settings
 
@@ -110,11 +106,13 @@ func NewStressConfig() (s *StressConfig) {
 }
 
 //RunStress starts the stress tests
-func RunStress(s StressConfig) error {
-	err := ValidateTargets(s)
+func RunStress(s StressConfig, w io.Writer) ([][]RequestStat, error) {
+	if w == nil {
+		return nil, errors.New("nil writer")
+	}
+	err := validateTargets(s)
 	if err != nil {
-		fmt.Println(err.Error())
-		return errors.New("invalid configuration")
+		return nil, errors.New("invalid configuration: " + err.Error())
 	}
 	targetCount := len(s.Targets)
 
@@ -125,8 +123,7 @@ func RunStress(s StressConfig) error {
 		for i := 0; i < target.Count; i++ {
 			req, err := buildRequest(target)
 			if err != nil {
-				fmt.Println(err.Error())
-				return errors.New("failed to create request with target configuration")
+				return nil, errors.New("failed to create request with target configuration: " + err.Error())
 			}
 			requestQueues[idx] <- req
 		}
@@ -134,19 +131,21 @@ func RunStress(s StressConfig) error {
 	}
 
 	if targetCount == 1 {
-		fmt.Printf("Stress testing %d target:\n", targetCount)
+		fmt.Fprintf(w, "Stress testing %d target:\n", targetCount)
 	} else {
-		fmt.Printf("Stress testing %d targets:\n", targetCount)
+		fmt.Fprintf(w, "Stress testing %d targets:\n", targetCount)
 	}
 
 	//when a target is finished, send all stats into this
-	targetStats := make(chan []requestStat)
+	targetStats := make(chan []RequestStat)
 	for idx, target := range s.Targets {
-		go func(target Target, requestQueue chan http.Request, targetStats chan []requestStat) {
-			fmt.Printf("- Running %d tests at %s, %d at a time\n", target.Count, target.URL, target.Concurrency)
+		go func(target Target, requestQueue chan http.Request, targetStats chan []RequestStat) {
+			writeLock.Lock()
+			fmt.Fprintf(w, "- Running %d tests at %s, %d at a time\n", target.Count, target.URL, target.Concurrency)
+			writeLock.Unlock()
 
 			workerDoneChan := make(chan workerDone)   //workers use this to indicate they are done
-			requestStatChan := make(chan requestStat) //workers communicate each requests' info
+			requestStatChan := make(chan RequestStat) //workers communicate each requests' info
 
 			tr := &http.Transport{}
 			tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: !s.EnforceSSL}
@@ -180,9 +179,9 @@ func RunStress(s StressConfig) error {
 							response, stat := runRequest(req, client)
 							if !s.Quiet {
 								writeLock.Lock()
-								printStat(stat)
+								printStat(stat, w)
 								if s.Verbose {
-									printVerbose(&req, response)
+									printVerbose(&req, response, w)
 								}
 								writeLock.Unlock()
 							}
@@ -192,7 +191,7 @@ func RunStress(s StressConfig) error {
 					}
 				}()
 			}
-			requestStats := make([]requestStat, target.Count)
+			requestStats := make([]RequestStat, target.Count)
 			requestsCompleteCount := 0
 			workersDoneCount := 0
 			//wait for all workers to finish
@@ -212,7 +211,7 @@ func RunStress(s StressConfig) error {
 			targetStats <- requestStats
 		}(target, requestQueues[idx], targetStats)
 	}
-	targetRequestStats := make([][]requestStat, targetCount)
+	targetRequestStats := make([][]RequestStat, targetCount)
 	targetDoneCount := 0
 	for {
 		select {
@@ -226,74 +225,10 @@ func RunStress(s StressConfig) error {
 		}
 	}
 
-	fmt.Print("\n----Summary----\n\n")
-
-	//only print individual target data if multiple targets
-	if len(s.Targets) > 1 {
-		for idx, target := range s.Targets {
-			//info about the request
-			fmt.Printf("----Target %d: %s %s\n", idx+1, target.Method, target.URL)
-			reqStats := createRequestsStats(targetRequestStats[idx])
-			fmt.Println(createTextSummary(reqStats))
-		}
-	}
-
-	//combine individual targets to a total one
-	globalStats := []requestStat{}
-	for i := range s.Targets {
-		for j := range targetRequestStats[i] {
-			globalStats = append(globalStats, targetRequestStats[i][j])
-		}
-	}
-	if len(s.Targets) > 1 {
-		fmt.Println("----Global----")
-	}
-	reqStats := createRequestsStats(globalStats)
-	fmt.Println(createTextSummary(reqStats))
-
-	//write out json
-	if s.ResultFilenameJSON != "" {
-		fmt.Print("Writing full result data to: " + s.ResultFilenameJSON + " ...")
-		json, _ := json.MarshalIndent(globalStats, "", "    ")
-		err = ioutil.WriteFile(s.ResultFilenameJSON, json, 0644)
-		if err != nil {
-			return errors.New("failed to write full result data to " +
-				s.ResultFilenameJSON + ": " + err.Error())
-		}
-		fmt.Println("finished!")
-	}
-	//write out csv
-	if s.ResultFilenameCSV != "" {
-		fmt.Print("Writing full result data to: " + s.ResultFilenameCSV + " ...")
-		file, err := os.Create(s.ResultFilenameCSV)
-		if err != nil {
-			return errors.New("failed to write full result data to " +
-				s.ResultFilenameCSV + ": " + err.Error())
-		}
-		defer file.Close()
-
-		writer := csv.NewWriter(file)
-
-		for _, req := range globalStats {
-			line := []string{
-				req.StartTime.String(),
-				fmt.Sprintf("%d", req.Duration),
-				fmt.Sprintf("%d", req.StatusCode),
-				fmt.Sprintf("%d bytes", req.DataTransferred),
-			}
-			err := writer.Write(line)
-			if err != nil {
-				return errors.New("failed to write full result data to " +
-					s.ResultFilenameCSV + ": " + err.Error())
-			}
-		}
-		defer writer.Flush()
-		fmt.Println("finished!")
-	}
-	return nil
+	return targetRequestStats, nil
 }
 
-func ValidateTargets(s StressConfig) error {
+func validateTargets(s StressConfig) error {
 	if len(s.Targets) == 0 {
 		return errors.New("zero targets")
 	}
@@ -312,7 +247,6 @@ func ValidateTargets(s StressConfig) error {
 			//TODO should save this parsed duration so don't have to inefficiently reparse later
 			timeout, err := time.ParseDuration(target.Timeout)
 			if err != nil {
-				fmt.Println(err)
 				return errors.New("failed to parse timeout: " + target.Timeout)
 			}
 			if timeout <= time.Millisecond {
@@ -368,8 +302,7 @@ func buildRequest(t Target) (http.Request, error) {
 	if t.Headers != "" {
 		headerMap, err := parseKeyValString(t.Headers, ",", ":")
 		if err != nil {
-			fmt.Println(err)
-			return http.Request{}, errors.New("could not parse headers")
+			return http.Request{}, errors.New("could not parse headers: " + err.Error())
 		}
 		for key, val := range headerMap {
 			req.Header.Add(key, val)
@@ -381,8 +314,7 @@ func buildRequest(t Target) (http.Request, error) {
 	if t.BasicAuth != "" {
 		authMap, err := parseKeyValString(t.BasicAuth, ",", ":")
 		if err != nil {
-			fmt.Println(err)
-			return http.Request{}, errors.New("could not parse basic auth")
+			return http.Request{}, errors.New("could not parse basic auth: " + err.Error())
 		}
 		for key, val := range authMap {
 			req.SetBasicAuth(key, val)
