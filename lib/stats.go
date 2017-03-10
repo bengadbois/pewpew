@@ -14,6 +14,8 @@ type requestStatSummary struct {
 	startTime            time.Time   //start of first request
 	endTime              time.Time   //end of last request
 	avgDataTransferred   int         //bytes
+	maxDataTransferred   int         //bytes
+	minDataTransferred   int         //bytes
 	totalDataTransferred int         //bytes
 }
 
@@ -26,6 +28,7 @@ func CreateRequestsStats(requestStats []RequestStat) requestStatSummary {
 	requestCodes := make(map[int]int)
 	summary := requestStatSummary{maxDuration: requestStats[0].Duration,
 		minDuration:          requestStats[0].Duration,
+		minDataTransferred:   requestStats[0].DataTransferred,
 		statusCodes:          requestCodes,
 		startTime:            requestStats[0].StartTime,
 		endTime:              requestStats[0].EndTime,
@@ -45,6 +48,13 @@ func CreateRequestsStats(requestStats []RequestStat) requestStatSummary {
 		}
 		if requestStats[i].EndTime.After(summary.endTime) {
 			summary.endTime = requestStats[i].EndTime
+		}
+
+		if requestStats[i].DataTransferred > summary.maxDataTransferred {
+			summary.maxDataTransferred = requestStats[i].DataTransferred
+		}
+		if requestStats[i].DataTransferred < summary.minDataTransferred {
+			summary.minDataTransferred = requestStats[i].DataTransferred
 		}
 
 		totalDurations += requestStats[i].Duration
