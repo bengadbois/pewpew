@@ -1,8 +1,12 @@
 package cmd
 
 import (
+	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	pewpew "github.com/bengadbois/pewpew/lib"
 	"github.com/spf13/cobra"
@@ -24,8 +28,6 @@ var stressCmd = &cobra.Command{
 		//global configs
 		stressCfg.NoHTTP2 = viper.GetBool("noHTTP2")
 		stressCfg.EnforceSSL = viper.GetBool("enforceSSL")
-		stressCfg.ResultFilenameJSON = viper.GetString("ResultFilenameJSON")
-		stressCfg.ResultFilenameCSV = viper.GetString("ResultFilenameCSV")
 		stressCfg.Quiet = viper.GetBool("quiet")
 		stressCfg.Verbose = viper.GetBool("verbose")
 
@@ -101,8 +103,76 @@ var stressCmd = &cobra.Command{
 			}
 		}
 
-		err = pewpew.RunStress(stressCfg)
-		return err
+		targetRequestStats, err := pewpew.RunStress(stressCfg, os.Stdout)
+		if err != nil {
+			return err
+		}
+
+		fmt.Print("\n----Summary----\n\n")
+
+		//only print individual target data if multiple targets
+		if len(stressCfg.Targets) > 1 {
+			for idx, target := range stressCfg.Targets {
+				//info about the request
+				fmt.Printf("----Target %d: %s %s\n", idx+1, target.Method, target.URL)
+				reqStats := pewpew.CreateRequestsStats(targetRequestStats[idx])
+				fmt.Println(pewpew.CreateTextSummary(reqStats))
+			}
+		}
+
+		//combine individual targets to a total one
+		globalStats := []pewpew.RequestStat{}
+		for i := range stressCfg.Targets {
+			for j := range targetRequestStats[i] {
+				globalStats = append(globalStats, targetRequestStats[i][j])
+			}
+		}
+		if len(stressCfg.Targets) > 1 {
+			fmt.Println("----Global----")
+		}
+		reqStats := pewpew.CreateRequestsStats(globalStats)
+		fmt.Println(pewpew.CreateTextSummary(reqStats))
+
+		//write out json
+		if viper.GetString("ResultFilenameJSON") != "" {
+			fmt.Print("Writing full result data to: " + viper.GetString("ResultFilenameJSON") + " ...")
+			json, _ := json.MarshalIndent(globalStats, "", "    ")
+			err = ioutil.WriteFile(viper.GetString("ResultFilenameJSON"), json, 0644)
+			if err != nil {
+				return errors.New("failed to write full result data to " +
+					viper.GetString("ResultFilenameJSON") + ": " + err.Error())
+			}
+			fmt.Println("finished!")
+		}
+		//write out csv
+		if viper.GetString("ResultFilenameCSV") != "" {
+			fmt.Print("Writing full result data to: " + viper.GetString("ResultFilenameCSV") + " ...")
+			file, err := os.Create(viper.GetString("ResultFilenameCSV"))
+			if err != nil {
+				return errors.New("failed to write full result data to " +
+					viper.GetString("ResultFilenameCSV") + ": " + err.Error())
+			}
+			defer file.Close()
+
+			writer := csv.NewWriter(file)
+
+			for _, req := range globalStats {
+				line := []string{
+					req.StartTime.String(),
+					fmt.Sprintf("%d", req.Duration),
+					fmt.Sprintf("%d", req.StatusCode),
+					fmt.Sprintf("%d bytes", req.DataTransferred),
+				}
+				err := writer.Write(line)
+				if err != nil {
+					return errors.New("failed to write full result data to " +
+						viper.GetString("ResultFilenameCSV") + ": " + err.Error())
+				}
+			}
+			defer writer.Flush()
+			fmt.Println("finished!")
+		}
+		return nil
 	},
 }
 

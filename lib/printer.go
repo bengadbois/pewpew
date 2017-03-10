@@ -2,6 +2,7 @@ package pewpew
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"sort"
@@ -10,7 +11,7 @@ import (
 )
 
 //creates nice readable summary of entire stress test
-func createTextSummary(reqStatSummary requestStatSummary) string {
+func CreateTextSummary(reqStatSummary requestStatSummary) string {
 	summary := "\n"
 
 	summary = summary + "Runtime Statistics:\n"
@@ -44,11 +45,11 @@ func createTextSummary(reqStatSummary requestStatSummary) string {
 	return summary
 }
 
-//print colored single line stats per requestStat
-func printStat(stat requestStat) {
+//print colored single line stats per RequestStat
+func printStat(stat RequestStat, w io.Writer) {
 	if stat.Error != nil {
 		color.Set(color.FgRed)
-		fmt.Println("Failed to make request: " + stat.Error.Error())
+		fmt.Fprintln(w, "Failed to make request: "+stat.Error.Error())
 		color.Unset()
 	} else {
 		if stat.StatusCode >= 100 && stat.StatusCode < 200 {
@@ -62,7 +63,7 @@ func printStat(stat requestStat) {
 		} else {
 			color.Set(color.FgRed)
 		}
-		fmt.Printf("%s %d\t%d bytes\t%d ms\t-> %s %s\n",
+		fmt.Fprintf(w, "%s %d\t%d bytes\t%d ms\t-> %s %s\n",
 			stat.Proto,
 			stat.StatusCode,
 			stat.DataTransferred,
@@ -74,7 +75,7 @@ func printStat(stat requestStat) {
 }
 
 //print tons of info about the request, response and response body
-func printVerbose(req *http.Request, response *http.Response) {
+func printVerbose(req *http.Request, response *http.Response, w io.Writer) {
 	var requestInfo string
 	//request details
 	requestInfo = requestInfo + fmt.Sprintf("Request:\n%+v\n\n", &req)
@@ -90,5 +91,5 @@ func printVerbose(req *http.Request, response *http.Response) {
 		requestInfo = requestInfo + fmt.Sprintf("Body:\n%s\n\n", body)
 		response.Body.Close()
 	}
-	fmt.Println(requestInfo)
+	fmt.Fprintln(w, requestInfo)
 }

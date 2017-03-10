@@ -18,7 +18,7 @@ type requestStatSummary struct {
 }
 
 //create statistical summary of all requests
-func createRequestsStats(requestStats []requestStat) requestStatSummary {
+func CreateRequestsStats(requestStats []RequestStat) requestStatSummary {
 	if len(requestStats) == 0 {
 		return requestStatSummary{}
 	}

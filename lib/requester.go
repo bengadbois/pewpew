@@ -6,13 +6,13 @@ import (
 	"time"
 )
 
-func runRequest(req http.Request, client *http.Client) (response *http.Response, stat requestStat) {
+func runRequest(req http.Request, client *http.Client) (response *http.Response, stat RequestStat) {
 	reqStartTime := time.Now()
 	response, responseErr := (*client).Do(&req)
 	reqEndTime := time.Now()
 
 	if responseErr != nil {
-		stat = requestStat{
+		stat = RequestStat{
 			Proto:           req.Proto,
 			URL:             req.URL.String(),
 			Method:          req.Method,
@@ -33,7 +33,7 @@ func runRequest(req http.Request, client *http.Client) (response *http.Response,
 	totalSizeReceivedBytes := len(respDump)
 	totalSizeBytes := totalSizeSentBytes + totalSizeReceivedBytes
 
-	stat = requestStat{
+	stat = RequestStat{
 		Proto:           req.Proto,
 		URL:             req.URL.String(),
 		Method:          req.Method,

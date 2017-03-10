@@ -131,8 +131,6 @@ Not all settings are available per target, such as Verbose, which is only a glob
 Global settings:
 - NoHTTP2 (default false)
 - EnforceSSL (default false)
-- ResultFilenameJSON (default empty, so skipped)
-- ResultFilenameCSV (default empty, so skipped)
 - Quiet (default false)
 - Verbose (default false)
 - Count (default defer to Target)
@@ -168,6 +166,7 @@ package main
 
 import (
     "fmt"
+    "os"
 
     pewpew "github.com/bengadbois/pewpew/lib"
 )
@@ -186,10 +185,14 @@ func main() {
     stressCfg.Targets[0].Body = `{"field": "data", "work": true}`
 
     //begin testing
-    err := pewpew.RunStress(*stressCfg)
+    output := os.Stdout //can be any io.Writer, such as a file
+    stats, err := pewpew.RunStress(*stressCfg, output)
     if err != nil {
         fmt.Println("pewpew stress failed:  %s", err.Error())
     }
+    
+    //do whatever you want with the raw stats
+    fmt.Printf("%+v", stats)
 }
 ```
 Full package documentation at [godoc.org](https://godoc.org/github.com/bengadbois/pewpew/lib)
