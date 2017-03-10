@@ -55,11 +55,19 @@ func CreateRequestsStats(requestStats []RequestStat) requestStatSummary {
 		}
 	}
 	//kinda ugly to calculate average, then convert into nanoseconds
-	avgNs := totalDurations.Nanoseconds() / int64(nonErrCount)
-	newAvg, _ := time.ParseDuration(fmt.Sprintf("%d", avgNs) + "ns")
-	summary.avgDuration = newAvg
+	if nonErrCount == 0 {
+		summary.avgDuration = 0
+	} else {
+		avgNs := totalDurations.Nanoseconds() / int64(nonErrCount)
+		newAvg, _ := time.ParseDuration(fmt.Sprintf("%d", avgNs) + "ns")
+		summary.avgDuration = newAvg
+	}
 
-	summary.avgDataTransferred = summary.totalDataTransferred / nonErrCount
+	if nonErrCount == 0 {
+		summary.avgDataTransferred = 0
+	} else {
+		summary.avgDataTransferred = summary.totalDataTransferred / nonErrCount
+	}
 
 	summary.avgRPS = float64(len(requestStats)) / float64(summary.endTime.Sub(summary.startTime))
 	return summary
