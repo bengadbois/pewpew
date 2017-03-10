@@ -34,7 +34,7 @@ func runRequest(req http.Request, client *http.Client) (response *http.Response,
 	totalSizeBytes := totalSizeSentBytes + totalSizeReceivedBytes
 
 	stat = RequestStat{
-		Proto:           req.Proto,
+		Proto:           response.Proto,
 		URL:             req.URL.String(),
 		Method:          req.Method,
 		StartTime:       reqStartTime,
