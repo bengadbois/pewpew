@@ -48,10 +48,11 @@ Each of the three targets https://www.example.com:443/path, http://localhost, ht
 For the full list of command line options, run `pewpew help` or `pewpew help stress`
 
 ### Using Regular Expression Targets
+Pewpew supports using regular expressions (Perl syntax) to nondeterministically generate targets.
 ```
 pewpew stress -r "http://localhost/pages/[0-9]{1,3}"
 ```
-The URL is parsed as a regular expression (Perl syntax) and will nondeterministically make requests to matching URLs, such as:
+This example will generate target URLs such as:
  - http://localhost/pages/309
  - http://localhost/pages/390
  - http://localhost/pages/008
@@ -66,7 +67,7 @@ The URL is parsed as a regular expression (Perl syntax) and will nondeterministi
 ```
 pewpew stress -r "http://localhost/pages/[0-9]+\?cache=(true|false)(\&referrer=[0-9]{3})?"
 ```
-This more complex example may target URLs such as:
+This example will generate target URLs such as:
 - http://localhost/pages/278613?cache=false
 - http://localhost/pages/736?cache=false
 - http://localhost/pages/255?cache=false
