@@ -18,18 +18,12 @@ Flexible HTTP stress tester
 - Tons of command line and/or config file options (arbitrary headers, user agent, timeouts, ignore SSL certs, HTTP authentication, keepalive and more)
 
 ## Status
-Pewpew is under active development. Building from master should generally work, but the API is not solidified yet. Don't rely on it for anything important yet.
+Pewpew is under active development. Since Pewpew is pre-1.0, minor version changes may be breaking. Tagged releases should be stable. Versioning follows [SemVer](http://semver.org/).
 
 ## Installing
-Requires Golang 1.6+
+Pre-compiled binaries are available on [Releases](https://github.com/bengadbois/pewpew/releases).
 
-If your `$GOPATH` is set correctly, you can just
-
-```
-go get github.com/bengadbois/pewpew
-```
-
-Will publish prebuilt binaries once first release is ready
+If you want to get the latest or build from source: install Go 1.6+, `go get github.com/bengadbois/pewpew`, and install dependencies with [Glide](http://glide.sh/).
 
 ## Usage
 ```
