@@ -23,7 +23,7 @@ Pewpew is under active development. Since Pewpew is pre-1.0, minor version chang
 ## Installing
 Pre-compiled binaries are available on [Releases](https://github.com/bengadbois/pewpew/releases).
 
-If you want to get the latest or build from source: install Go 1.6+, `go get github.com/bengadbois/pewpew`, and install dependencies with [Glide](http://glide.sh/).
+If you want to get the latest or build from source: install Go 1.7+, `go get github.com/bengadbois/pewpew`, and install dependencies with [Glide](http://glide.sh/).
 
 ## Usage
 ```
@@ -140,6 +140,7 @@ Global settings:
 - BasicAuth (default defer to Target)
 - Compress (default defer to Target)
 - KeepAlive (default defer to Target)
+- FollowRedirects (default defer to Target)
 
 Individual target settings:
 - URL (default "http://localhost")
@@ -155,6 +156,7 @@ Individual target settings:
 - BasicAuth (default none)
 - Compress (default false)
 - KeepAlive (default false)
+- FollowRedirects (default true)
 
 ## Using as a Golang library
 ```go
