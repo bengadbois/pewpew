@@ -47,32 +47,34 @@ type (
 
 		//global target settings
 
-		Count        int
-		Concurrency  int
-		Timeout      string
-		Method       string
-		Body         string
-		BodyFilename string
-		Headers      string
-		UserAgent    string
-		BasicAuth    string
-		Compress     bool
-		KeepAlive    bool
+		Count           int
+		Concurrency     int
+		Timeout         string
+		Method          string
+		Body            string
+		BodyFilename    string
+		Headers         string
+		UserAgent       string
+		BasicAuth       string
+		Compress        bool
+		KeepAlive       bool
+		FollowRedirects bool
 	}
 	Target struct {
-		URL          string
-		RegexURL     bool
-		Count        int //how many total requests to make
-		Concurrency  int
-		Timeout      string
-		Method       string
-		Body         string
-		BodyFilename string
-		Headers      string
-		UserAgent    string
-		BasicAuth    string
-		Compress     bool
-		KeepAlive    bool
+		URL             string
+		RegexURL        bool
+		Count           int //how many total requests to make
+		Concurrency     int
+		Timeout         string
+		Method          string
+		Body            string
+		BodyFilename    string
+		Headers         string
+		UserAgent       string
+		BasicAuth       string
+		Compress        bool
+		KeepAlive       bool
+		FollowRedirects bool
 	}
 )
 
@@ -93,12 +95,13 @@ func NewStressConfig() (s *StressConfig) {
 	s = &StressConfig{
 		Targets: []Target{
 			{
-				URL:         DefaultURL,
-				Count:       DefaultCount,
-				Concurrency: DefaultConcurrency,
-				Timeout:     DefaultTimeout,
-				Method:      DefaultMethod,
-				UserAgent:   DefaultUserAgent,
+				URL:             DefaultURL,
+				Count:           DefaultCount,
+				Concurrency:     DefaultConcurrency,
+				Timeout:         DefaultTimeout,
+				Method:          DefaultMethod,
+				UserAgent:       DefaultUserAgent,
+				FollowRedirects: true,
 			},
 		},
 	}
@@ -163,6 +166,11 @@ func RunStress(s StressConfig, w io.Writer) ([][]RequestStat, error) {
 				timeout = time.Duration(0)
 			}
 			client := &http.Client{Timeout: timeout, Transport: tr}
+			if !target.FollowRedirects {
+				client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+			}
 
 			//start up the workers
 			for i := 0; i < target.Concurrency; i++ {

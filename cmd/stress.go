@@ -57,6 +57,7 @@ var stressCmd = &cobra.Command{
 				stressCfg.Targets[i].BasicAuth = viper.GetString("basicAuth")
 				stressCfg.Targets[i].Compress = viper.GetBool("compress")
 				stressCfg.Targets[i].KeepAlive = viper.GetBool("keepalive")
+				stressCfg.Targets[i].FollowRedirects = viper.GetBool("followredirects")
 			}
 		} else {
 			//set non-URL target settings
@@ -99,6 +100,9 @@ var stressCmd = &cobra.Command{
 				}
 				if _, set := targetMapVals["KeepAlive"]; !set {
 					stressCfg.Targets[i].KeepAlive = viper.GetBool("keepalive")
+				}
+				if _, set := targetMapVals["FollowRedirects"]; !set {
+					stressCfg.Targets[i].FollowRedirects = viper.GetBool("followredirects")
 				}
 			}
 		}
@@ -213,6 +217,9 @@ func init() {
 
 	stressCmd.Flags().BoolP("keepalive", "k", true, "Enable HTTP KeepAlive.")
 	viper.BindPFlag("keepalive", stressCmd.Flags().Lookup("keepalive"))
+
+	stressCmd.Flags().Bool("follow-redirects", true, "Follow HTTP redirects.")
+	viper.BindPFlag("followredirects", stressCmd.Flags().Lookup("follow-redirects"))
 
 	stressCmd.Flags().Bool("no-http2", false, "Disable HTTP2.")
 	viper.BindPFlag("noHTTP2", stressCmd.Flags().Lookup("no-http2"))
