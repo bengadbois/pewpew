@@ -53,6 +53,7 @@ var stressCmd = &cobra.Command{
 				stressCfg.Targets[i].Body = viper.GetString("body")
 				stressCfg.Targets[i].BodyFilename = viper.GetString("bodyFile")
 				stressCfg.Targets[i].Headers = viper.GetString("headers")
+				stressCfg.Targets[i].Cookies = viper.GetString("cookies")
 				stressCfg.Targets[i].UserAgent = viper.GetString("userAgent")
 				stressCfg.Targets[i].BasicAuth = viper.GetString("basicAuth")
 				stressCfg.Targets[i].Compress = viper.GetBool("compress")
@@ -88,6 +89,9 @@ var stressCmd = &cobra.Command{
 				}
 				if _, set := targetMapVals["Headers"]; !set {
 					stressCfg.Targets[i].Headers = viper.GetString("headers")
+				}
+				if _, set := targetMapVals["Cookies"]; !set {
+					stressCfg.Targets[i].Cookies = viper.GetString("cookies")
 				}
 				if _, set := targetMapVals["UserAgent"]; !set {
 					stressCfg.Targets[i].UserAgent = viper.GetString("userAgent")
@@ -205,6 +209,9 @@ func init() {
 
 	stressCmd.Flags().StringP("headers", "H", "", "Add arbitrary header line, eg. 'Accept-Encoding:gzip, Content-Type:application/json'")
 	viper.BindPFlag("headers", stressCmd.Flags().Lookup("headers"))
+
+	stressCmd.Flags().String("cookies", "", "Add request cookies, eg. 'data=123; session=456'")
+	viper.BindPFlag("cookies", stressCmd.Flags().Lookup("cookies"))
 
 	stressCmd.Flags().StringP("user-agent", "A", "pewpew", "Add User-Agent header. Can also be done with the arbitrary header flag.")
 	viper.BindPFlag("userAgent", stressCmd.Flags().Lookup("user-agent"))
