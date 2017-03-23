@@ -54,6 +54,7 @@ type (
 		Body            string
 		BodyFilename    string
 		Headers         string
+		Cookies         string
 		UserAgent       string
 		BasicAuth       string
 		Compress        bool
@@ -70,6 +71,7 @@ type (
 		Body            string
 		BodyFilename    string
 		Headers         string
+		Cookies         string
 		UserAgent       string
 		BasicAuth       string
 		Compress        bool
@@ -318,6 +320,17 @@ func buildRequest(t Target) (http.Request, error) {
 	}
 
 	req.Header.Set("User-Agent", t.UserAgent)
+
+	//add cookies
+	if t.Cookies != "" {
+		cookieMap, err := parseKeyValString(t.Cookies, ";", "=")
+		if err != nil {
+			return http.Request{}, errors.New("could not parse cookies: " + err.Error())
+		}
+		for key, val := range cookieMap {
+			req.AddCookie(&http.Cookie{Name: key, Value: val})
+		}
+	}
 
 	if t.BasicAuth != "" {
 		authMap, err := parseKeyValString(t.BasicAuth, ",", ":")
