@@ -15,7 +15,7 @@ Flexible HTTP stress tester
 - HTTP2 support
 - IPV6 support
 - Available as a Go library
-- Tons of command line and/or config file options (arbitrary headers, user agent, timeouts, ignore SSL certs, HTTP authentication, keepalive and more)
+- Tons of command line and/or config file options (arbitrary headers, cookies, user agent, timeouts, ignore SSL certs, HTTP authentication, keepalive and more)
 
 ## Status
 Pewpew is under active development. Since Pewpew is pre-1.0, minor version changes may be breaking. Tagged releases should be stable. Versioning follows [SemVer](http://semver.org/).
@@ -105,6 +105,7 @@ Count = 1 #this overwrites the default global Count (10) for this target
 Method = "POST"
 Body = "{\"username\": \"newuser1\", \"email\": \"newuser1@domain.com\"}"
 Headers = "Accept-Encoding:gzip, Content-Type:application/json"
+Cookies = "data=123; session=456" #equivalent to adding "Cookie: data=123; session=456," to the Header option
 Compress = true #redundant with the global which is fine
 Timeout = "500ms" #this overwrites the explicitly set global Timeout for this target
 UserAgent = "notpewpew"
@@ -136,6 +137,7 @@ Global settings:
 - Body (default defer to Target)
 - BodyFilename (default defer to Target)
 - Headers (default defer to Target)
+- Cookies (default defer to Target)
 - UserAgent (default defer to Target)
 - BasicAuth (default defer to Target)
 - Compress (default defer to Target)
@@ -152,6 +154,7 @@ Individual target settings:
 - Body (default empty)
 - BodyFilename (default none)
 - Headers (default none)
+- Cookies (default none)
 - UserAgent (default "pewpew")
 - BasicAuth (default none)
 - Compress (default false)
