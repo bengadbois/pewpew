@@ -14,34 +14,41 @@ import (
 func CreateTextSummary(reqStatSummary requestStatSummary) string {
 	summary := "\n"
 
-	summary = summary + "Timing\n"
-	summary = summary + "Mean query speed:     " + fmt.Sprintf("%d", reqStatSummary.avgDuration/1000000) + " ms\n"
-	summary = summary + "Fastest query speed:  " + fmt.Sprintf("%d", reqStatSummary.minDuration/1000000) + " ms\n"
-	summary = summary + "Slowest query speed:  " + fmt.Sprintf("%d", reqStatSummary.maxDuration/1000000) + " ms\n"
-	summary = summary + "Mean RPS:             " + fmt.Sprintf("%.2f", reqStatSummary.avgRPS*1000000000) + " req/sec\n"
-	summary = summary + "Total time:           " + fmt.Sprintf("%d", reqStatSummary.endTime.Sub(reqStatSummary.startTime).Nanoseconds()/1000000) + " ms\n"
+	summary += "Timing\n"
+	summary += "Mean query speed:     " + fmt.Sprintf("%d", reqStatSummary.avgDuration/1000000) + " ms\n"
+	summary += "Fastest query speed:  " + fmt.Sprintf("%d", reqStatSummary.minDuration/1000000) + " ms\n"
+	summary += "Slowest query speed:  " + fmt.Sprintf("%d", reqStatSummary.maxDuration/1000000) + " ms\n"
+	summary += "Mean RPS:             " + fmt.Sprintf("%.2f", reqStatSummary.avgRPS*1000000000) + " req/sec\n"
+	summary += "Total time:           " + fmt.Sprintf("%d", reqStatSummary.endTime.Sub(reqStatSummary.startTime).Nanoseconds()/1000000) + " ms\n"
 
-	summary = summary + "\nData Transferred\n"
-	summary = summary + "Mean query:      " + fmt.Sprintf("%d", reqStatSummary.avgDataTransferred) + " bytes\n"
-	summary = summary + "Largest query:   " + fmt.Sprintf("%d", reqStatSummary.maxDataTransferred) + " bytes\n"
-	summary = summary + "Smallest query:  " + fmt.Sprintf("%d", reqStatSummary.minDataTransferred) + " bytes\n"
-	summary = summary + "Total:           " + fmt.Sprintf("%d", reqStatSummary.totalDataTransferred) + " bytes\n"
+	summary += "\nData Transferred\n"
+	summary += "Mean query:      " + fmt.Sprintf("%d", reqStatSummary.avgDataTransferred) + " bytes\n"
+	summary += "Largest query:   " + fmt.Sprintf("%d", reqStatSummary.maxDataTransferred) + " bytes\n"
+	summary += "Smallest query:  " + fmt.Sprintf("%d", reqStatSummary.minDataTransferred) + " bytes\n"
+	summary += "Total:           " + fmt.Sprintf("%d", reqStatSummary.totalDataTransferred) + " bytes\n"
 
 	summary = summary + "\nResponse Codes\n"
 	//sort the status codes
 	var codes []int
-	for key := range reqStatSummary.statusCodes {
+	totalResponses := 0
+	for key, val := range reqStatSummary.statusCodes {
 		codes = append(codes, key)
+		totalResponses += val
 	}
 	sort.Ints(codes)
 	for _, code := range codes {
 		if code == 0 {
-			continue
+			summary += "Failed"
+		} else {
+			summary += fmt.Sprintf("%d", code)
 		}
-		summary = summary + fmt.Sprintf("%d", code) + ": " + fmt.Sprintf("%d", reqStatSummary.statusCodes[code]) + " responses\n"
-	}
-	if reqStatSummary.statusCodes[0] > 0 {
-		summary = summary + "Failed: " + fmt.Sprintf("%d", reqStatSummary.statusCodes[0]) + " requests\n"
+		summary += ": " + fmt.Sprintf("%d", reqStatSummary.statusCodes[code])
+		if code == 0 {
+			summary += " requests"
+		} else {
+			summary += " responses"
+		}
+		summary += " (" + fmt.Sprintf("%.2f", 100*float64(reqStatSummary.statusCodes[code])/float64(totalResponses)) + "%)\n"
 	}
 	return summary
 }
