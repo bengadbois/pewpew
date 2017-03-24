@@ -84,6 +84,12 @@ func printStat(stat RequestStat, w io.Writer) {
 
 //print tons of info about the request, response and response body
 func printVerbose(req *http.Request, response *http.Response, w io.Writer) {
+	if req == nil {
+		return
+	}
+	if response == nil {
+		return
+	}
 	var requestInfo string
 	//request details
 	requestInfo = requestInfo + fmt.Sprintf("Request:\n%+v\n\n", &req)

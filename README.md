@@ -23,11 +23,11 @@ Pewpew is under active development. Since Pewpew is pre-1.0, minor version chang
 ## Installing
 Pre-compiled binaries are available on [Releases](https://github.com/bengadbois/pewpew/releases).
 
-If you want to get the latest or build from source: install Go 1.7+, `go get github.com/bengadbois/pewpew`, and install dependencies with [Glide](http://glide.sh/).
+If you want to get the latest or build from source: install Go 1.8+, `go get github.com/bengadbois/pewpew`, and install dependencies with [Glide](http://glide.sh/).
 
 ## Examples
 ```
-pewpew stress -n 50 http://www.example.com
+pewpew stress -n 50 www.example.com
 ```
 Make 50 requests to http://www.example.com
 
@@ -46,7 +46,7 @@ For the full list of command line options, run `pewpew help` or `pewpew help str
 ### Using Regular Expression Targets
 Pewpew supports using regular expressions (Perl syntax) to nondeterministically generate targets.
 ```
-pewpew stress -r "http://localhost/pages/[0-9]{1,3}"
+pewpew stress -r "localhost/pages/[0-9]{1,3}"
 ```
 This example will generate target URLs such as:
 ```
@@ -63,7 +63,7 @@ http://localhost/pages/3
 ```
 
 ```
-pewpew stress -r "http://localhost/pages/[0-9]+\?cache=(true|false)(\&referrer=[0-9]{3})?"
+pewpew stress -r "localhost/pages/[0-9]+\?cache=(true|false)(\&referrer=[0-9]{3})?"
 ```
 This example will generate target URLs such as:
 ```
