@@ -26,7 +26,8 @@ func CreateRequestsStats(requestStats []RequestStat) requestStatSummary {
 	}
 
 	requestCodes := make(map[int]int)
-	summary := requestStatSummary{maxDuration: requestStats[0].Duration,
+	summary := requestStatSummary{
+		maxDuration:          requestStats[0].Duration,
 		minDuration:          requestStats[0].Duration,
 		minDataTransferred:   requestStats[0].DataTransferred,
 		statusCodes:          requestCodes,
@@ -37,10 +38,14 @@ func CreateRequestsStats(requestStats []RequestStat) requestStatSummary {
 	var totalDurations time.Duration //total time of all requests (concurrent is counted)
 	nonErrCount := 0
 	for i := 0; i < len(requestStats); i++ {
+		if requestStats[i].Error != nil {
+			continue
+		}
+		nonErrCount++
 		if requestStats[i].Duration > summary.maxDuration {
 			summary.maxDuration = requestStats[i].Duration
 		}
-		if requestStats[i].Duration < summary.minDuration {
+		if requestStats[i].Duration < summary.minDuration || summary.minDuration == 0 { //in case was set to 0 due to an error req
 			summary.minDuration = requestStats[i].Duration
 		}
 		if requestStats[i].StartTime.Before(summary.startTime) {
@@ -49,36 +54,35 @@ func CreateRequestsStats(requestStats []RequestStat) requestStatSummary {
 		if requestStats[i].EndTime.After(summary.endTime) {
 			summary.endTime = requestStats[i].EndTime
 		}
+		totalDurations += requestStats[i].Duration
 
 		if requestStats[i].DataTransferred > summary.maxDataTransferred {
 			summary.maxDataTransferred = requestStats[i].DataTransferred
 		}
-		if requestStats[i].DataTransferred < summary.minDataTransferred {
+		if requestStats[i].DataTransferred < summary.minDataTransferred || summary.minDataTransferred == 0 { //in case was set to 0 due to an error req
 			summary.minDataTransferred = requestStats[i].DataTransferred
 		}
-
-		totalDurations += requestStats[i].Duration
-		summary.statusCodes[requestStats[i].StatusCode]++
 		summary.totalDataTransferred += requestStats[i].DataTransferred
-		if requestStats[i].Error == nil {
-			nonErrCount++
-		}
+
+		summary.statusCodes[requestStats[i].StatusCode]++
 	}
-	//kinda ugly to calculate average, then convert into nanoseconds
 	if nonErrCount == 0 {
 		summary.avgDuration = 0
+		summary.maxDuration = 0
+		summary.minDuration = 0
+		summary.minDataTransferred = 0
+		summary.maxDataTransferred = 0
+		summary.totalDataTransferred = 0
+		return summary
 	} else {
+		//kinda ugly to calculate average, then convert into nanoseconds
 		avgNs := totalDurations.Nanoseconds() / int64(nonErrCount)
 		newAvg, _ := time.ParseDuration(fmt.Sprintf("%d", avgNs) + "ns")
 		summary.avgDuration = newAvg
 	}
 
-	if nonErrCount == 0 {
-		summary.avgDataTransferred = 0
-	} else {
-		summary.avgDataTransferred = summary.totalDataTransferred / nonErrCount
-	}
+	summary.avgDataTransferred = summary.totalDataTransferred / nonErrCount
 
-	summary.avgRPS = float64(len(requestStats)) / float64(summary.endTime.Sub(summary.startTime))
+	summary.avgRPS = float64(nonErrCount) / float64(summary.endTime.Sub(summary.startTime))
 	return summary
 }
