@@ -10,7 +10,7 @@ import (
 	color "github.com/fatih/color"
 )
 
-//creates nice readable summary of entire stress test
+//CreateTextSummary creates a human friendly summary of entire stress test
 func CreateTextSummary(reqStatSummary requestStatSummary) string {
 	summary := "\n"
 
