@@ -10,9 +10,11 @@ install:
   - go get github.com/opennota/check/cmd/structcheck
   - go get github.com/opennota/check/cmd/varcheck
   - go get github.com/client9/misspell/cmd/misspell
+  - go get github.com/mattn/goveralls
 
 script:
   - go get -t ./...
+  - goveralls -service=travis-ci
   - diff <(echo -n) <(gofmt -s -d .)
   - ineffassign .
   - go vet -race ./...
