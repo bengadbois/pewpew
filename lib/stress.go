@@ -22,6 +22,7 @@ var writeLock sync.Mutex
 
 type workerDone struct{}
 
+//RequestStat is the saved information about an individual completed HTTP request
 type RequestStat struct {
 	Proto     string
 	URL       string
@@ -37,7 +38,7 @@ type RequestStat struct {
 }
 
 type (
-	//Stress is the top level struct that contains the configuration of stress test
+	//Stress is the top level struct that contains the configuration for a stress test
 	StressConfig struct {
 		Targets    []Target
 		Verbose    bool
@@ -61,14 +62,22 @@ type (
 		KeepAlive       bool
 		FollowRedirects bool
 	}
+	//Target is location to send the HTTP request.
 	Target struct {
-		URL             string
-		RegexURL        bool
-		Count           int //how many total requests to make
-		Concurrency     int
-		Timeout         string
-		Method          string
-		Body            string
+		URL string
+		//Whether or not to interpret the URL as a regular expression string
+		//and generate actual target URLs from that
+		RegexURL bool
+		//How many total requests to make
+		Count int
+		//How many requests can be happening simultaneously for this Target
+		Concurrency int
+		Timeout     string
+		//A valid HTTP method: GET, HEAD, POST, etc.
+		Method string
+		//String that is the content of the HTTP body. Empty string is no body.
+		Body string
+		//A location on disk to read the HTTP body from. Empty string means it will not be read.
 		BodyFilename    string
 		Headers         string
 		Cookies         string
@@ -80,10 +89,8 @@ type (
 	}
 )
 
-//defaults
-var DefaultURL = "http://localhost"
-
 const (
+	DefaultURL         = "http://localhost"
 	DefaultCount       = 10
 	DefaultConcurrency = 1
 	DefaultTimeout     = "10s"
@@ -92,7 +99,7 @@ const (
 )
 
 //NewStress creates a new Stress object
-//with reasonable defaults, but needs URL set
+//with reasonable defaults
 func NewStressConfig() (s *StressConfig) {
 	s = &StressConfig{
 		Targets: []Target{
@@ -110,7 +117,8 @@ func NewStressConfig() (s *StressConfig) {
 	return
 }
 
-//RunStress starts the stress tests
+//RunStress starts the stress tests with the provided StressConfig.
+//Throughout the test, data is sent to w, useful for live updates.
 func RunStress(s StressConfig, w io.Writer) ([][]RequestStat, error) {
 	if w == nil {
 		return nil, errors.New("nil writer")
