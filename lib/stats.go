@@ -19,7 +19,7 @@ type requestStatSummary struct {
 	totalDataTransferred int         //bytes
 }
 
-//create statistical summary of all requests
+//CreateRequestsStats creates a statistical summary out of the individual RequestStats
 func CreateRequestsStats(requestStats []RequestStat) requestStatSummary {
 	if len(requestStats) == 0 {
 		return requestStatSummary{}
