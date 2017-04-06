@@ -10,10 +10,10 @@ import (
 
 func TestCreateTextSummary(t *testing.T) {
 	cases := []struct {
-		s requestStatSummary
+		s RequestStatSummary
 	}{
-		{requestStatSummary{}}, //empty
-		{requestStatSummary{
+		{RequestStatSummary{}}, //empty
+		{RequestStatSummary{
 			avgRPS:               12.34,
 			avgDuration:          1234,
 			minDuration:          1234,

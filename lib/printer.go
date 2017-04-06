@@ -11,7 +11,7 @@ import (
 )
 
 //CreateTextSummary creates a human friendly summary of entire stress test
-func CreateTextSummary(reqStatSummary requestStatSummary) string {
+func CreateTextSummary(reqStatSummary RequestStatSummary) string {
 	summary := "\n"
 
 	summary += "Timing\n"

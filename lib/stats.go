@@ -5,7 +5,8 @@ import (
 	"time"
 )
 
-type requestStatSummary struct {
+//RequestStatSummary is an aggregate statistical summary of a set of RequestStats
+type RequestStatSummary struct {
 	avgRPS               float64 //requests per nanoseconds
 	avgDuration          time.Duration
 	maxDuration          time.Duration
@@ -20,13 +21,13 @@ type requestStatSummary struct {
 }
 
 //CreateRequestsStats creates a statistical summary out of the individual RequestStats
-func CreateRequestsStats(requestStats []RequestStat) requestStatSummary {
+func CreateRequestsStats(requestStats []RequestStat) RequestStatSummary {
 	if len(requestStats) == 0 {
-		return requestStatSummary{}
+		return RequestStatSummary{}
 	}
 
 	requestCodes := make(map[int]int)
-	summary := requestStatSummary{
+	summary := RequestStatSummary{
 		maxDuration:          requestStats[0].Duration,
 		minDuration:          requestStats[0].Duration,
 		minDataTransferred:   requestStats[0].DataTransferred,
@@ -74,12 +75,11 @@ func CreateRequestsStats(requestStats []RequestStat) requestStatSummary {
 		summary.maxDataTransferred = 0
 		summary.totalDataTransferred = 0
 		return summary
-	} else {
-		//kinda ugly to calculate average, then convert into nanoseconds
-		avgNs := totalDurations.Nanoseconds() / int64(nonErrCount)
-		newAvg, _ := time.ParseDuration(fmt.Sprintf("%d", avgNs) + "ns")
-		summary.avgDuration = newAvg
 	}
+	//kinda ugly to calculate average, then convert into nanoseconds
+	avgNs := totalDurations.Nanoseconds() / int64(nonErrCount)
+	newAvg, _ := time.ParseDuration(fmt.Sprintf("%d", avgNs) + "ns")
+	summary.avgDuration = newAvg
 
 	summary.avgDataTransferred = summary.totalDataTransferred / nonErrCount
 

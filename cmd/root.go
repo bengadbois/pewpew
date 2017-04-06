@@ -18,6 +18,7 @@ var RootCmd = &cobra.Command{
 	},
 }
 
+// Execute runs the RootCmd and terminates the program if there is an error
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
