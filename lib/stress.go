@@ -38,7 +38,7 @@ type RequestStat struct {
 }
 
 type (
-	//Stress is the top level struct that contains the configuration for a stress test
+	//StressConfig is the top level struct that contains the configuration for a stress test
 	StressConfig struct {
 		Targets    []Target
 		Verbose    bool
@@ -89,6 +89,7 @@ type (
 	}
 )
 
+//Reasonable default values for an new StressConfig
 const (
 	DefaultURL         = "http://localhost"
 	DefaultCount       = 10
@@ -98,8 +99,8 @@ const (
 	DefaultUserAgent   = "pewpew"
 )
 
-//NewStress creates a new Stress object
-//with reasonable defaults
+//NewStressConfig creates a new StressConfig object
+//with package defaults
 func NewStressConfig() (s *StressConfig) {
 	s = &StressConfig{
 		Targets: []Target{
