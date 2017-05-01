@@ -39,7 +39,26 @@ func init() {
 		fmt.Println("No config file found")
 	}
 
-	RootCmd.PersistentFlags().Int("cpu", runtime.GOMAXPROCS(0), "Number of CPUs to use.")
+	RootCmd.PersistentFlags().BoolP("regex", "r", false, "Interpret URLs as regular expressions.")
+	RootCmd.PersistentFlags().StringP("timeout", "t", "10s", "Maximum seconds to wait for response")
+	RootCmd.PersistentFlags().StringP("request-method", "X", "GET", "Request type. GET, HEAD, POST, PUT, etc.")
+	RootCmd.PersistentFlags().String("body", "", "String to use as request body e.g. POST body.")
+	RootCmd.PersistentFlags().String("body-file", "", "Path to file to use as request body. Will overwrite --body if both are present.")
+	RootCmd.PersistentFlags().StringP("headers", "H", "", "Add arbitrary header line, eg. 'Accept-Encoding:gzip, Content-Type:application/json'")
+	RootCmd.PersistentFlags().String("cookies", "", "Add request cookies, eg. 'data=123; session=456'")
+	RootCmd.PersistentFlags().StringP("user-agent", "A", "pewpew", "Add User-Agent header. Can also be done with the arbitrary header flag.")
+	RootCmd.PersistentFlags().String("basic-auth", "", "Add HTTP basic authentication, eg. 'user123:password456'.")
+	RootCmd.PersistentFlags().BoolP("compress", "C", true, "Add 'Accept-Encoding: gzip' header if Accept-Encoding is not already present.")
+	RootCmd.PersistentFlags().BoolP("keepalive", "k", true, "Enable HTTP KeepAlive.")
+	RootCmd.PersistentFlags().Bool("follow-redirects", true, "Follow HTTP redirects.")
+	RootCmd.PersistentFlags().Bool("no-http2", false, "Disable HTTP2.")
+	RootCmd.PersistentFlags().Bool("enforce-ssl", false, "Enfore SSL certificate correctness.")
+	RootCmd.PersistentFlags().String("output-json", "", "Path to file to write full data as JSON")
+	RootCmd.PersistentFlags().String("output-csv", "", "Path to file to write full data as CSV")
+	RootCmd.PersistentFlags().BoolP("quiet", "q", false, "Do not print while requests are running.")
 	RootCmd.PersistentFlags().BoolP("verbose", "v", false, "Print extra troubleshooting info.")
+	RootCmd.PersistentFlags().Int("cpu", runtime.GOMAXPROCS(0), "Number of CPUs to use.")
+
 	viper.BindPFlags(RootCmd.PersistentFlags())
+
 }
