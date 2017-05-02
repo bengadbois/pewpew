@@ -5,6 +5,21 @@ import (
 	"time"
 )
 
+//RequestStat is the saved information about an individual completed HTTP request
+type RequestStat struct {
+	Proto     string
+	URL       string
+	Method    string
+	StartTime time.Time `json:"startTime"`
+	EndTime   time.Time `json:"endTime"`
+	//equivalent to the difference between StartTime and EndTime
+	Duration time.Duration `json:"duration"`
+	//HTTP Status Code, e.g. 200, 404, 503
+	StatusCode      int   `json:"statusCode"`
+	Error           error `json:"error"`
+	DataTransferred int   //bytes
+}
+
 //RequestStatSummary is an aggregate statistical summary of a set of RequestStats
 type RequestStatSummary struct {
 	avgRPS               float64 //requests per nanoseconds
