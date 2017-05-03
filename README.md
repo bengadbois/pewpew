@@ -15,7 +15,7 @@ Pewpew is a flexible command line HTTP stress tester. Unlike other stress tester
 - HTTP2 support
 - IPV6 support
 - Available as a Go library
-- Tons of command line and/or config file options (arbitrary headers, cookies, User-Agent, timeouts, ignore SSL certs, HTTP authentication, Keep-Alive and more)
+- Tons of command line and/or config file options (arbitrary headers, cookies, User-Agent, timeouts, ignore SSL certs, HTTP authentication, Keep-Alive, DNS prefetch, and more)
 
 ## Status
 Pewpew is under active development. Since Pewpew is pre-1.0, minor version changes may be breaking. Tagged releases should be stable. Versioning follows [SemVer](http://semver.org/).
@@ -96,6 +96,7 @@ Quiet = false
 Compress = true
 UserAgent = "pewpewpewpewpew"
 Timeout = "1.75s"
+DNSPrefetch = true
 Headers = "Accept-Encoding:gzip"
 
 #Settings for each of the three Targets
@@ -136,6 +137,7 @@ Global settings:
 - Verbose (default false)
 - Count (default defer to Target)
 - Concurrency (default defer to Target)
+- DNSPrefetch (default defer to Target)
 - Timeout (default defer to Target)
 - Method (default defer to Target)
 - Body (default defer to Target)
@@ -153,6 +155,7 @@ Individual target settings:
 - RegexURL (default false)
 - Count (default 10)
 - Concurrency (default 1)
+- DNSPrefetch (default false)
 - Timeout (default 10s)
 - Method (default GET)
 - Body (default empty)

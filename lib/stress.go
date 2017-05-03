@@ -26,6 +26,7 @@ type (
 
 		Count           int
 		Concurrency     int
+		DNSPrefetch     bool
 		Timeout         string
 		Method          string
 		Body            string

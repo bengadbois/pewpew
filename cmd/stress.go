@@ -46,6 +46,7 @@ var stressCmd = &cobra.Command{
 				stressCfg.StressTargets[i].Target.URL = args[i]
 				//use global configs instead of the config file's individual target settings
 				stressCfg.StressTargets[i].Target.RegexURL = viper.GetBool("regex")
+				stressCfg.StressTargets[i].Target.DNSPrefetch = viper.GetBool("dns-prefetch")
 				stressCfg.StressTargets[i].Target.Timeout = viper.GetString("timeout")
 				stressCfg.StressTargets[i].Target.Method = viper.GetString("request-method")
 				stressCfg.StressTargets[i].Target.Body = viper.GetString("body")
@@ -74,6 +75,9 @@ var stressCmd = &cobra.Command{
 				}
 				if _, set := targetMapVals["RegexURL"]; !set {
 					stressCfg.StressTargets[i].Target.RegexURL = viper.GetBool("regex")
+				}
+				if _, set := targetMapVals["DNSPrefetch"]; !set {
+					stressCfg.StressTargets[i].Target.DNSPrefetch = viper.GetBool("dns-prefetch")
 				}
 				if _, set := targetMapVals["Timeout"]; !set {
 					stressCfg.StressTargets[i].Target.Timeout = viper.GetString("timeout")
