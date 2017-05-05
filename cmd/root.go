@@ -15,6 +15,10 @@ var RootCmd = &cobra.Command{
 	Short: "HTTP(S) & HTTP2 load tester for performance and stress testing",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		runtime.GOMAXPROCS(viper.GetInt("cpu"))
+		if viper.GetBool("verbose") && viper.GetBool("quiet") {
+			fmt.Println("Both verbose and quiet enabled, disabling verbose")
+			viper.Set("verbose", false)
+		}
 	},
 }
 
