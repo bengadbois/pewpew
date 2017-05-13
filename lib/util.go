@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -70,6 +71,17 @@ func buildRequest(t Target) (http.Request, error) {
 	}
 	if URL.Host == "" {
 		return http.Request{}, errors.New("empty hostname")
+	}
+
+	if t.DNSPrefetch {
+		addrs, err := net.LookupHost(URL.Host)
+		if err != nil {
+			return http.Request{}, errors.New("failed to prefetch host " + URL.Host)
+		}
+		if len(addrs) == 0 {
+			return http.Request{}, errors.New("no addresses found for " + URL.Host)
+		}
+		URL.Host = addrs[0]
 	}
 
 	//setup the request

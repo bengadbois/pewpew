@@ -27,7 +27,10 @@ type (
 		//Whether or not to interpret the URL as a regular expression string
 		//and generate actual target URLs from that
 		RegexURL bool
-		Timeout  string
+		//whether or not to resolve hostname to IP address before making request,
+		//eliminating that aspect of timing
+		DNSPrefetch bool
+		Timeout     string
 		//A valid HTTP method: GET, HEAD, POST, etc.
 		Method string
 		//String that is the content of the HTTP body. Empty string is no body.

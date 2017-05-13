@@ -44,6 +44,7 @@ func init() {
 	}
 
 	RootCmd.PersistentFlags().BoolP("regex", "r", false, "Interpret URLs as regular expressions.")
+	RootCmd.PersistentFlags().Bool("dns-prefetch", false, "Prefetch IP from hostname before making request, eliminating DNS fetching from timing.")
 	RootCmd.PersistentFlags().StringP("timeout", "t", "10s", "Maximum seconds to wait for response")
 	RootCmd.PersistentFlags().StringP("request-method", "X", "GET", "Request type. GET, HEAD, POST, PUT, etc.")
 	RootCmd.PersistentFlags().String("body", "", "String to use as request body e.g. POST body.")
