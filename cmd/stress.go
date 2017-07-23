@@ -65,14 +65,19 @@ var stressCmd = &cobra.Command{
 			//set non-URL target settings
 			//walk through viper.Get() because that will show which were
 			//explictly set instead of guessing at zero-valued defaults
-			for i, target := range viper.Get("targets").([]interface{}) {
-				targetMapVals := target.(map[string]interface{})
-				if _, set := targetMapVals["Count"]; !set {
+			for i, target := range viper.Get("stresstargets").([]interface{}) {
+				stressTargetMapVals := target.(map[string]interface{})
+				if _, set := stressTargetMapVals["Count"]; !set {
 					stressCfg.StressTargets[i].Count = viper.GetInt("count")
 				}
-				if _, set := targetMapVals["Concurrency"]; !set {
+				if _, set := stressTargetMapVals["Concurrency"]; !set {
 					stressCfg.StressTargets[i].Concurrency = viper.GetInt("concurrency")
 				}
+				targetMapVals, set := stressTargetMapVals["Target"].(map[string]interface{})
+				if !set {
+					continue
+				}
+
 				if _, set := targetMapVals["RegexURL"]; !set {
 					stressCfg.StressTargets[i].Target.RegexURL = viper.GetBool("regex")
 				}
@@ -83,7 +88,7 @@ var stressCmd = &cobra.Command{
 					stressCfg.StressTargets[i].Target.Timeout = viper.GetString("timeout")
 				}
 				if _, set := targetMapVals["Method"]; !set {
-					stressCfg.StressTargets[i].Target.Method = viper.GetString("method")
+					stressCfg.StressTargets[i].Target.Method = viper.GetString("request-method")
 				}
 				if _, set := targetMapVals["Body"]; !set {
 					stressCfg.StressTargets[i].Target.Body = viper.GetString("body")
