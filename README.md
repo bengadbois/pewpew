@@ -4,7 +4,7 @@ Pewpew is a flexible command line HTTP stress tester. Unlike other stress tester
 
 **Disclaimer**: Pewpew is designed as a tool to help those developing web services and websites. Please use responsibly.
 
-![Demo](http://i.imgur.com/4Hj6AuO.gif)
+![Demo](screencast.gif)
 
 ## Features
 - Regular expression defined targets
