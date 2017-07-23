@@ -79,6 +79,8 @@ http://localhost/pages/767911706?cache=false&referrer=642
 http://localhost/pages/68780?cache=true
 ```
 
+Note: dots in IP addresses must be escaped, such as `pewpew stress -r "http://127\.0\.0\.1:8080/api/user/[0-9]{1,3}"`
+
 ### Using Config Files
 
 Pewpew supports complex configurations more easily managed with a config file. You can define one or more targets each with their own settings.
@@ -100,24 +102,27 @@ DNSPrefetch = true
 Headers = "Accept-Encoding:gzip"
 
 #Settings for each of the three Targets
-[[Targets]]
-URL = "http://127.0.0.1/home"
-Count = 15
-Concurrency = 3
-[[Targets]]
-URL = "https://127.0.0.1/api/user"
-Count = 1 #this overwrites the default global Count (10) for this target
-Method = "POST"
-Body = "{\"username\": \"newuser1\", \"email\": \"newuser1@domain.com\"}"
-Headers = "Accept-Encoding:gzip, Content-Type:application/json"
-Cookies = "data=123; session=456" #equivalent to adding "Cookie: data=123; session=456," to the Header option
-Compress = true #redundant with the global which is fine
-Timeout = "500ms" #this overwrites the explicitly set global Timeout for this target
-UserAgent = "notpewpew"
-[[Targets]]
-URL = "https://127\\.0\\.0\\.1/api/user/[0-9]{1,4}" #double \\ to escape both the '.' and TOML
-RegexURL = true #parse URL with Perl syntax regex
-Count = 5
+[[StressTargets]]
+    Count = 15
+    Concurrency = 3
+		[StressTargets.Target]
+            URL = "http://127.0.0.1/home"
+[[StressTargets]]
+    Count = 1 #this overwrites the default global Count (10) for this target
+		[StressTargets.Target]
+            URL = "https://127.0.0.1/api/user"
+            Method = "POST"
+            Body = "{\"username\": \"newuser1\", \"email\": \"newuser1@domain.com\"}"
+            Headers = "Accept-Encoding:gzip, Content-Type:application/json"
+            Cookies = "data=123; session=456" #equivalent to adding "Cookie: data=123; session=456," to the Header option
+            Compress = true #redundant with the global which is fine
+            Timeout = "500ms" #this overwrites the explicitly set global Timeout for this target
+        UserAgent = "notpewpew"
+[[StressTargets]]
+    Count = 5
+		[StressTargets.Target]
+            URL = "https://127\\.0\\.0\\.1/api/user/[0-9]{1,4}" #double \\ to escape both the '.' and TOML
+            RegexURL = true #parse URL with Perl syntax regex
 ```
 Pewpew allows for cascading settings, to maximize flexibility and readability.
 Precedence (highest first):

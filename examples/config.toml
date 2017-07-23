@@ -4,16 +4,18 @@ UserAgent = "pewpewpewpewpew"
 Timeout = "1.75s"
 Headers = "Accept-Encoding:gzip"
 
-[[Targets]]
-URL = "http://127.0.0.1/home"
-Count = 15
-Concurrency = 3
-[[Targets]]
-URL = "https://127.0.0.1/api/user"
-Count = 1
-Method = "POST"
-Body = "{\"username\": \"newuser1\", \"email\": \"newuser1@domain.com\"}"
-Headers = "Accept-Encoding:gzip, Content-Type:application/json"
-Compress = true
-Timeout = "500ms"
-UserAgent = "notpewpew"
+[[StressTargets]]
+	Count = 15
+	Concurrency = 3
+		[StressTargets.Target]
+		URL = "http://127.0.0.1/home"
+[[StressTargets]]
+	Count = 1
+		[StressTargets.Target]
+		URL = "https://127.0.0.1/api/user"
+		Method = "POST"
+		Body = "{\"username\": \"newuser1\", \"email\": \"newuser1@domain.com\"}"
+		Headers = "Accept-Encoding:gzip, Content-Type:application/json"
+		Compress = true
+		Timeout = "500ms"
+		UserAgent = "notpewpew"

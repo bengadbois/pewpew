@@ -4,21 +4,25 @@
   "UserAgent": "pewpewpewpewpew",
   "Timeout": "1.75s",
   "Headers": "Accept-Encoding:gzip",
-  "Targets": [
+  "StressTargets": [
     {
-      "URL": "http://127.0.0.1/home",
       "Count": 15,
-      "Concurrency": 3
+      "Concurrency": 3,
+      "Target": {
+        "URL": "http://127.0.0.1/home"
+      }
     },
     {
-      "URL": "https://127.0.0.1/api/user",
       "Concurrency": 1,
-      "Method": "POST",
-      "Body": "{\"username\": \"newuser1\", \"email\": \"newuser1@domain.com\"}",
-      "Headers": "Accept-Encoding:gzip, Content-Type:application/json",
-      "Compress": true,
-      "Timeout": "500ms",
-      "UserAgent": "notpewpew"
+      "Target": {
+        "URL": "https://127.0.0.1/api/user",
+        "Method": "POST",
+        "Body": "{\"username\": \"newuser1\", \"email\": \"newuser1@domain.com\"}",
+        "Headers": "Accept-Encoding:gzip, Content-Type:application/json",
+        "Compress": true,
+        "Timeout": "500ms",
+        "UserAgent": "notpewpew"
+      }
     }
   ]
 }
