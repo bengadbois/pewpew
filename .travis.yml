@@ -4,30 +4,17 @@ go:
   - 1.8.1
 
 install:
-  - go get github.com/golang/lint/golint
-  - go get github.com/gordonklaus/ineffassign
-  - go get github.com/opennota/check/cmd/aligncheck
-  - go get github.com/opennota/check/cmd/structcheck
-  - go get github.com/opennota/check/cmd/varcheck
-  - go get github.com/client9/misspell/cmd/misspell
   - go get github.com/mattn/goveralls
+  - go get github.com/alecthomas/gometalinter
+  - gometalinter --install
+  - curl -sL https://github.com/golang/dep/releases/download/v0.3.1/dep-linux-amd64 > dep
+  - chmod +x ./dep
+  - ./dep ensure
 
 script:
   - go get -t ./...
   - goveralls -service=travis-ci
-  - diff <(echo -n) <(gofmt -s -d .)
-  - ineffassign .
-  - go vet -race ./...
-  - aligncheck .
-  - structcheck .
-  - varcheck .
-  - misspell -error .
-  - go test -v -cover ./...
-  # recompile with glide AFTER doing code checks, as errors in dependencies in vendor/ will get caught ¯\_(ツ)_/¯
-  - go get -v github.com/Masterminds/glide
-  - cd $GOPATH/src/github.com/Masterminds/glide && git checkout tags/v0.12.3 && go install && cd -
-  - glide install
-  - go get ./...
+  - gometalinter --disable-all -E vet -E gofmt -E misspell -E ineffassign -E goimports -E deadcode -E structcheck -E varcheck --tests --vendor ./...
 
 after_success:
   - go get github.com/mitchellh/gox

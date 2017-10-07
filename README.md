@@ -23,7 +23,7 @@ Pewpew is under active development. Since Pewpew is pre-1.0, minor version chang
 ## Installing
 Pre-compiled binaries are available on [Releases](https://github.com/bengadbois/pewpew/releases).
 
-If you want to get the latest or build from source: install Go 1.8+, `go get github.com/bengadbois/pewpew`, and install dependencies with [Glide](http://glide.sh/).
+If you want to get the latest or build from source: install Go 1.8+, `go get github.com/bengadbois/pewpew`, and install dependencies with [dep](https://github.com/golang/dep).
 
 ## Examples
 ```
