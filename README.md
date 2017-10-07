@@ -89,41 +89,8 @@ Pewpew expects the config file is in the current directory and named `config.jso
 ```
 pewpew stress
 ```
+There are examples config files in `examples/`.
 
-Here is an example `config.toml`. There are more examples in `examples/`.
-```toml
-#Global settings
-Count = 10
-Quiet = false
-Compress = true
-UserAgent = "pewpewpewpewpew"
-Timeout = "1.75s"
-DNSPrefetch = true
-Headers = "Accept-Encoding:gzip"
-
-#Settings for each of the three Targets
-[[StressTargets]]
-    Count = 15
-    Concurrency = 3
-		[StressTargets.Target]
-            URL = "http://127.0.0.1/home"
-[[StressTargets]]
-    Count = 1 #this overwrites the default global Count (10) for this target
-		[StressTargets.Target]
-            URL = "https://127.0.0.1/api/user"
-            Method = "POST"
-            Body = "{\"username\": \"newuser1\", \"email\": \"newuser1@domain.com\"}"
-            Headers = "Accept-Encoding:gzip, Content-Type:application/json"
-            Cookies = "data=123; session=456" #equivalent to adding "Cookie: data=123; session=456," to the Header option
-            Compress = true #redundant with the global which is fine
-            Timeout = "500ms" #this overwrites the explicitly set global Timeout for this target
-        UserAgent = "notpewpew"
-[[StressTargets]]
-    Count = 5
-		[StressTargets.Target]
-            URL = "https://127\\.0\\.0\\.1/api/user/[0-9]{1,4}" #double \\ to escape both the '.' and TOML
-            RegexURL = true #parse URL with Perl syntax regex
-```
 Pewpew allows for cascading settings, to maximize flexibility and readability.
 Precedence (highest first):
 - Individual target setting from config file
@@ -136,12 +103,12 @@ All command line options are treated as global settings, and URLs specified on t
 Not all settings are available per target, such as Verbose, which is only a global setting.
 
 Global settings:
+- Count (default 10)
+- Concurrency (default 1)
 - NoHTTP2 (default false)
 - EnforceSSL (default false)
 - Quiet (default false)
 - Verbose (default false)
-- Count (default defer to Target)
-- Concurrency (default defer to Target)
 - DNSPrefetch (default defer to Target)
 - Timeout (default defer to Target)
 - Method (default defer to Target)
@@ -158,8 +125,6 @@ Global settings:
 Individual target settings:
 - URL (default "http://localhost")
 - RegexURL (default false)
-- Count (default 10)
-- Concurrency (default 1)
 - DNSPrefetch (default false)
 - Timeout (default 10s)
 - Method (default GET)
@@ -185,25 +150,27 @@ import (
 )
 
 func main() {
-    stressCfg := pewpew.NewStressConfig()
+    stressCfg := pewpew.StressConfig{
+        //global settings
+        Count:       1,
+        Concurrency: 1,
+        Verbose:     false,
+        //setup one target
+        Targets: []pewpew.Target{{
+            URL:     "https://127.0.0.1:443/home",
+            Timeout: "2s",
+            Method:  "GET",
+            Body:    `{"field": "data", "work": true}`,
+        }},
+    }
 
-    //global settings
-    stressCfg.Quiet = true
-    //setup one target
-    stressCfg.Targets[0].URL = "https://127.0.0.1:443/home"
-    stressCfg.Targets[0].Count = 100
-    stressCfg.Targets[0].Concurrency = 32
-    stressCfg.Targets[0].Timeout = "2s"
-    stressCfg.Targets[0].Method = "POST"
-    stressCfg.Targets[0].Body = `{"field": "data", "work": true}`
-
-    //begin testing
+    //begin stress test
     output := os.Stdout //can be any io.Writer, such as a file
-    stats, err := pewpew.RunStress(*stressCfg, output)
+    stats, err := pewpew.RunStress(stressCfg, output)
     if err != nil {
         fmt.Println("pewpew stress failed:  %s", err.Error())
     }
-    
+
     //do whatever you want with the raw stats
     fmt.Printf("%+v", stats)
 }

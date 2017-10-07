@@ -28,100 +28,90 @@ var stressCmd = &cobra.Command{
 		//global configs
 		stressCfg.Quiet = viper.GetBool("quiet")
 		stressCfg.Verbose = viper.GetBool("verbose")
+		stressCfg.Count = viper.GetInt("count")
+		stressCfg.Concurrency = viper.GetInt("concurrency")
 
 		//URLs are handled differently that other config options
 		//command line specifying URLs take higher precedence than config URLs
 
 		//check either set via config or command line
-		if len(stressCfg.StressTargets) == 0 && len(args) < 1 {
+		if len(stressCfg.Targets) == 0 && len(args) < 1 {
 			return errors.New("requires URL")
 		}
 
 		//if URLs are set on command line, use that for Targets instead of config
 		if len(args) >= 1 {
-			stressCfg.StressTargets = make([]pewpew.StressTarget, len(args))
-			for i := range stressCfg.StressTargets {
-				stressCfg.StressTargets[i].Count = viper.GetInt("count")
-				stressCfg.StressTargets[i].Concurrency = viper.GetInt("concurrency")
-				stressCfg.StressTargets[i].Target.URL = args[i]
+			stressCfg.Targets = make([]pewpew.Target, len(args))
+			for i := range stressCfg.Targets {
+				stressCfg.Targets[i].URL = args[i]
 				//use global configs instead of the config file's individual target settings
-				stressCfg.StressTargets[i].Target.RegexURL = viper.GetBool("regex")
-				stressCfg.StressTargets[i].Target.DNSPrefetch = viper.GetBool("dns-prefetch")
-				stressCfg.StressTargets[i].Target.Timeout = viper.GetString("timeout")
-				stressCfg.StressTargets[i].Target.Method = viper.GetString("request-method")
-				stressCfg.StressTargets[i].Target.Body = viper.GetString("body")
-				stressCfg.StressTargets[i].Target.BodyFilename = viper.GetString("body-file")
-				stressCfg.StressTargets[i].Target.Headers = viper.GetString("headers")
-				stressCfg.StressTargets[i].Target.Cookies = viper.GetString("cookies")
-				stressCfg.StressTargets[i].Target.UserAgent = viper.GetString("user-agent")
-				stressCfg.StressTargets[i].Target.BasicAuth = viper.GetString("basic-auth")
-				stressCfg.StressTargets[i].Target.Compress = viper.GetBool("compress")
-				stressCfg.StressTargets[i].Target.KeepAlive = viper.GetBool("keepalive")
-				stressCfg.StressTargets[i].Target.FollowRedirects = viper.GetBool("follow-redirects")
-				stressCfg.StressTargets[i].Target.NoHTTP2 = viper.GetBool("no-http2")
-				stressCfg.StressTargets[i].Target.EnforceSSL = viper.GetBool("enforce-ssl")
+				stressCfg.Targets[i].RegexURL = viper.GetBool("regex")
+				stressCfg.Targets[i].DNSPrefetch = viper.GetBool("dns-prefetch")
+				stressCfg.Targets[i].Timeout = viper.GetString("timeout")
+				stressCfg.Targets[i].Method = viper.GetString("request-method")
+				stressCfg.Targets[i].Body = viper.GetString("body")
+				stressCfg.Targets[i].BodyFilename = viper.GetString("body-file")
+				stressCfg.Targets[i].Headers = viper.GetString("headers")
+				stressCfg.Targets[i].Cookies = viper.GetString("cookies")
+				stressCfg.Targets[i].UserAgent = viper.GetString("user-agent")
+				stressCfg.Targets[i].BasicAuth = viper.GetString("basic-auth")
+				stressCfg.Targets[i].Compress = viper.GetBool("compress")
+				stressCfg.Targets[i].KeepAlive = viper.GetBool("keepalive")
+				stressCfg.Targets[i].FollowRedirects = viper.GetBool("follow-redirects")
+				stressCfg.Targets[i].NoHTTP2 = viper.GetBool("no-http2")
+				stressCfg.Targets[i].EnforceSSL = viper.GetBool("enforce-ssl")
 			}
 		} else {
 			//set non-URL target settings
 			//walk through viper.Get() because that will show which were
 			//explictly set instead of guessing at zero-valued defaults
-			for i, target := range viper.Get("stresstargets").([]interface{}) {
-				stressTargetMapVals := target.(map[string]interface{})
-				if _, set := stressTargetMapVals["Count"]; !set {
-					stressCfg.StressTargets[i].Count = viper.GetInt("count")
-				}
-				if _, set := stressTargetMapVals["Concurrency"]; !set {
-					stressCfg.StressTargets[i].Concurrency = viper.GetInt("concurrency")
-				}
-				targetMapVals, set := stressTargetMapVals["Target"].(map[string]interface{})
-				if !set {
-					continue
-				}
+			for i, target := range viper.Get("targets").([]interface{}) {
+				targetMapVals := target.(map[string]interface{})
 
 				if _, set := targetMapVals["RegexURL"]; !set {
-					stressCfg.StressTargets[i].Target.RegexURL = viper.GetBool("regex")
+					stressCfg.Targets[i].RegexURL = viper.GetBool("regex")
 				}
 				if _, set := targetMapVals["DNSPrefetch"]; !set {
-					stressCfg.StressTargets[i].Target.DNSPrefetch = viper.GetBool("dns-prefetch")
+					stressCfg.Targets[i].DNSPrefetch = viper.GetBool("dns-prefetch")
 				}
 				if _, set := targetMapVals["Timeout"]; !set {
-					stressCfg.StressTargets[i].Target.Timeout = viper.GetString("timeout")
+					stressCfg.Targets[i].Timeout = viper.GetString("timeout")
 				}
 				if _, set := targetMapVals["Method"]; !set {
-					stressCfg.StressTargets[i].Target.Method = viper.GetString("request-method")
+					stressCfg.Targets[i].Method = viper.GetString("request-method")
 				}
 				if _, set := targetMapVals["Body"]; !set {
-					stressCfg.StressTargets[i].Target.Body = viper.GetString("body")
+					stressCfg.Targets[i].Body = viper.GetString("body")
 				}
 				if _, set := targetMapVals["BodyFilename"]; !set {
-					stressCfg.StressTargets[i].Target.BodyFilename = viper.GetString("bodyFile")
+					stressCfg.Targets[i].BodyFilename = viper.GetString("bodyFile")
 				}
 				if _, set := targetMapVals["Headers"]; !set {
-					stressCfg.StressTargets[i].Target.Headers = viper.GetString("headers")
+					stressCfg.Targets[i].Headers = viper.GetString("headers")
 				}
 				if _, set := targetMapVals["Cookies"]; !set {
-					stressCfg.StressTargets[i].Target.Cookies = viper.GetString("cookies")
+					stressCfg.Targets[i].Cookies = viper.GetString("cookies")
 				}
 				if _, set := targetMapVals["UserAgent"]; !set {
-					stressCfg.StressTargets[i].Target.UserAgent = viper.GetString("userAgent")
+					stressCfg.Targets[i].UserAgent = viper.GetString("userAgent")
 				}
 				if _, set := targetMapVals["BasicAuth"]; !set {
-					stressCfg.StressTargets[i].Target.BasicAuth = viper.GetString("basicAuth")
+					stressCfg.Targets[i].BasicAuth = viper.GetString("basicAuth")
 				}
 				if _, set := targetMapVals["Compress"]; !set {
-					stressCfg.StressTargets[i].Target.Compress = viper.GetBool("compress")
+					stressCfg.Targets[i].Compress = viper.GetBool("compress")
 				}
 				if _, set := targetMapVals["KeepAlive"]; !set {
-					stressCfg.StressTargets[i].Target.KeepAlive = viper.GetBool("keepalive")
+					stressCfg.Targets[i].KeepAlive = viper.GetBool("keepalive")
 				}
 				if _, set := targetMapVals["FollowRedirects"]; !set {
-					stressCfg.StressTargets[i].Target.FollowRedirects = viper.GetBool("followredirects")
+					stressCfg.Targets[i].FollowRedirects = viper.GetBool("followredirects")
 				}
 				if _, set := targetMapVals["NoHTTP2"]; !set {
-					stressCfg.StressTargets[i].Target.NoHTTP2 = viper.GetBool("no-http2")
+					stressCfg.Targets[i].NoHTTP2 = viper.GetBool("no-http2")
 				}
 				if _, set := targetMapVals["EnforceSSL"]; !set {
-					stressCfg.StressTargets[i].Target.EnforceSSL = viper.GetBool("enforce-ssl")
+					stressCfg.Targets[i].EnforceSSL = viper.GetBool("enforce-ssl")
 				}
 			}
 		}
@@ -134,10 +124,10 @@ var stressCmd = &cobra.Command{
 		fmt.Print("\n----Summary----\n\n")
 
 		//only print individual target data if multiple targets
-		if len(stressCfg.StressTargets) > 1 {
-			for idx, stressTarget := range stressCfg.StressTargets {
+		if len(stressCfg.Targets) > 1 {
+			for idx, target := range stressCfg.Targets {
 				//info about the request
-				fmt.Printf("----Target %d: %s %s\n", idx+1, stressTarget.Target.Method, stressTarget.Target.URL)
+				fmt.Printf("----Target %d: %s %s\n", idx+1, target.Method, target.URL)
 				reqStats := pewpew.CreateRequestsStats(targetRequestStats[idx])
 				fmt.Println(pewpew.CreateTextSummary(reqStats))
 			}
@@ -145,12 +135,12 @@ var stressCmd = &cobra.Command{
 
 		//combine individual targets to a total one
 		globalStats := []pewpew.RequestStat{}
-		for i := range stressCfg.StressTargets {
+		for i := range stressCfg.Targets {
 			for j := range targetRequestStats[i] {
 				globalStats = append(globalStats, targetRequestStats[i][j])
 			}
 		}
-		if len(stressCfg.StressTargets) > 1 {
+		if len(stressCfg.Targets) > 1 {
 			fmt.Println("----Global----")
 		}
 		reqStats := pewpew.CreateRequestsStats(globalStats)

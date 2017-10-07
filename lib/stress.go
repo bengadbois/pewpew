@@ -18,14 +18,17 @@ type workerDone struct{}
 type (
 	//StressConfig is the top level struct that contains the configuration for a stress test
 	StressConfig struct {
-		StressTargets []StressTarget
-		Verbose       bool
-		Quiet         bool
+		Verbose bool
+		Quiet   bool
+
+		//Count is how many total requests to make for each Target
+		Count int
+		//Concurrency is how many requests can be happening simultaneously for each Target
+		Concurrency int
+		Targets     []Target
 
 		//global target settings
 
-		Count           int
-		Concurrency     int
 		DNSPrefetch     bool
 		Timeout         string
 		Method          string
@@ -41,31 +44,21 @@ type (
 		NoHTTP2         bool
 		EnforceSSL      bool
 	}
-	//StressTarget combines stress related configuration with a Target configuration
-	StressTarget struct {
-		//How many total requests to make for this Target
-		Count int
-		//How many requests can be happening simultaneously for this Target
-		Concurrency int
-		Target      Target
-	}
 )
 
 //NewStressConfig creates a new StressConfig
 //with package defaults
 func NewStressConfig() (s *StressConfig) {
 	s = &StressConfig{
-		StressTargets: []StressTarget{
+		Count:       DefaultCount,
+		Concurrency: DefaultConcurrency,
+		Targets: []Target{
 			{
-				Count:       DefaultCount,
-				Concurrency: DefaultConcurrency,
-				Target: Target{
-					URL:             DefaultURL,
-					Timeout:         DefaultTimeout,
-					Method:          DefaultMethod,
-					UserAgent:       DefaultUserAgent,
-					FollowRedirects: true,
-				},
+				URL:             DefaultURL,
+				Timeout:         DefaultTimeout,
+				Method:          DefaultMethod,
+				UserAgent:       DefaultUserAgent,
+				FollowRedirects: true,
 			},
 		},
 	}
@@ -82,14 +75,14 @@ func RunStress(s StressConfig, w io.Writer) ([][]RequestStat, error) {
 	if err != nil {
 		return nil, errors.New("invalid configuration: " + err.Error())
 	}
-	targetCount := len(s.StressTargets)
+	targetCount := len(s.Targets)
 
 	//setup the queue of requests, one queue per target
 	requestQueues := make([](chan http.Request), targetCount)
-	for idx, stressTarget := range s.StressTargets {
-		requestQueues[idx] = make(chan http.Request, stressTarget.Count)
-		for i := 0; i < stressTarget.Count; i++ {
-			req, err := buildRequest(stressTarget.Target)
+	for idx, target := range s.Targets {
+		requestQueues[idx] = make(chan http.Request, s.Count)
+		for i := 0; i < s.Count; i++ {
+			req, err := buildRequest(target)
 			if err != nil {
 				return nil, errors.New("failed to create request with target configuration: " + err.Error())
 			}
@@ -106,19 +99,19 @@ func RunStress(s StressConfig, w io.Writer) ([][]RequestStat, error) {
 
 	//when a target is finished, send all stats into this
 	targetStats := make(chan []RequestStat)
-	for idx, stressTarget := range s.StressTargets {
-		go func(target StressTarget, requestQueue chan http.Request, targetStats chan []RequestStat) {
+	for idx, target := range s.Targets {
+		go func(target Target, requestQueue chan http.Request, targetStats chan []RequestStat) {
 			writeLock.Lock()
-			fmt.Fprintf(w, "- Running %d tests at %s, %d at a time\n", target.Count, target.Target.URL, target.Concurrency)
+			fmt.Fprintf(w, "- Running %d tests at %s, %d at a time\n", s.Count, target.URL, s.Concurrency)
 			writeLock.Unlock()
 
 			workerDoneChan := make(chan workerDone)   //workers use this to indicate they are done
 			requestStatChan := make(chan RequestStat) //workers communicate each requests' info
 
-			client := createClient(target.Target)
+			client := createClient(target)
 
 			//start up the workers
-			for i := 0; i < target.Concurrency; i++ {
+			for i := 0; i < s.Concurrency; i++ {
 				go func() {
 					for {
 						select {
@@ -144,7 +137,7 @@ func RunStress(s StressConfig, w io.Writer) ([][]RequestStat, error) {
 					}
 				}()
 			}
-			requestStats := make([]RequestStat, target.Count)
+			requestStats := make([]RequestStat, s.Count)
 			requestsCompleteCount := 0
 			workersDoneCount := 0
 			//wait for all workers to finish
@@ -156,13 +149,13 @@ func RunStress(s StressConfig, w io.Writer) ([][]RequestStat, error) {
 					requestStats[requestsCompleteCount] = stat
 					requestsCompleteCount++
 				}
-				if workersDoneCount == target.Concurrency {
+				if workersDoneCount == s.Concurrency {
 					//all workers are finished
 					break
 				}
 			}
 			targetStats <- requestStats
-		}(stressTarget, requestQueues[idx], targetStats)
+		}(target, requestQueues[idx], targetStats)
 	}
 	targetRequestStats := make([][]RequestStat, targetCount)
 	targetDoneCount := 0
@@ -182,30 +175,23 @@ func RunStress(s StressConfig, w io.Writer) ([][]RequestStat, error) {
 }
 
 func validateStressConfig(s StressConfig) error {
-	if len(s.StressTargets) == 0 {
+	if len(s.Targets) == 0 {
 		return errors.New("zero targets")
 	}
-	for _, stressTarget := range s.StressTargets {
-		if err := validateStressTarget(stressTarget); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func validateStressTarget(stressTarget StressTarget) error {
-	if stressTarget.Count <= 0 {
+	if s.Count <= 0 {
 		return errors.New("request count must be greater than zero")
 	}
-	if stressTarget.Concurrency <= 0 {
+	if s.Concurrency <= 0 {
 		return errors.New("concurrency must be greater than zero")
 	}
-	if stressTarget.Concurrency > stressTarget.Count {
+	if s.Concurrency > s.Count {
 		return errors.New("concurrency must be higher than request count")
 	}
 
-	if err := validateTarget(stressTarget.Target); err != nil {
-		return err
+	for _, target := range s.Targets {
+		if err := validateTarget(target); err != nil {
+			return err
+		}
 	}
 	return nil
 }
