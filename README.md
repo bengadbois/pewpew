@@ -9,12 +9,11 @@ Pewpew is a flexible command line HTTP stress tester. Unlike other stress tester
 ## Features
 - Regular expression defined targets
 - Multiple simultaneous targets
-- No dependencies, single binary
+- No runtime dependencies, single binary file
 - Statistics on timing, data transferred, status codes, and more
 - Export raw data as TSV and/or JSON for analysis, graphs, etc.
 - HTTP2 support
 - IPV6 support
-- Available as a Go library
 - Tons of command line and/or config file options (arbitrary headers, cookies, User-Agent, timeouts, ignore SSL certs, HTTP authentication, Keep-Alive, DNS prefetch, and more)
 
 ## Status
@@ -91,18 +90,7 @@ pewpew stress
 ```
 There are examples config files in `examples/`.
 
-Pewpew allows for cascading settings, to maximize flexibility and readability.
-Precedence (highest first):
-- Individual target setting from config file
-- Command line setting (which are global)
-- Global setting from config file
-- Default global setting
-
-All command line options are treated as global settings, and URLs specified on the command line overwrite all Targets set config files.
-
-Not all settings are available per target, such as Verbose, which is only a global setting.
-
-Global settings:
+Available global settings:
 - Count (default 10)
 - Concurrency (default 1)
 - NoHTTP2 (default false)
@@ -122,7 +110,7 @@ Global settings:
 - KeepAlive (default defer to Target)
 - FollowRedirects (default defer to Target)
 
-Individual target settings:
+Available individual target settings:
 - URL (default "http://localhost")
 - RegexURL (default false)
 - DNSPrefetch (default false)
@@ -137,6 +125,12 @@ Individual target settings:
 - Compress (default false)
 - KeepAlive (default false)
 - FollowRedirects (default true)
+
+Pewpew allows combining config file and command line settings, to maximize flexibility.
+
+Individual target settings in the config file override any other setting, then command line flags (applied to all targets) override others, then global settings in the config file override the Pewpew's defaults.
+
+If target URL(s) are specified on the command line, they override all targets in the config file.
 
 ## Using as a Go library
 ```go
