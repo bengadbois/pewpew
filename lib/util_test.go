@@ -63,6 +63,8 @@ func TestBuildRequest(t *testing.T) {
 			BasicAuth: "::"}, true}, //invalid basic auth
 		{Target{URL: "http://localhost",
 			Method: "@"}, true}, //invalid method
+		{Target{URL: "https://invaliddomain.invalidtld",
+			DNSPrefetch: true}, true},
 
 		//good cases
 		{Target{URL: "localhost"}, false}, //missing scheme (http://) should be auto fixed
@@ -72,6 +74,8 @@ func TestBuildRequest(t *testing.T) {
 			Body:   "data"}, false},
 		{Target{URL: "https://www.github.com"}, false},
 		{Target{URL: "http://github.com"}, false},
+		{Target{URL: "https://www.github.com",
+			DNSPrefetch: true}, false},
 		{Target{URL: "http://localhost",
 			BodyFilename: ""}, false},
 		{Target{URL: "http://localhost",
