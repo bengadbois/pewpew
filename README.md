@@ -84,10 +84,11 @@ Note: dots in IP addresses must be escaped, such as `pewpew stress -r "http://12
 
 Pewpew supports complex configurations more easily managed with a config file. You can define one or more targets each with their own settings.
 
-Pewpew expects the config file is in the current directory and named `config.json` or `config.toml`. Then just run:
+By default, Pewpew looks for a config file in the current directory and named `pewpew.json` or `pewpew.toml`. If found, Pewpew can be run like:
 ```
 pewpew stress
 ```
+
 There are examples config files in `examples/`.
 
 Available global settings:
