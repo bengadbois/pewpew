@@ -1,28 +1,29 @@
 {
+  "Count": 15,
+  "Concurrency": 4,
   "Quiet": false,
   "Compress": true,
   "UserAgent": "pewpewpewpewpew",
   "Timeout": "1.75s",
+  "DNSPrefetch": true,
   "Headers": "Accept-Encoding:gzip",
-  "StressTargets": [
+  "Targets": [
     {
-      "Count": 15,
-      "Concurrency": 3,
-      "Target": {
-        "URL": "http://127.0.0.1/home"
-      }
+      "URL": "http://127.0.0.1/home"
     },
     {
-      "Concurrency": 1,
-      "Target": {
-        "URL": "https://127.0.0.1/api/user",
-        "Method": "POST",
-        "Body": "{\"username\": \"newuser1\", \"email\": \"newuser1@domain.com\"}",
-        "Headers": "Accept-Encoding:gzip, Content-Type:application/json",
-        "Compress": true,
-        "Timeout": "500ms",
-        "UserAgent": "notpewpew"
-      }
+      "URL": "https://127.0.0.1/api/user",
+      "Method": "POST",
+      "Body": "{"username": "newuser1", "email": "newuser1@domain.com"}",
+      "Headers": "Accept-Encoding:gzip, Content-Type:application/json",
+      "Cookies": "data=123; session=456",
+      "Compress": true,
+      "Timeout": "500ms",
+      "UserAgent": "notpewpew"
+    },
+    {
+      "URL": "https://127.0.0.1/api/user/[0-9]{1,4}",
+      "RegexURL": true
     }
   ]
 }
