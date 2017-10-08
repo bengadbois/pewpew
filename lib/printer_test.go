@@ -29,7 +29,7 @@ func TestCreateTextSummary(t *testing.T) {
 	}
 	for _, c := range cases {
 		//could check for the exact string, but that's super tedious and brittle
-		_ = CreateTextSummary(c.s)
+		_ = CreateTextStressSummary(c.s)
 	}
 }
 
@@ -47,8 +47,9 @@ func TestPrintStat(t *testing.T) {
 		//error case
 		{RequestStat{Error: errors.New("this is an error")}},
 	}
+	p := printer{output: ioutil.Discard}
 	for _, c := range cases {
-		printStat(c.r, ioutil.Discard)
+		p.printStat(c.r)
 	}
 }
 
@@ -62,7 +63,8 @@ func TestPrintVerbose(t *testing.T) {
 		{&http.Request{}, nil},
 		{&http.Request{}, &http.Response{Body: http.NoBody}},
 	}
+	p := printer{output: ioutil.Discard}
 	for _, c := range cases {
-		printVerbose(c.req, c.resp, ioutil.Discard)
+		p.printVerbose(c.req, c.resp)
 	}
 }
