@@ -5,12 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sync"
 )
-
-//TODO move to other file
-//so concurrent workers don't interlace messages
-var writeLock sync.Mutex
 
 //TODO move to other file
 type workerDone struct{}
@@ -77,6 +72,9 @@ func RunStress(s StressConfig, w io.Writer) ([][]RequestStat, error) {
 	}
 	targetCount := len(s.Targets)
 
+	//setup printer
+	p := printer{output: w}
+
 	//setup the queue of requests, one queue per target
 	requestQueues := make([](chan http.Request), targetCount)
 	for idx, target := range s.Targets {
@@ -101,9 +99,7 @@ func RunStress(s StressConfig, w io.Writer) ([][]RequestStat, error) {
 	targetStats := make(chan []RequestStat)
 	for idx, target := range s.Targets {
 		go func(target Target, requestQueue chan http.Request, targetStats chan []RequestStat) {
-			writeLock.Lock()
-			fmt.Fprintf(w, "- Running %d tests at %s, %d at a time\n", s.Count, target.URL, s.Concurrency)
-			writeLock.Unlock()
+			p.writeString(fmt.Sprintf("- Running %d tests at %s, %d at a time\n", s.Count, target.URL, s.Concurrency))
 
 			workerDoneChan := make(chan workerDone)   //workers use this to indicate they are done
 			requestStatChan := make(chan RequestStat) //workers communicate each requests' info
@@ -124,12 +120,10 @@ func RunStress(s StressConfig, w io.Writer) ([][]RequestStat, error) {
 
 							response, stat := runRequest(req, client)
 							if !s.Quiet {
-								writeLock.Lock()
-								printStat(stat, w)
+								p.printStat(stat)
 								if s.Verbose {
-									printVerbose(&req, response, w)
+									p.printVerbose(&req, response)
 								}
-								writeLock.Unlock()
 							}
 
 							requestStatChan <- stat

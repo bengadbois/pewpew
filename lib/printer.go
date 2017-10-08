@@ -6,12 +6,21 @@ import (
 	"io/ioutil"
 	"net/http"
 	"sort"
+	"sync"
 
 	color "github.com/fatih/color"
 )
 
-//CreateTextSummary creates a human friendly summary of entire stress test
-func CreateTextSummary(reqStatSummary RequestStatSummary) string {
+type printer struct {
+	//writeLock prevents concurrent messages from being interlaced
+	writeLock sync.Mutex
+
+	//output is where the printer writes to
+	output io.Writer
+}
+
+//CreateTextStressSummary creates a human friendly summary of entire stress test
+func CreateTextStressSummary(reqStatSummary RequestStatSummary) string {
 	summary := "\n"
 
 	summary += "Timing\n"
@@ -54,36 +63,40 @@ func CreateTextSummary(reqStatSummary RequestStatSummary) string {
 }
 
 //print colored single line stats per RequestStat
-func printStat(stat RequestStat, w io.Writer) {
+func (p *printer) printStat(stat RequestStat) {
+	p.writeLock.Lock()
+	defer p.writeLock.Unlock()
+
 	if stat.Error != nil {
 		color.Set(color.FgRed)
-		fmt.Fprintln(w, "Failed to make request: "+stat.Error.Error())
+		fmt.Fprintln(p.output, "Failed to make request: "+stat.Error.Error())
 		color.Unset()
-	} else {
-		if stat.StatusCode >= 100 && stat.StatusCode < 200 {
-			color.Set(color.FgBlue)
-		} else if stat.StatusCode >= 200 && stat.StatusCode < 300 {
-			color.Set(color.FgGreen)
-		} else if stat.StatusCode >= 300 && stat.StatusCode < 400 {
-			color.Set(color.FgCyan)
-		} else if stat.StatusCode >= 400 && stat.StatusCode < 500 {
-			color.Set(color.FgMagenta)
-		} else {
-			color.Set(color.FgRed)
-		}
-		fmt.Fprintf(w, "%s %d\t%d bytes\t%d ms\t-> %s %s\n",
-			stat.Proto,
-			stat.StatusCode,
-			stat.DataTransferred,
-			stat.Duration.Nanoseconds()/1000000,
-			stat.Method,
-			stat.URL)
-		color.Unset()
+		return
 	}
+
+	if stat.StatusCode >= 100 && stat.StatusCode < 200 {
+		color.Set(color.FgBlue)
+	} else if stat.StatusCode >= 200 && stat.StatusCode < 300 {
+		color.Set(color.FgGreen)
+	} else if stat.StatusCode >= 300 && stat.StatusCode < 400 {
+		color.Set(color.FgCyan)
+	} else if stat.StatusCode >= 400 && stat.StatusCode < 500 {
+		color.Set(color.FgMagenta)
+	} else {
+		color.Set(color.FgRed)
+	}
+	fmt.Fprintf(p.output, "%s %d\t%d bytes\t%d ms\t-> %s %s\n",
+		stat.Proto,
+		stat.StatusCode,
+		stat.DataTransferred,
+		stat.Duration.Nanoseconds()/1000000,
+		stat.Method,
+		stat.URL)
+	color.Unset()
 }
 
 //print tons of info about the request, response and response body
-func printVerbose(req *http.Request, response *http.Response, w io.Writer) {
+func (p *printer) printVerbose(req *http.Request, response *http.Response) {
 	if req == nil {
 		return
 	}
@@ -105,5 +118,14 @@ func printVerbose(req *http.Request, response *http.Response, w io.Writer) {
 		requestInfo = requestInfo + fmt.Sprintf("Body:\n%s\n\n", body)
 		response.Body.Close()
 	}
-	fmt.Fprintln(w, requestInfo)
+	p.writeLock.Lock()
+	fmt.Fprintln(p.output, requestInfo)
+	p.writeLock.Unlock()
+}
+
+//writeString is a generic output string printer
+func (p *printer) writeString(s string) {
+	p.writeLock.Lock()
+	fmt.Fprint(p.output, s)
+	p.writeLock.Unlock()
 }
