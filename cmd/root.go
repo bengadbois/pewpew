@@ -60,6 +60,7 @@ func init() {
 	RootCmd.PersistentFlags().Bool("enforce-ssl", false, "Enfore SSL certificate correctness.")
 	RootCmd.PersistentFlags().String("output-json", "", "Path to file to write full data as JSON")
 	RootCmd.PersistentFlags().String("output-csv", "", "Path to file to write full data as CSV")
+	RootCmd.PersistentFlags().String("output-xml", "", "Path to file to write full data as XML")
 	RootCmd.PersistentFlags().BoolP("quiet", "q", false, "Do not print while requests are running.")
 	RootCmd.PersistentFlags().BoolP("verbose", "v", false, "Print extra troubleshooting info.")
 	RootCmd.PersistentFlags().Int("cpu", runtime.GOMAXPROCS(0), "Number of CPUs to use.")

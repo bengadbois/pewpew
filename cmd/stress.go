@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/csv"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -185,6 +186,17 @@ var stressCmd = &cobra.Command{
 				}
 			}
 			defer writer.Flush()
+			fmt.Println("finished!")
+		}
+		//write out xml
+		if viper.GetString("ResultFilenameXML") != "" {
+			fmt.Print("Writing full result data to: " + viper.GetString("ResultFilenameXML") + " ...")
+			xml, _ := xml.MarshalIndent(globalStats, "", "    ")
+			err = ioutil.WriteFile(viper.GetString("ResultFilenameXML"), xml, 0644)
+			if err != nil {
+				return errors.New("failed to write full result data to " +
+					viper.GetString("ResultFilenameXML") + ": " + err.Error())
+			}
 			fmt.Println("finished!")
 		}
 		return nil
