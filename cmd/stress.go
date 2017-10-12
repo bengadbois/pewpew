@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/csv"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -146,8 +147,7 @@ var stressCmd = &cobra.Command{
 		reqStats := pewpew.CreateRequestsStats(globalStats)
 		fmt.Println(pewpew.CreateTextStressSummary(reqStats))
 
-		//write out json
-		if viper.GetString("ResultFilenameJSON") != "" {
+		if viper.GetString("output-json") != "" {
 			filename := viper.GetString("output-json")
 			fmt.Print("Writing full result data to: " + filename + " ...")
 			json, _ := json.MarshalIndent(globalStats, "", "    ")
@@ -159,8 +159,8 @@ var stressCmd = &cobra.Command{
 			fmt.Println("finished!")
 		}
 		//write out csv
-		if viper.GetString("ResultFilenameCSV") != "" {
-			filename := viper.GetString("ResultFilenameCSV")
+		if viper.GetString("output-csv") != "" {
+			filename := viper.GetString("output-csv")
 			fmt.Print("Writing full result data to: " + filename + " ...")
 			file, err := os.Create(filename)
 			if err != nil {
@@ -181,10 +181,22 @@ var stressCmd = &cobra.Command{
 				err := writer.Write(line)
 				if err != nil {
 					return errors.New("failed to write full result data to " +
-						viper.GetString("ResultFilenameCSV") + ": " + err.Error())
+						filename + ": " + err.Error())
 				}
 			}
 			defer writer.Flush()
+			fmt.Println("finished!")
+		}
+		//write out xml
+		if viper.GetString("output-xml") != "" {
+			filename := viper.GetString("output-xml")
+			fmt.Print("Writing full result data to: " + filename + " ...")
+			xml, _ := xml.MarshalIndent(globalStats, "", "    ")
+			err = ioutil.WriteFile(viper.GetString("output-xml"), xml, 0644)
+			if err != nil {
+				return errors.New("failed to write full result data to " +
+					filename + ": " + err.Error())
+			}
 			fmt.Println("finished!")
 		}
 		return nil
