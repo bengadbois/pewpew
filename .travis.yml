@@ -16,15 +16,32 @@ script:
   - goveralls -service=travis-ci
   - gometalinter --disable-all -E vet -E gofmt -E misspell -E ineffassign -E goimports -E deadcode -E structcheck -E varcheck --tests --vendor ./...
 
+before_deploy:
+  - go get github.com/mitchellh/gox
+  - go get github.com/tcnksm/ghr
+  - # make an dist/OS_ARCH.tar.gz for each platform, and put the binary in the top level
+  - gox -output "dist/{{.OS}}_{{.Arch}}/{{.Dir}}/{{.Dir}}"
+  - for i in $(find dist -mindepth 1 -maxdepth 1 -type d); do tar -czf "$i".tar.gz -C "$i" "."; done
+
 deploy:
-  provider: script
-  script:
-    - go get github.com/mitchellh/gox
-    - go get github.com/tcnksm/ghr
-    - gox -output "dist/{{.OS}}_{{.Arch}}/{{.Dir}}/{{.Dir}}"
-    # make an dist/OS_ARCH.tar.gz for each, but put the binary in the top level
-    - for i in $(find dist -mindepth 1 -maxdepth 1 -type d); do tar -czf "$i".tar.gz -C "$i" "."; done
-    - ghr --username bengadbois --token $GITHUB_TOKEN --replace --debug $(git tag -l --contains HEAD) dist/
+  provider: releases
+  api_key: $GITHUB_TOKEN
+  file:
+    - dist/darwin_386.tar.gz
+    - dist/darwin_amd64.tar.gz
+    - dist/freebsd_386.tar.gz
+    - dist/freebsd_amd64.tar.gz
+    - dist/freebsd_arm.tar.gz
+    - dist/linux_386.tar.gz
+    - dist/linux_amd64.tar.gz
+    - dist/linux_arm.tar.gz
+    - dist/netbsd_386.tar.gz
+    - dist/netbsd_amd64.tar.gz
+    - dist/netbsd_arm.tar.gz
+    - dist/openbsd_386.tar.gz
+    - dist/openbsd_amd64.tar.gz
+    - dist/windows_386.tar.gz
+    - dist/windows_amd64.tar.gz
   skip_cleanup: true
   on:
     tags: true
