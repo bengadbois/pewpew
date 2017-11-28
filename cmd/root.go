@@ -40,7 +40,10 @@ func init() {
 			fmt.Println(err)
 			os.Exit(-1)
 		}
-		fmt.Println("No config file found")
+	}
+
+	if viper.ConfigFileUsed() != "" {
+		fmt.Println("Using config file: " + viper.ConfigFileUsed())
 	}
 
 	RootCmd.PersistentFlags().BoolP("regex", "r", false, "Interpret URLs as regular expressions.")

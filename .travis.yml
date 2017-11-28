@@ -20,7 +20,7 @@ before_deploy:
   - go get github.com/mitchellh/gox
   - go get github.com/tcnksm/ghr
   - # make an dist/OS_ARCH.tar.gz for each platform, and put the binary in the top level
-  - gox -output "dist/{{.OS}}_{{.Arch}}/{{.Dir}}/{{.Dir}}"
+  - gox -output -ldflags="-X \"main.buildTime=$(date)\" -X \"main.version=$TRAVIS_TAG\"" "dist/{{.OS}}_{{.Arch}}/{{.Dir}}/{{.Dir}}"
   - for i in $(find dist -mindepth 1 -maxdepth 1 -type d); do tar -czf "$i".tar.gz -C "$i" "."; done
 
 deploy:
