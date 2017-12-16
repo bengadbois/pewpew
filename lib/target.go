@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-//Reasonable default values for a StressConfig or BenchConfig
+//Reasonable default values for a target
 const (
 	DefaultURL         = "http://localhost"
 	DefaultTimeout     = "10s"
@@ -13,11 +13,6 @@ const (
 	DefaultUserAgent   = "pewpew"
 	DefaultCount       = 10
 	DefaultConcurrency = 1
-	DefaultBeginRPS    = 10
-	DefaultEndRPS      = 50
-	DefaultInterval    = 10
-	DefaultDuration    = "10s"
-	DefaultCooldown    = "10s"
 )
 
 type (
