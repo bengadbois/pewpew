@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - 1.9.1
+  - "1.10"
 
 install:
   - go get github.com/mattn/goveralls
@@ -45,4 +45,4 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
-    go: 1.9.1
+    go: "1.10"
