@@ -74,7 +74,7 @@ func buildRequest(t Target) (http.Request, error) {
 	}
 
 	if t.DNSPrefetch {
-		addrs, err := net.LookupHost(URL.Host)
+		addrs, err := net.LookupHost(URL.Hostname())
 		if err != nil {
 			return http.Request{}, errors.New("failed to prefetch host " + URL.Host)
 		}
