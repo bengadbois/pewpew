@@ -78,15 +78,11 @@ func RunStress(s StressConfig, w io.Writer) ([][]RequestStat, error) {
 	//setup the queue of requests, one queue per target
 	requestQueues := make([](chan http.Request), targetCount)
 	for idx, target := range s.Targets {
-		requestQueues[idx] = make(chan http.Request, s.Count)
-		for i := 0; i < s.Count; i++ {
-			req, err := buildRequest(target)
-			if err != nil {
-				return nil, errors.New("failed to create request with target configuration: " + err.Error())
-			}
-			requestQueues[idx] <- req
+		requestQueue, err := createRequestQueue(s.Count, target)
+		if err != nil {
+			return nil, err
 		}
-		close(requestQueues[idx])
+		requestQueues[idx] = requestQueue
 	}
 
 	if targetCount == 1 {
@@ -188,4 +184,26 @@ func validateStressConfig(s StressConfig) error {
 		}
 	}
 	return nil
+}
+
+// createRequestQueue creates a channel of http.Requests of size count
+func createRequestQueue(count int, target Target) (chan http.Request, error) {
+	requestQueue := make(chan http.Request)
+	//attempt to build one request - if passes, the rest should too
+	_, err := buildRequest(target)
+	if err != nil {
+		return nil, errors.New("failed to create request with target configuration: " + err.Error())
+	}
+	go func() {
+		for i := 0; i < count; i++ {
+			req, err := buildRequest(target)
+			if err != nil {
+				//this shouldn't happen, but probably should handle for it
+				continue
+			}
+			requestQueue <- req
+		}
+		close(requestQueue)
+	}()
+	return requestQueue, nil
 }
