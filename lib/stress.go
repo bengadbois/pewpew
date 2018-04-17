@@ -188,14 +188,22 @@ func validateStressConfig(s StressConfig) error {
 
 // createRequestQueue creates a channel of http.Requests of size count
 func createRequestQueue(count int, target Target) (chan http.Request, error) {
-	requestQueue := make(chan http.Request, count)
-	for i := 0; i < count; i++ {
-		req, err := buildRequest(target)
-		if err != nil {
-			return nil, errors.New("failed to create request with target configuration: " + err.Error())
-		}
-		requestQueue <- req
+	requestQueue := make(chan http.Request)
+	//attempt to build one request - if passes, the rest should too
+	_, err := buildRequest(target)
+	if err != nil {
+		return nil, errors.New("failed to create request with target configuration: " + err.Error())
 	}
-	close(requestQueue)
+	go func() {
+		for i := 0; i < count; i++ {
+			req, err := buildRequest(target)
+			if err != nil {
+				//this shouldn't happen, but probably should handle for it
+				continue
+			}
+			requestQueue <- req
+		}
+		close(requestQueue)
+	}()
 	return requestQueue, nil
 }
