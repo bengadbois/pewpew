@@ -8,6 +8,7 @@ import (
 	"sort"
 	"sync"
 
+	humanize "github.com/dustin/go-humanize"
 	color "github.com/fatih/color"
 )
 
@@ -24,17 +25,17 @@ func CreateTextStressSummary(reqStatSummary RequestStatSummary) string {
 	summary := "\n"
 
 	summary += "Timing\n"
-	summary += "Mean query speed:     " + fmt.Sprintf("%d", reqStatSummary.avgDuration/1000000) + " ms\n"
-	summary += "Fastest query speed:  " + fmt.Sprintf("%d", reqStatSummary.minDuration/1000000) + " ms\n"
-	summary += "Slowest query speed:  " + fmt.Sprintf("%d", reqStatSummary.maxDuration/1000000) + " ms\n"
-	summary += "Mean RPS:             " + fmt.Sprintf("%.2f", reqStatSummary.avgRPS*1000000000) + " req/sec\n"
-	summary += "Total time:           " + fmt.Sprintf("%d", reqStatSummary.endTime.Sub(reqStatSummary.startTime).Nanoseconds()/1000000) + " ms\n"
+	summary += fmt.Sprintf("Mean query speed:     %d ms\n", reqStatSummary.avgDuration/1000000)
+	summary += fmt.Sprintf("Fastest query speed:  %d ms\n", reqStatSummary.minDuration/1000000)
+	summary += fmt.Sprintf("Slowest query speed:  %d ms\n", reqStatSummary.maxDuration/1000000)
+	summary += fmt.Sprintf("Mean RPS:             %.2f req/sec\n", reqStatSummary.avgRPS*1000000000)
+	summary += fmt.Sprintf("Total time:           %d ms\n", reqStatSummary.endTime.Sub(reqStatSummary.startTime).Nanoseconds()/1000000)
 
 	summary += "\nData Transferred\n"
-	summary += "Mean query:      " + fmt.Sprintf("%d", reqStatSummary.avgDataTransferred) + " bytes\n"
-	summary += "Largest query:   " + fmt.Sprintf("%d", reqStatSummary.maxDataTransferred) + " bytes\n"
-	summary += "Smallest query:  " + fmt.Sprintf("%d", reqStatSummary.minDataTransferred) + " bytes\n"
-	summary += "Total:           " + fmt.Sprintf("%d", reqStatSummary.totalDataTransferred) + " bytes\n"
+	summary += fmt.Sprintf("Mean query:      %s\n", humanize.Bytes(uint64(reqStatSummary.avgDataTransferred)))
+	summary += fmt.Sprintf("Largest query:   %s\n", humanize.Bytes(uint64(reqStatSummary.maxDataTransferred)))
+	summary += fmt.Sprintf("Smallest query:  %s\n", humanize.Bytes(uint64(reqStatSummary.minDataTransferred)))
+	summary += fmt.Sprintf("Total:           %s\n", humanize.Bytes(uint64(reqStatSummary.totalDataTransferred)))
 
 	summary = summary + "\nResponse Codes\n"
 	//sort the status codes
@@ -85,10 +86,10 @@ func (p *printer) printStat(stat RequestStat) {
 	} else {
 		color.Set(color.FgRed)
 	}
-	fmt.Fprintf(p.output, "%s %d\t%d bytes\t%d ms\t-> %s %s\n",
+	fmt.Fprintf(p.output, "%s %d\t%s \t%d ms\t-> %s %s\n",
 		stat.Proto,
 		stat.StatusCode,
-		stat.DataTransferred,
+		humanize.Bytes(uint64(stat.DataTransferred)),
 		stat.Duration.Nanoseconds()/1000000,
 		stat.Method,
 		stat.URL)
