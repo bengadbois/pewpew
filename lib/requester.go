@@ -1,6 +1,8 @@
 package pewpew
 
 import (
+	"bytes"
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"time"
@@ -8,6 +10,16 @@ import (
 
 func runRequest(req http.Request, client *http.Client) (response *http.Response, stat RequestStat) {
 	reqStartTime := time.Now()
+
+	// get size of request
+	reqDump, _ := httputil.DumpRequestOut(&req, false)
+	var reqBody []byte
+	if req.Body != nil {
+		reqBody, _ = ioutil.ReadAll(req.Body)
+		req.Body = ioutil.NopCloser(bytes.NewBuffer(reqBody)) // reset due to read
+	}
+	totalSizeSentBytes := len(reqDump) + len(reqBody)
+
 	response, responseErr := (*client).Do(&req)
 	reqEndTime := time.Now()
 
@@ -26,12 +38,10 @@ func runRequest(req http.Request, client *http.Client) (response *http.Response,
 		return
 	}
 
-	//get size of request
-	reqDump, _ := httputil.DumpRequestOut(&req, true)
-	respDump, _ := httputil.DumpResponse(response, true)
-	totalSizeSentBytes := len(reqDump)
-	totalSizeReceivedBytes := len(respDump)
-	totalSizeBytes := totalSizeSentBytes + totalSizeReceivedBytes
+	// get size of response
+	respDump, _ := httputil.DumpResponse(response, false)
+	respBody, _ := ioutil.ReadAll(response.Body)
+	totalSizeReceivedBytes := len(respDump) + len(respBody)
 
 	stat = RequestStat{
 		Proto:           response.Proto,
@@ -42,7 +52,7 @@ func runRequest(req http.Request, client *http.Client) (response *http.Response,
 		Duration:        reqEndTime.Sub(reqStartTime),
 		StatusCode:      response.StatusCode,
 		Error:           responseErr,
-		DataTransferred: totalSizeBytes,
+		DataTransferred: totalSizeSentBytes + totalSizeReceivedBytes,
 	}
 	return
 }
