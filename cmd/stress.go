@@ -10,6 +10,7 @@ import (
 	"os"
 
 	pewpew "github.com/bengadbois/pewpew/lib"
+	humanize "github.com/dustin/go-humanize"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -176,7 +177,7 @@ var stressCmd = &cobra.Command{
 					req.StartTime.String(),
 					fmt.Sprintf("%d", req.Duration),
 					fmt.Sprintf("%d", req.StatusCode),
-					fmt.Sprintf("%d bytes", req.DataTransferred),
+					fmt.Sprintf("%s", humanize.Bytes(uint64(req.DataTransferred))),
 				}
 				err := writer.Write(line)
 				if err != nil {
