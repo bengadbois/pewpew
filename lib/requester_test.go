@@ -12,11 +12,11 @@ func TestRunRequest(t *testing.T) {
 		t.Errorf("failed to create bad http request")
 	}
 	//TODO setup a local http server and request that instead of using github
-	goodRequest, err := http.NewRequest("HEAD", "http://github.com", http.NoBody)
+	goodRequestWithNoBody, err := http.NewRequest("HEAD", "http://github.com", http.NoBody)
 	if err != nil {
 		t.Errorf("failed to create good http request with no body")
 	}
-	goodRequest, err = http.NewRequest("HEAD", "http://github.com", bytes.NewBufferString("the body"))
+	goodRequestWithBody, err := http.NewRequest("HEAD", "http://github.com", bytes.NewBufferString("the body"))
 	if err != nil {
 		t.Errorf("failed to create good http request with body")
 	}
@@ -25,7 +25,8 @@ func TestRunRequest(t *testing.T) {
 		c *http.Client
 	}{
 		{*badRequest, &http.Client{}},
-		{*goodRequest, &http.Client{}},
+		{*goodRequestWithBody, &http.Client{}},
+		{*goodRequestWithNoBody, &http.Client{}},
 	}
 	for _, c := range cases {
 		runRequest(c.r, c.c)
