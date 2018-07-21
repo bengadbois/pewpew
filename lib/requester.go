@@ -13,8 +13,11 @@ func runRequest(req http.Request, client *http.Client) (response *http.Response,
 
 	// get size of request
 	reqDump, _ := httputil.DumpRequestOut(&req, false)
-	reqBody, _ := ioutil.ReadAll(req.Body)
-	req.Body = ioutil.NopCloser(bytes.NewBuffer(reqBody)) // reset due to read
+	var reqBody []byte
+	if req.Body != nil {
+		reqBody, _ = ioutil.ReadAll(req.Body)
+		req.Body = ioutil.NopCloser(bytes.NewBuffer(reqBody)) // reset due to read
+	}
 	totalSizeSentBytes := len(reqDump) + len(reqBody)
 
 	response, responseErr := (*client).Do(&req)

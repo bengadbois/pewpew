@@ -1,6 +1,7 @@
 package pewpew
 
 import (
+	"bytes"
 	"net/http"
 	"testing"
 )
@@ -13,7 +14,11 @@ func TestRunRequest(t *testing.T) {
 	//TODO setup a local http server and request that instead of using github
 	goodRequest, err := http.NewRequest("HEAD", "http://github.com", http.NoBody)
 	if err != nil {
-		t.Errorf("failed to create good http request")
+		t.Errorf("failed to create good http request with no body")
+	}
+	goodRequest, err = http.NewRequest("HEAD", "http://github.com", bytes.NewBufferString("the body"))
+	if err != nil {
+		t.Errorf("failed to create good http request with body")
 	}
 	cases := []struct {
 		r http.Request
