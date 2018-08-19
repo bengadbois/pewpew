@@ -177,7 +177,7 @@ var stressCmd = &cobra.Command{
 					req.StartTime.String(),
 					fmt.Sprintf("%d", req.Duration),
 					fmt.Sprintf("%d", req.StatusCode),
-					fmt.Sprintf("%s", humanize.Bytes(uint64(req.DataTransferred))),
+					humanize.Bytes(uint64(req.DataTransferred)),
 				}
 				err := writer.Write(line)
 				if err != nil {
