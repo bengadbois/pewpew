@@ -105,26 +105,17 @@ func RunStress(s StressConfig, w io.Writer) ([][]RequestStat, error) {
 			//start up the workers
 			for i := 0; i < s.Concurrency; i++ {
 				go func() {
-					for {
-						select {
-						case req, ok := <-requestQueue:
-							if !ok {
-								//queue is empty
-								workerDoneChan <- workerDone{}
-								return
+					for req := range requestQueue {
+						response, stat := runRequest(req, client)
+						if !s.Quiet {
+							p.printStat(stat)
+							if s.Verbose {
+								p.printVerbose(&req, response)
 							}
-
-							response, stat := runRequest(req, client)
-							if !s.Quiet {
-								p.printStat(stat)
-								if s.Verbose {
-									p.printVerbose(&req, response)
-								}
-							}
-
-							requestStatChan <- stat
 						}
+						requestStatChan <- stat
 					}
+					workerDoneChan <- workerDone{}
 				}()
 			}
 			requestStats := make([]RequestStat, s.Count)
@@ -149,12 +140,9 @@ func RunStress(s StressConfig, w io.Writer) ([][]RequestStat, error) {
 	}
 	targetRequestStats := make([][]RequestStat, targetCount)
 	targetDoneCount := 0
-	for {
-		select {
-		case reqStats := <-targetStats:
-			targetRequestStats[targetDoneCount] = reqStats
-			targetDoneCount++
-		}
+	for reqStats := range targetStats {
+		targetRequestStats[targetDoneCount] = reqStats
+		targetDoneCount++
 		if targetDoneCount == targetCount {
 			//all targets are finished
 			break
