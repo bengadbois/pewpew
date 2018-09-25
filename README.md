@@ -160,7 +160,7 @@ func main() {
     output := os.Stdout //can be any io.Writer, such as a file
     stats, err := pewpew.RunStress(stressCfg, output)
     if err != nil {
-        fmt.Println("pewpew stress failed:  %s", err.Error())
+        fmt.Printf("pewpew stress failed:  %s", err.Error())
     }
 
     //do whatever you want with the raw stats
