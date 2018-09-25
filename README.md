@@ -16,9 +16,6 @@ Pewpew is a flexible command line HTTP stress tester. Unlike other stress tester
 - IPV6 support
 - Tons of command line and/or config file options (arbitrary headers, cookies, User-Agent, timeouts, ignore SSL certs, HTTP authentication, Keep-Alive, DNS prefetch, and more)
 
-## Status
-Pewpew is under active development. Since Pewpew is pre-1.0, minor version changes may be breaking. Tagged releases should be stable. Versioning follows [SemVer](http://semver.org/).
-
 ## Installing
 Pre-compiled binaries for Windows, Mac, Linux, and BSD are available on [Releases](https://github.com/bengadbois/pewpew/releases).
 
