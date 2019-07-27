@@ -207,8 +207,18 @@ var stressCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(stressCmd)
 	stressCmd.Flags().IntP("num", "n", pewpew.DefaultCount, "Number of total requests to make.")
-	viper.BindPFlag("count", stressCmd.Flags().Lookup("num"))
+	err := viper.BindPFlag("count", stressCmd.Flags().Lookup("num"))
+	if err != nil {
+		fmt.Println("failed to configure flags")
+		fmt.Println(err)
+		os.Exit(-1)
+	}
 
 	stressCmd.Flags().IntP("concurrent", "c", pewpew.DefaultConcurrency, "Number of concurrent requests to make.")
-	viper.BindPFlag("concurrency", stressCmd.Flags().Lookup("concurrent"))
+	err = viper.BindPFlag("concurrency", stressCmd.Flags().Lookup("concurrent"))
+	if err != nil {
+		fmt.Println("failed to configure flags")
+		fmt.Println(err)
+		os.Exit(-1)
+	}
 }

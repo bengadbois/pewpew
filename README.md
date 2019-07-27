@@ -19,7 +19,7 @@ Pewpew is a flexible command line HTTP stress tester. Unlike other stress tester
 ## Installing
 Pre-compiled binaries for Windows, Mac, Linux, and BSD are available on [Releases](https://github.com/bengadbois/pewpew/releases).
 
-If you want to get the latest or build from source: install Go 1.8+, `go get github.com/bengadbois/pewpew`, and install dependencies with [dep](https://github.com/golang/dep).
+If you want to get the latest or build from source: install Go 1.11+ and either `go get github.com/bengadbois/pewpew` or git clone this repo.
 
 ## Examples
 ```

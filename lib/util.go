@@ -87,9 +87,9 @@ func buildRequest(t Target) (http.Request, error) {
 	//setup the request
 	var req *http.Request
 	if t.BodyFilename != "" {
-		fileContents, err := ioutil.ReadFile(t.BodyFilename)
-		if err != nil {
-			return http.Request{}, errors.New("failed to read contents of file " + t.BodyFilename + ": " + err.Error())
+		fileContents, fileErr := ioutil.ReadFile(t.BodyFilename)
+		if fileErr != nil {
+			return http.Request{}, errors.New("failed to read contents of file " + t.BodyFilename + ": " + fileErr.Error())
 		}
 		req, err = http.NewRequest(t.Method, URL.String(), bytes.NewBuffer(fileContents))
 	} else if t.Body != "" {
@@ -145,7 +145,7 @@ func createClient(target Target) *http.Client {
 	if target.NoHTTP2 {
 		tr.TLSNextProto = make(map[string](func(string, *tls.Conn) http.RoundTripper))
 	} else {
-		http2.ConfigureTransport(tr)
+		_ = http2.ConfigureTransport(tr)
 	}
 	var timeout time.Duration
 	if target.Timeout != "" {
