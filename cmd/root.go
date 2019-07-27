@@ -68,6 +68,10 @@ func init() {
 	RootCmd.PersistentFlags().BoolP("verbose", "v", false, "Print extra troubleshooting info.")
 	RootCmd.PersistentFlags().Int("cpu", runtime.GOMAXPROCS(0), "Number of CPUs to use.")
 
-	viper.BindPFlags(RootCmd.PersistentFlags())
-
+	err = viper.BindPFlags(RootCmd.PersistentFlags())
+	if err != nil {
+		fmt.Println("failed to configure flags")
+		fmt.Println(err)
+		os.Exit(-1)
+	}
 }
