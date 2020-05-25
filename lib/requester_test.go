@@ -1,7 +1,6 @@
 package pewpew
 
 import (
-	"bytes"
 	"net/http"
 	"testing"
 )
@@ -16,16 +15,11 @@ func TestRunRequest(t *testing.T) {
 	if err != nil {
 		t.Errorf("failed to create good http request with no body")
 	}
-	goodRequestWithBody, err := http.NewRequest("HEAD", "http://github.com", bytes.NewBufferString("the body"))
-	if err != nil {
-		t.Errorf("failed to create good http request with body")
-	}
 	cases := []struct {
 		r http.Request
 		c *http.Client
 	}{
 		{*badRequest, &http.Client{}},
-		{*goodRequestWithBody, &http.Client{}},
 		{*goodRequestWithNoBody, &http.Client{}},
 	}
 	for _, c := range cases {
