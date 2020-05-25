@@ -131,7 +131,7 @@ var stressCmd = &cobra.Command{
 				//info about the request
 				fmt.Printf("----Target %d: %s %s\n", idx+1, target.Method, target.URL)
 				reqStats := pewpew.CreateRequestsStats(targetRequestStats[idx])
-				fmt.Println(pewpew.CreateTextStressSummary(reqStats))
+				fmt.Println(pewpew.CreateTextSummary(reqStats))
 			}
 		}
 
@@ -146,7 +146,7 @@ var stressCmd = &cobra.Command{
 			fmt.Println("----Global----")
 		}
 		reqStats := pewpew.CreateRequestsStats(globalStats)
-		fmt.Println(pewpew.CreateTextStressSummary(reqStats))
+		fmt.Println(pewpew.CreateTextSummary(reqStats))
 
 		if viper.GetString("output-json") != "" {
 			filename := viper.GetString("output-json")

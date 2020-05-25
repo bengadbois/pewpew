@@ -20,8 +20,8 @@ type printer struct {
 	output io.Writer
 }
 
-//CreateTextStressSummary creates a human friendly summary of entire stress test
-func CreateTextStressSummary(reqStatSummary RequestStatSummary) string {
+//CreateTextSummary creates a human friendly summary of entire test
+func CreateTextSummary(reqStatSummary RequestStatSummary) string {
 	summary := "\n"
 
 	summary += "Timing\n"

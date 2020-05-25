@@ -29,7 +29,7 @@ func TestCreateTextSummary(t *testing.T) {
 	}
 	for _, c := range cases {
 		//could check for the exact string, but that's super tedious and brittle
-		_ = CreateTextStressSummary(c.s)
+		_ = CreateTextSummary(c.s)
 	}
 }
 
