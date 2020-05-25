@@ -38,7 +38,7 @@ func TestRunStress(t *testing.T) {
 		{StressConfig{}, nil, true},                                 //empty writer
 		{StressConfig{Targets: []Target{{}}}, ioutil.Discard, true}, //invalid target
 		{StressConfig{Count: 10, Concurrency: 1, Targets: []Target{{URL: "*(", RegexURL: true, Method: "GET"}}}, ioutil.Discard, true}, //error building target, invalid regex
-		{StressConfig{Count: 10, Concurrency: 1, Targets: []Target{{URL: ":::fail", Method: "GET"}}}, ioutil.Discard, true},            //error building target
+		{StressConfig{Count: 10, Concurrency: 1, Targets: []Target{{URL: ":::fail", Method: "GET"}}}, ioutil.Discard, true},            //error building target, invalid url
 
 		//good cases
 		{StressConfig{Count: 1, Concurrency: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}, {URL: "http://localhost", Method: "GET"}}}, ioutil.Discard, false}, //multiple targets
