@@ -71,6 +71,8 @@ func createRequestQueue(count int, target Target) (chan http.Request, error) {
 			req, err := buildRequest(target)
 			if err != nil {
 				//this shouldn't happen, but probably should handle for it
+				//usually happens when regex generating an invalid URL
+				i--
 				continue
 			}
 			requestQueue <- req
