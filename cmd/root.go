@@ -51,6 +51,7 @@ func init() {
 	RootCmd.PersistentFlags().StringP("timeout", "t", "10s", "Maximum seconds to wait for response")
 	RootCmd.PersistentFlags().StringP("request-method", "X", "GET", "Request type. GET, HEAD, POST, PUT, etc.")
 	RootCmd.PersistentFlags().String("body", "", "String to use as request body e.g. POST body.")
+	RootCmd.PersistentFlags().BoolP("body-regex", "", false, "Interpret Body as regular expressions.")
 	RootCmd.PersistentFlags().String("body-file", "", "Path to file to use as request body. Will overwrite --body if both are present.")
 	RootCmd.PersistentFlags().StringP("headers", "H", "", "Add arbitrary header line, eg. 'Accept-Encoding:gzip, Content-Type:application/json'")
 	RootCmd.PersistentFlags().String("cookies", "", "Add request cookies, eg. 'data=123; session=456'")
