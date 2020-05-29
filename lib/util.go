@@ -93,7 +93,15 @@ func buildRequest(t Target) (http.Request, error) {
 		}
 		req, err = http.NewRequest(t.Method, URL.String(), bytes.NewBuffer(fileContents))
 	} else if t.Body != "" {
-		req, err = http.NewRequest(t.Method, URL.String(), bytes.NewBuffer([]byte(t.Body)))
+		// req, err = http.NewRequest(t.Method, URL.String(), bytes.NewBuffer([]byte(t.Body)))
+		bodyStr := t.Body
+		if t.RegexBody {
+			bodyStr, err = reggen.Generate(t.Body, 10)
+			if err != nil {
+				return http.Request{}, errors.New("failed to parse regex: " + err.Error())
+			}
+		}
+		req, err = http.NewRequest(t.Method, URL.String(), bytes.NewBuffer([]byte(bodyStr)))
 	} else {
 		req, err = http.NewRequest(t.Method, URL.String(), nil)
 	}
