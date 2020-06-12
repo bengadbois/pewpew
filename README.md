@@ -7,6 +7,7 @@ Pewpew is a flexible command line HTTP stress tester. Unlike other stress tester
 ![Demo](screencast.gif)
 
 ## Features
+- Multiple modes for measuring servers
 - Regular expression defined targets
 - Multiple simultaneous targets
 - No runtime dependencies, single binary file
@@ -21,11 +22,23 @@ Pre-compiled binaries for Windows, Mac, Linux, and BSD are available on [Release
 
 If you want to get the latest or build from source: install Go 1.11+ and either `go get github.com/bengadbois/pewpew` or git clone this repo.
 
+## Modes
+Pewpew features two independent modes: stress and benchmark.
+
+Stress mode (`pewpew stress`) sends requests as fast as the server can respond (limited by concurrency). This mode is usually best for answering questions such as "how fast can the server return 1000 requests?", "will the server ever OOM?", "can I get the server to 503?", and more related to overloading.
+
+Benchmark mode (`pewpew benchmark`) sends requests at a fixed rate (requests per second). This mode is usually best for anwering questions such as "how much traffic can the server handle before latency surprasses 1 second?", "if traffic to the server is rate limited to 100 rps, will there by any 503s?", and other measurable controlled traffic tests.
+
 ## Examples
 ```
 pewpew stress -n 50 www.example.com
 ```
 Make 50 requests to http://www.example.com
+
+```
+pewpew benchmark --rps 100 --duration 60 www.example.com
+```
+For 60 seconds, send 100 requests each second to www.example.com
 
 ```
 pewpew stress -X POST --body '{"hello": "world"}' -n 100 -c 5 -t 2.5s -H "Accept-Encoding:gzip, Content-Type:application/json" https://www.example.com:443/path localhost 127.0.0.1/api

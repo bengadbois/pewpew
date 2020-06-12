@@ -13,6 +13,8 @@ const (
 	DefaultUserAgent   = "pewpew"
 	DefaultCount       = 10
 	DefaultConcurrency = 1
+	DefaultRPS         = 10
+	DefaultDuration    = 15
 )
 
 type (
