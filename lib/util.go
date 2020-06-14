@@ -93,7 +93,6 @@ func buildRequest(t Target) (http.Request, error) {
 		}
 		req, err = http.NewRequest(t.Method, URL.String(), bytes.NewBuffer(fileContents))
 	} else if t.Body != "" {
-		// req, err = http.NewRequest(t.Method, URL.String(), bytes.NewBuffer([]byte(t.Body)))
 		bodyStr := t.Body
 		if t.RegexBody {
 			bodyStr, err = reggen.Generate(t.Body, 10)
