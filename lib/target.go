@@ -32,6 +32,9 @@ type (
 		Method string
 		//String that is the content of the HTTP body. Empty string is no body.
 		Body string
+		// Whether or not to interpret the Body as regular expression string
+		// and generate actual body from that
+		RegexBody bool
 		//A location on disk to read the HTTP body from. Empty string means it will not be read.
 		BodyFilename    string
 		Headers         string

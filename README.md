@@ -128,6 +128,7 @@ Available individual target settings:
 - Timeout (default 10s)
 - Method (default GET)
 - Body (default empty)
+- RegexBody (default false)
 - BodyFilename (default none)
 - Headers (default none)
 - Cookies (default none)
