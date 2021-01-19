@@ -34,12 +34,11 @@ func init() {
 	viper.SetConfigName("pewpew") // name of config file (without extension)
 	viper.AddConfigPath(".")      // optionally look for config in the working directory
 	err := viper.ReadInConfig()   // Find and read the config file
-	if err != nil {               // Handle errors reading the config file
-		if _, ok := err.(viper.ConfigParseError); ok {
-			fmt.Println("Failed to parse config file " + viper.ConfigFileUsed())
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+	// Handle errors reading the config file
+	if _, ok := err.(viper.ConfigParseError); ok {
+		fmt.Println("Failed to parse config file " + viper.ConfigFileUsed())
+		fmt.Println(err)
+		os.Exit(-1)
 	}
 
 	if viper.ConfigFileUsed() != "" {
