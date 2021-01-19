@@ -104,28 +104,26 @@ func RunBenchmark(b BenchmarkConfig, w io.Writer) ([][]RequestStat, error) {
 			secondsLeft := b.Duration
 			go func() {
 				for {
-					select {
-					case <-ticker.C:
-						secondsLeft--
-						if secondsLeft < 0 {
-							return
-						}
-						for i := 0; i < b.RPS; i++ {
-							//run all the requests at the start of the second
-							//note: this means it's a little bursty, not evenly
-							//distributed throughout the 1 second window
-							go func() {
-								req := <-requestQueue
-								response, stat := runRequest(req, client)
-								if !b.Quiet {
-									p.printStat(stat)
-									if b.Verbose {
-										p.printVerbose(&req, response)
-									}
+					<-ticker.C
+					secondsLeft--
+					if secondsLeft < 0 {
+						return
+					}
+					for i := 0; i < b.RPS; i++ {
+						//run all the requests at the start of the second
+						//note: this means it's a little bursty, not evenly
+						//distributed throughout the 1 second window
+						go func() {
+							req := <-requestQueue
+							response, stat := runRequest(req, client)
+							if !b.Quiet {
+								p.printStat(stat)
+								if b.Verbose {
+									p.printVerbose(&req, response)
 								}
-								requestStatChan <- stat
-							}()
-						}
+							}
+							requestStatChan <- stat
+						}()
 					}
 				}
 			}()
@@ -133,11 +131,9 @@ func RunBenchmark(b BenchmarkConfig, w io.Writer) ([][]RequestStat, error) {
 			requestStats := make([]RequestStat, b.RPS*b.Duration)
 			requestsCompleteCount := 0
 			for {
-				select {
-				case stat := <-requestStatChan:
-					requestStats[requestsCompleteCount] = stat
-					requestsCompleteCount++
-				}
+				stat := <-requestStatChan
+				requestStats[requestsCompleteCount] = stat
+				requestsCompleteCount++
 				if requestsCompleteCount == b.RPS*b.Duration {
 					//all requests are finished
 					break
