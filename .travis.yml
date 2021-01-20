@@ -5,7 +5,7 @@ go:
 
 install:
   - go get github.com/mattn/goveralls
-  - GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.17.1
+  - GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.35.2
 
 script:
   - go get -t ./...
