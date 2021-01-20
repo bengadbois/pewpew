@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - "1.12"
+  - "1.15"
 
 install:
   - go get github.com/mattn/goveralls
@@ -16,14 +16,13 @@ before_deploy:
   - go get github.com/mitchellh/gox
   - go get github.com/tcnksm/ghr
   - # make an dist/OS_ARCH.tar.gz for each platform, and put the binary in the top level
-  - gox -ldflags="-X \"github.com/bengadbois/pewpew/cmd.buildTime=$(date)\" -X \"github.com/bengadbois/pewpew/cmd.version=$TRAVIS_TAG\"" -output "dist/{{.OS}}_{{.Arch}}/{{.Dir}}/{{.Dir}}"
+  - gox -ldflags="-X \"github.com/bengadbois/pewpew/cmd.buildTime=$(date)\" -X \"github.com/bengadbois/pewpew/cmd.version=$TRAVIS_TAG\"" -osarch "darwin/amd64 freebsd/386 freebsd/amd64 freebsd/arm linux/386 linux/amd64 linux/arm netbsd/386 netbsd/amd64 netbsd/arm openbsd/386 openbsd/amd64 windows/386 windows/amd64" -output "dist/{{.OS}}_{{.Arch}}/{{.Dir}}/{{.Dir}}"
   - for i in $(find dist -mindepth 1 -maxdepth 1 -type d); do tar -czf "$i".tar.gz -C "$i" "."; done
 
 deploy:
   provider: releases
   api_key: $GITHUB_TOKEN
   file:
-    - dist/darwin_386.tar.gz
     - dist/darwin_amd64.tar.gz
     - dist/freebsd_386.tar.gz
     - dist/freebsd_amd64.tar.gz
@@ -41,4 +40,4 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
-    go: "1.12"
+    go: "1.15"
