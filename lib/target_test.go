@@ -5,41 +5,61 @@ import (
 )
 
 func TestValidateTarget(t *testing.T) {
-	cases := []struct {
-		t      Target
-		hasErr bool
+	tests := []struct {
+		name      string
+		t         Target
+		expectErr bool
 	}{
-		//multiple things uninitialized
-		{Target{}, true},
-		//empty method
-		{Target{
-			URL:     DefaultURL,
-			Timeout: DefaultTimeout,
-			Method:  "",
-		}, true},
-		//empty timeout string okay
-		{Target{
-			URL:     DefaultURL,
-			Timeout: "",
-			Method:  DefaultMethod,
-		}, false},
-		//invalid time string
-		{Target{
-			URL:     DefaultURL,
-			Timeout: "unparseable",
-			Method:  DefaultMethod,
-		}, true},
-		//timeout too short
-		{Target{
-			URL:     DefaultURL,
-			Timeout: "1ms",
-			Method:  DefaultMethod,
-		}, true},
+		{
+			name:      "uninitialized target",
+			t:         Target{},
+			expectErr: true,
+		},
+		{
+			name: "empty method",
+			t: Target{
+				URL:     DefaultURL,
+				Timeout: DefaultTimeout,
+				Method:  "",
+			},
+			expectErr: true,
+		},
+		{
+			name: "valid empty timeout",
+			t: Target{
+				URL:     DefaultURL,
+				Timeout: "",
+				Method:  DefaultMethod,
+			},
+			expectErr: false,
+		},
+		{
+			name: "unparseable string",
+			t: Target{
+				URL:     DefaultURL,
+				Timeout: "unparseable",
+				Method:  DefaultMethod,
+			},
+			expectErr: true,
+		},
+		{
+			name: "timeout too short",
+			t: Target{
+				URL:     DefaultURL,
+				Timeout: "1ms",
+				Method:  DefaultMethod,
+			},
+			expectErr: true,
+		},
 	}
-	for _, c := range cases {
-		err := validateTarget(c.t)
-		if (err != nil) != c.hasErr {
-			t.Errorf("validateTarget(%+v) err: %t wanted %t", c.t, (err != nil), c.hasErr)
-		}
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			err := validateTarget(tc.t)
+			if (err != nil) != tc.expectErr {
+				t.Errorf("got error: %t, wanted: %t", (err != nil), tc.expectErr)
+			}
+		})
 	}
 }

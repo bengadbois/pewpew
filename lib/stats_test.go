@@ -8,15 +8,21 @@ import (
 )
 
 func TestCreateRequestsStats(t *testing.T) {
-	cases := []struct {
+	tests := []struct {
+		name         string
 		requestStats []RequestStat
 		want         RequestStatSummary
 	}{
-		{requestStats: make([]RequestStat, 0), want: RequestStatSummary{}},
-		//check basic
-		{requestStats: []RequestStat{
-			{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, StatusCode: 200},
+		{
+			name:         "empty stats",
+			requestStats: make([]RequestStat, 0),
+			want:         RequestStatSummary{},
 		},
+		{
+			name: "single stat",
+			requestStats: []RequestStat{
+				{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, StatusCode: 200},
+			},
 			want: RequestStatSummary{
 				avgRPS:      0.000000000001,
 				avgDuration: 1000,
@@ -27,11 +33,12 @@ func TestCreateRequestsStats(t *testing.T) {
 				statusCodes: map[int]int{200: 1},
 			},
 		},
-		//check multiple
-		{requestStats: []RequestStat{
-			{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, StatusCode: 200},
-			{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, StatusCode: 200},
-		},
+		{
+			name: "multiple stats",
+			requestStats: []RequestStat{
+				{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, StatusCode: 200},
+				{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, StatusCode: 200},
+			},
 			want: RequestStatSummary{
 				avgRPS:      0.000000000002,
 				avgDuration: 1000,
@@ -42,11 +49,12 @@ func TestCreateRequestsStats(t *testing.T) {
 				statusCodes: map[int]int{200: 2},
 			},
 		},
-		//checking errors
-		{requestStats: []RequestStat{
-			{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, Error: errors.New("test error 1")},
-			{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, Error: errors.New("test error 1")},
-		},
+		{
+			name: "stats with errors",
+			requestStats: []RequestStat{
+				{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, Error: errors.New("test error 1")},
+				{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, Error: errors.New("test error 1")},
+			},
 			want: RequestStatSummary{
 				avgRPS:      0,
 				avgDuration: 0,
@@ -57,16 +65,17 @@ func TestCreateRequestsStats(t *testing.T) {
 				statusCodes: map[int]int{},
 			},
 		},
-		//mix of timings, mix of data transferred, mix of status codes
-		{requestStats: []RequestStat{
-			{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, Error: errors.New("test error 1")},
-			{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, StatusCode: 200, DataTransferred: 100},
-			{StartTime: time.Unix(2000, 0), EndTime: time.Unix(3000, 0), Duration: 1000, StatusCode: 200, DataTransferred: 200},
-			{StartTime: time.Unix(3000, 0), EndTime: time.Unix(4000, 0), Duration: 1000, StatusCode: 400, DataTransferred: 300},
-			{StartTime: time.Unix(4000, 0), EndTime: time.Unix(6000, 0), Duration: 2000, StatusCode: 400, DataTransferred: 400},
-			{StartTime: time.Unix(5000, 0), EndTime: time.Unix(7000, 0), Duration: 2000, StatusCode: 400, DataTransferred: 500},
-			{StartTime: time.Unix(6000, 0), EndTime: time.Unix(7000, 0), Duration: 2000, StatusCode: 400, DataTransferred: 600},
-		},
+		{
+			name: "mix of timings, mix of data transferred, mix of status codes, ordering v1",
+			requestStats: []RequestStat{
+				{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, Error: errors.New("test error 1")},
+				{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, StatusCode: 200, DataTransferred: 100},
+				{StartTime: time.Unix(2000, 0), EndTime: time.Unix(3000, 0), Duration: 1000, StatusCode: 200, DataTransferred: 200},
+				{StartTime: time.Unix(3000, 0), EndTime: time.Unix(4000, 0), Duration: 1000, StatusCode: 400, DataTransferred: 300},
+				{StartTime: time.Unix(4000, 0), EndTime: time.Unix(6000, 0), Duration: 2000, StatusCode: 400, DataTransferred: 400},
+				{StartTime: time.Unix(5000, 0), EndTime: time.Unix(7000, 0), Duration: 2000, StatusCode: 400, DataTransferred: 500},
+				{StartTime: time.Unix(6000, 0), EndTime: time.Unix(7000, 0), Duration: 2000, StatusCode: 400, DataTransferred: 600},
+			},
 			want: RequestStatSummary{
 				avgRPS:               0.000000000001,
 				avgDuration:          1500,
@@ -81,16 +90,17 @@ func TestCreateRequestsStats(t *testing.T) {
 				totalDataTransferred: 2100,
 			},
 		},
-		//like test case from above, but differently ordered
-		{requestStats: []RequestStat{
-			{StartTime: time.Unix(6000, 0), EndTime: time.Unix(7000, 0), Duration: 2000, StatusCode: 400, DataTransferred: 600},
-			{StartTime: time.Unix(5000, 0), EndTime: time.Unix(7000, 0), Duration: 2000, StatusCode: 400, DataTransferred: 500},
-			{StartTime: time.Unix(4000, 0), EndTime: time.Unix(6000, 0), Duration: 2000, StatusCode: 400, DataTransferred: 400},
-			{StartTime: time.Unix(3000, 0), EndTime: time.Unix(4000, 0), Duration: 1000, StatusCode: 400, DataTransferred: 300},
-			{StartTime: time.Unix(2000, 0), EndTime: time.Unix(3000, 0), Duration: 1000, StatusCode: 200, DataTransferred: 200},
-			{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, StatusCode: 200, DataTransferred: 100},
-			{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, Error: errors.New("test error 1")},
-		},
+		{
+			name: "mix of timings, mix of data transferred, mix of status codes, ordering v2",
+			requestStats: []RequestStat{
+				{StartTime: time.Unix(6000, 0), EndTime: time.Unix(7000, 0), Duration: 2000, StatusCode: 400, DataTransferred: 600},
+				{StartTime: time.Unix(5000, 0), EndTime: time.Unix(7000, 0), Duration: 2000, StatusCode: 400, DataTransferred: 500},
+				{StartTime: time.Unix(4000, 0), EndTime: time.Unix(6000, 0), Duration: 2000, StatusCode: 400, DataTransferred: 400},
+				{StartTime: time.Unix(3000, 0), EndTime: time.Unix(4000, 0), Duration: 1000, StatusCode: 400, DataTransferred: 300},
+				{StartTime: time.Unix(2000, 0), EndTime: time.Unix(3000, 0), Duration: 1000, StatusCode: 200, DataTransferred: 200},
+				{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, StatusCode: 200, DataTransferred: 100},
+				{StartTime: time.Unix(1000, 0), EndTime: time.Unix(2000, 0), Duration: 1000, Error: errors.New("test error 1")},
+			},
 			want: RequestStatSummary{
 				avgRPS:               0.000000000001,
 				avgDuration:          1500,
@@ -106,10 +116,13 @@ func TestCreateRequestsStats(t *testing.T) {
 			},
 		},
 	}
-	for _, c := range cases {
-		summary := CreateRequestsStats(c.requestStats)
-		if !reflect.DeepEqual(summary, c.want) {
-			t.Errorf("CreateRequestsStats(%+v) == %+v wanted %+v", c.requestStats, summary, c.want)
-		}
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			summary := CreateRequestsStats(tc.requestStats)
+			if !reflect.DeepEqual(summary, tc.want) {
+				t.Errorf("got summary: %+v, wanted: %+v", summary, tc.want)
+			}
+		})
 	}
 }
