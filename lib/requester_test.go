@@ -6,7 +6,7 @@ import (
 )
 
 func TestRunRequest(t *testing.T) {
-	badRequest, err := http.NewRequest("GET", "http://1234567890.0987654321", nil)
+	invalidURLRequest, err := http.NewRequest("GET", "http://1234567890.0987654321", nil)
 	if err != nil {
 		t.Errorf("failed to create bad http request")
 	}
@@ -15,14 +15,28 @@ func TestRunRequest(t *testing.T) {
 	if err != nil {
 		t.Errorf("failed to create good http request with no body")
 	}
-	cases := []struct {
-		r http.Request
-		c *http.Client
+
+	tests := []struct {
+		name string
+		r    http.Request
+		c    *http.Client
 	}{
-		{*badRequest, &http.Client{}},
-		{*goodRequestWithNoBody, &http.Client{}},
+		{
+			name: "invalid url",
+			r:    *invalidURLRequest,
+			c:    &http.Client{},
+		},
+		{
+			name: "valid",
+			r:    *goodRequestWithNoBody,
+			c:    &http.Client{},
+		},
 	}
-	for _, c := range cases {
-		runRequest(c.r, c.c)
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			runRequest(tc.r, tc.c)
+		})
 	}
 }

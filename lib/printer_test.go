@@ -9,62 +9,118 @@ import (
 )
 
 func TestCreateTextSummary(t *testing.T) {
-	cases := []struct {
-		s RequestStatSummary
+	tests := []struct {
+		name string
+		s    RequestStatSummary
 	}{
-		{RequestStatSummary{}}, //empty
-		{RequestStatSummary{
-			avgRPS:               12.34,
-			avgDuration:          1234,
-			minDuration:          1234,
-			maxDuration:          1234,
-			statusCodes:          map[int]int{100: 1, 200: 2, 300: 3, 400: 4, 500: 5, 0: 1},
-			startTime:            time.Now(),
-			endTime:              time.Now(),
-			avgDataTransferred:   2345,
-			maxDataTransferred:   12345,
-			minDataTransferred:   1234,
-			totalDataTransferred: 123456,
-		}}, //nonzero values for everything
+		{
+			name: "empty summary",
+			s:    RequestStatSummary{},
+		},
+		{
+			name: "valid summary, non-zero values",
+			s: RequestStatSummary{
+				avgRPS:               12.34,
+				avgDuration:          1234,
+				minDuration:          1234,
+				maxDuration:          1234,
+				statusCodes:          map[int]int{100: 1, 200: 2, 300: 3, 400: 4, 500: 5, 0: 1},
+				startTime:            time.Now(),
+				endTime:              time.Now(),
+				avgDataTransferred:   2345,
+				maxDataTransferred:   12345,
+				minDataTransferred:   1234,
+				totalDataTransferred: 123456,
+			},
+		},
 	}
-	for _, c := range cases {
-		//could check for the exact string, but that's super tedious and brittle
-		_ = CreateTextSummary(c.s)
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			_ = CreateTextSummary(tc.s)
+		})
 	}
 }
 
 func TestPrintStat(t *testing.T) {
-	cases := []struct {
-		r RequestStat
+	tests := []struct {
+		name string
+		r    RequestStat
 	}{
-		{RequestStat{}}, //empty
-		//status codes
-		{RequestStat{StatusCode: 100}},
-		{RequestStat{StatusCode: 200}},
-		{RequestStat{StatusCode: 300}},
-		{RequestStat{StatusCode: 400}},
-		{RequestStat{StatusCode: 500}},
-		//error case
-		{RequestStat{Error: errors.New("this is an error")}},
+		{
+			name: "empty stat",
+			r:    RequestStat{},
+		},
+		{
+			name: "status code 100",
+			r:    RequestStat{StatusCode: 100},
+		},
+		{
+			name: "status code 200",
+			r:    RequestStat{StatusCode: 200},
+		},
+		{
+			name: "status code 300",
+			r:    RequestStat{StatusCode: 300},
+		},
+		{
+			name: "status code 400",
+			r:    RequestStat{StatusCode: 400},
+		},
+		{
+			name: "status code 500",
+			r:    RequestStat{StatusCode: 500},
+		},
+		{
+			name: "error",
+			r:    RequestStat{Error: errors.New("this is an error")},
+		},
 	}
-	p := printer{output: ioutil.Discard}
-	for _, c := range cases {
-		p.printStat(c.r)
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			p := printer{output: ioutil.Discard}
+			p.printStat(tc.r)
+
+		})
 	}
 }
 
 func TestPrintVerbose(t *testing.T) {
-	cases := []struct {
+	tests := []struct {
+		name string
 		req  *http.Request
 		resp *http.Response
 	}{
-		{nil, nil},
-		{nil, &http.Response{}},
-		{&http.Request{}, nil},
-		{&http.Request{}, &http.Response{Body: http.NoBody}},
+		{
+			name: "nil request and response",
+			req:  nil,
+			resp: nil,
+		},
+		{
+			name: "nil request and empty response",
+			req:  nil,
+			resp: &http.Response{},
+		},
+		{
+			name: "empty request and nil response",
+			req:  &http.Request{},
+			resp: nil,
+		},
+		{
+			name: "non-empty request and response",
+			req:  &http.Request{},
+			resp: &http.Response{Body: http.NoBody},
+		},
 	}
-	p := printer{output: ioutil.Discard}
-	for _, c := range cases {
-		p.printVerbose(c.req, c.resp)
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			p := printer{output: ioutil.Discard}
+			p.printVerbose(tc.req, tc.resp)
+		})
 	}
 }
