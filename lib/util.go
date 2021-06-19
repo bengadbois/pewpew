@@ -73,7 +73,7 @@ func buildRequest(t Target) (http.Request, error) {
 		return http.Request{}, errors.New("empty hostname")
 	}
 
-	if t.DNSPrefetch {
+	if t.Options.DNSPrefetch {
 		addrs, err := net.LookupHost(URL.Hostname())
 		if err != nil {
 			return http.Request{}, errors.New("failed to prefetch host " + URL.Host)
@@ -86,30 +86,30 @@ func buildRequest(t Target) (http.Request, error) {
 
 	//setup the request
 	var req *http.Request
-	if t.BodyFilename != "" {
-		fileContents, fileErr := ioutil.ReadFile(t.BodyFilename)
+	if t.Options.BodyFilename != "" {
+		fileContents, fileErr := ioutil.ReadFile(t.Options.BodyFilename)
 		if fileErr != nil {
-			return http.Request{}, errors.New("failed to read contents of file " + t.BodyFilename + ": " + fileErr.Error())
+			return http.Request{}, errors.New("failed to read contents of file " + t.Options.BodyFilename + ": " + fileErr.Error())
 		}
-		req, err = http.NewRequest(t.Method, URL.String(), bytes.NewBuffer(fileContents))
-	} else if t.Body != "" {
-		bodyStr := t.Body
-		if t.RegexBody {
-			bodyStr, err = reggen.Generate(t.Body, 10)
+		req, err = http.NewRequest(t.Options.Method, URL.String(), bytes.NewBuffer(fileContents))
+	} else if t.Options.Body != "" {
+		bodyStr := t.Options.Body
+		if t.Options.RegexBody {
+			bodyStr, err = reggen.Generate(t.Options.Body, 10)
 			if err != nil {
 				return http.Request{}, errors.New("failed to parse regex: " + err.Error())
 			}
 		}
-		req, err = http.NewRequest(t.Method, URL.String(), bytes.NewBuffer([]byte(bodyStr)))
+		req, err = http.NewRequest(t.Options.Method, URL.String(), bytes.NewBuffer([]byte(bodyStr)))
 	} else {
-		req, err = http.NewRequest(t.Method, URL.String(), nil)
+		req, err = http.NewRequest(t.Options.Method, URL.String(), nil)
 	}
 	if err != nil {
 		return http.Request{}, errors.New("failed to create request: " + err.Error())
 	}
 	//add headers
-	if t.Headers != "" {
-		headerMap, err := parseKeyValString(t.Headers, ",", ":")
+	if t.Options.Headers != "" {
+		headerMap, err := parseKeyValString(t.Options.Headers, ",", ":")
 		if err != nil {
 			return http.Request{}, errors.New("could not parse headers: " + err.Error())
 		}
@@ -118,11 +118,11 @@ func buildRequest(t Target) (http.Request, error) {
 		}
 	}
 
-	req.Header.Set("User-Agent", t.UserAgent)
+	req.Header.Set("User-Agent", t.Options.UserAgent)
 
 	//add cookies
-	if t.Cookies != "" {
-		cookieMap, err := parseKeyValString(t.Cookies, ";", "=")
+	if t.Options.Cookies != "" {
+		cookieMap, err := parseKeyValString(t.Options.Cookies, ";", "=")
 		if err != nil {
 			return http.Request{}, errors.New("could not parse cookies: " + err.Error())
 		}
@@ -131,8 +131,8 @@ func buildRequest(t Target) (http.Request, error) {
 		}
 	}
 
-	if t.BasicAuth != "" {
-		authMap, err := parseKeyValString(t.BasicAuth, ",", ":")
+	if t.Options.BasicAuth != "" {
+		authMap, err := parseKeyValString(t.Options.BasicAuth, ",", ":")
 		if err != nil {
 			return http.Request{}, errors.New("could not parse basic auth: " + err.Error())
 		}
@@ -146,22 +146,22 @@ func buildRequest(t Target) (http.Request, error) {
 
 func createClient(target Target) *http.Client {
 	tr := &http.Transport{}
-	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: !target.EnforceSSL}
-	tr.DisableCompression = !target.Compress
-	tr.DisableKeepAlives = !target.KeepAlive
-	if target.NoHTTP2 {
+	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: !target.Options.EnforceSSL}
+	tr.DisableCompression = !target.Options.Compress
+	tr.DisableKeepAlives = !target.Options.KeepAlive
+	if target.Options.NoHTTP2 {
 		tr.TLSNextProto = make(map[string](func(string, *tls.Conn) http.RoundTripper))
 	} else {
 		_ = http2.ConfigureTransport(tr)
 	}
 	var timeout time.Duration
-	if target.Timeout != "" {
-		timeout, _ = time.ParseDuration(target.Timeout)
+	if target.Options.Timeout != "" {
+		timeout, _ = time.ParseDuration(target.Options.Timeout)
 	} else {
 		timeout = time.Duration(0)
 	}
 	client := &http.Client{Timeout: timeout, Transport: tr}
-	if !target.FollowRedirects {
+	if !target.Options.FollowRedirects {
 		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		}

@@ -49,20 +49,20 @@ var benchmarkCmd = &cobra.Command{
 				benchmarkCfg.Targets[i].URL = args[i]
 				//use global configs instead of the config file's individual target settings
 				benchmarkCfg.Targets[i].RegexURL = viper.GetBool("regex")
-				benchmarkCfg.Targets[i].DNSPrefetch = viper.GetBool("dns-prefetch")
-				benchmarkCfg.Targets[i].Timeout = viper.GetString("timeout")
-				benchmarkCfg.Targets[i].Method = viper.GetString("request-method")
-				benchmarkCfg.Targets[i].Body = viper.GetString("body")
-				benchmarkCfg.Targets[i].BodyFilename = viper.GetString("body-file")
-				benchmarkCfg.Targets[i].Headers = viper.GetString("headers")
-				benchmarkCfg.Targets[i].Cookies = viper.GetString("cookies")
-				benchmarkCfg.Targets[i].UserAgent = viper.GetString("user-agent")
-				benchmarkCfg.Targets[i].BasicAuth = viper.GetString("basic-auth")
-				benchmarkCfg.Targets[i].Compress = viper.GetBool("compress")
-				benchmarkCfg.Targets[i].KeepAlive = viper.GetBool("keepalive")
-				benchmarkCfg.Targets[i].FollowRedirects = viper.GetBool("follow-redirects")
-				benchmarkCfg.Targets[i].NoHTTP2 = viper.GetBool("no-http2")
-				benchmarkCfg.Targets[i].EnforceSSL = viper.GetBool("enforce-ssl")
+				benchmarkCfg.Targets[i].Options.DNSPrefetch = viper.GetBool("dns-prefetch")
+				benchmarkCfg.Targets[i].Options.Timeout = viper.GetString("timeout")
+				benchmarkCfg.Targets[i].Options.Method = viper.GetString("request-method")
+				benchmarkCfg.Targets[i].Options.Body = viper.GetString("body")
+				benchmarkCfg.Targets[i].Options.BodyFilename = viper.GetString("body-file")
+				benchmarkCfg.Targets[i].Options.Headers = viper.GetString("headers")
+				benchmarkCfg.Targets[i].Options.Cookies = viper.GetString("cookies")
+				benchmarkCfg.Targets[i].Options.UserAgent = viper.GetString("user-agent")
+				benchmarkCfg.Targets[i].Options.BasicAuth = viper.GetString("basic-auth")
+				benchmarkCfg.Targets[i].Options.Compress = viper.GetBool("compress")
+				benchmarkCfg.Targets[i].Options.KeepAlive = viper.GetBool("keepalive")
+				benchmarkCfg.Targets[i].Options.FollowRedirects = viper.GetBool("follow-redirects")
+				benchmarkCfg.Targets[i].Options.NoHTTP2 = viper.GetBool("no-http2")
+				benchmarkCfg.Targets[i].Options.EnforceSSL = viper.GetBool("enforce-ssl")
 			}
 		} else {
 			//set non-URL target settings
@@ -75,46 +75,46 @@ var benchmarkCmd = &cobra.Command{
 					benchmarkCfg.Targets[i].RegexURL = viper.GetBool("regex")
 				}
 				if _, set := targetMapVals["DNSPrefetch"]; !set {
-					benchmarkCfg.Targets[i].DNSPrefetch = viper.GetBool("dns-prefetch")
+					benchmarkCfg.Targets[i].Options.DNSPrefetch = viper.GetBool("dns-prefetch")
 				}
 				if _, set := targetMapVals["Timeout"]; !set {
-					benchmarkCfg.Targets[i].Timeout = viper.GetString("timeout")
+					benchmarkCfg.Targets[i].Options.Timeout = viper.GetString("timeout")
 				}
 				if _, set := targetMapVals["Method"]; !set {
-					benchmarkCfg.Targets[i].Method = viper.GetString("request-method")
+					benchmarkCfg.Targets[i].Options.Method = viper.GetString("request-method")
 				}
 				if _, set := targetMapVals["Body"]; !set {
-					benchmarkCfg.Targets[i].Body = viper.GetString("body")
+					benchmarkCfg.Targets[i].Options.Body = viper.GetString("body")
 				}
 				if _, set := targetMapVals["BodyFilename"]; !set {
-					benchmarkCfg.Targets[i].BodyFilename = viper.GetString("bodyFile")
+					benchmarkCfg.Targets[i].Options.BodyFilename = viper.GetString("bodyFile")
 				}
 				if _, set := targetMapVals["Headers"]; !set {
-					benchmarkCfg.Targets[i].Headers = viper.GetString("headers")
+					benchmarkCfg.Targets[i].Options.Headers = viper.GetString("headers")
 				}
 				if _, set := targetMapVals["Cookies"]; !set {
-					benchmarkCfg.Targets[i].Cookies = viper.GetString("cookies")
+					benchmarkCfg.Targets[i].Options.Cookies = viper.GetString("cookies")
 				}
 				if _, set := targetMapVals["UserAgent"]; !set {
-					benchmarkCfg.Targets[i].UserAgent = viper.GetString("userAgent")
+					benchmarkCfg.Targets[i].Options.UserAgent = viper.GetString("userAgent")
 				}
 				if _, set := targetMapVals["BasicAuth"]; !set {
-					benchmarkCfg.Targets[i].BasicAuth = viper.GetString("basicAuth")
+					benchmarkCfg.Targets[i].Options.BasicAuth = viper.GetString("basicAuth")
 				}
 				if _, set := targetMapVals["Compress"]; !set {
-					benchmarkCfg.Targets[i].Compress = viper.GetBool("compress")
+					benchmarkCfg.Targets[i].Options.Compress = viper.GetBool("compress")
 				}
 				if _, set := targetMapVals["KeepAlive"]; !set {
-					benchmarkCfg.Targets[i].KeepAlive = viper.GetBool("keepalive")
+					benchmarkCfg.Targets[i].Options.KeepAlive = viper.GetBool("keepalive")
 				}
 				if _, set := targetMapVals["FollowRedirects"]; !set {
-					benchmarkCfg.Targets[i].FollowRedirects = viper.GetBool("followredirects")
+					benchmarkCfg.Targets[i].Options.FollowRedirects = viper.GetBool("followredirects")
 				}
 				if _, set := targetMapVals["NoHTTP2"]; !set {
-					benchmarkCfg.Targets[i].NoHTTP2 = viper.GetBool("no-http2")
+					benchmarkCfg.Targets[i].Options.NoHTTP2 = viper.GetBool("no-http2")
 				}
 				if _, set := targetMapVals["EnforceSSL"]; !set {
-					benchmarkCfg.Targets[i].EnforceSSL = viper.GetBool("enforce-ssl")
+					benchmarkCfg.Targets[i].Options.EnforceSSL = viper.GetBool("enforce-ssl")
 				}
 			}
 		}
@@ -130,7 +130,7 @@ var benchmarkCmd = &cobra.Command{
 		if len(benchmarkCfg.Targets) > 1 {
 			for idx, target := range benchmarkCfg.Targets {
 				//info about the request
-				fmt.Printf("----Target %d: %s %s\n", idx+1, target.Method, target.URL)
+				fmt.Printf("----Target %d: %s %s\n", idx+1, target.Options.Method, target.URL)
 				reqStats := pewpew.CreateRequestsStats(targetRequestStats[idx])
 				fmt.Println(pewpew.CreateTextSummary(reqStats))
 			}

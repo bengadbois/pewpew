@@ -163,10 +163,12 @@ func main() {
         Verbose:     false,
         //setup one target
         Targets: []pewpew.Target{{
-            URL:     "https://127.0.0.1:443/home",
-            Timeout: "2s",
-            Method:  "GET",
-            Body:    `{"field": "data", "work": true}`,
+            URL: "https://127.0.0.1:443/home",
+            Options: pewpew.TargetOptions{
+                Timeout: "2s",
+                Method:  "GET",
+                Body:    `{"field": "data", "work": true}`,
+            },
         }},
     }
 
