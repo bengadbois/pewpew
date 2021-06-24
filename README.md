@@ -157,11 +157,9 @@ import (
 
 func main() {
     stressCfg := pewpew.StressConfig{
-        //global settings
         Count:       1,
         Concurrency: 1,
         Verbose:     false,
-        //setup one target
         Targets: []pewpew.Target{{
             URL: "https://127.0.0.1:443/home",
             Options: pewpew.TargetOptions{
@@ -172,14 +170,12 @@ func main() {
         }},
     }
 
-    //begin stress test
-    output := os.Stdout //can be any io.Writer, such as a file
+    output := os.Stdout
     stats, err := pewpew.RunStress(stressCfg, output)
     if err != nil {
         fmt.Printf("pewpew stress failed:  %s", err.Error())
     }
 
-    //do whatever you want with the raw stats
     fmt.Printf("%+v", stats)
 }
 ```
