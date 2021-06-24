@@ -7,7 +7,6 @@ import (
 	"net/http"
 )
 
-//TODO move to other file
 type workerDone struct{}
 
 type (
