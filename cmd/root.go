@@ -12,7 +12,7 @@ import (
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "pewpew",
-	Short: "HTTP(S) & HTTP2 load tester for performance and stress testing",
+	Short: "HTTP load tester for performance and stress testing",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		runtime.GOMAXPROCS(viper.GetInt("cpu"))
 		if viper.GetBool("verbose") && viper.GetBool("quiet") {
