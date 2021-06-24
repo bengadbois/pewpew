@@ -56,7 +56,7 @@ func RunStress(s StressConfig, w io.Writer) ([][]RequestStat, error) {
 	}
 	err := validateStressConfig(s)
 	if err != nil {
-		return nil, errors.New("invalid configuration: " + err.Error())
+		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
 	targetCount := len(s.Targets)
 

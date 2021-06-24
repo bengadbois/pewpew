@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -60,14 +61,14 @@ func buildRequest(t Target) (http.Request, error) {
 	if t.RegexURL {
 		urlStr, err = reggen.Generate(t.URL, 10)
 		if err != nil {
-			return http.Request{}, errors.New("failed to parse regex: " + err.Error())
+			return http.Request{}, fmt.Errorf("failed to parse regex: %w", err)
 		}
 	} else {
 		urlStr = t.URL
 	}
 	URL, err := url.Parse(urlStr)
 	if err != nil {
-		return http.Request{}, errors.New("failed to parse URL " + urlStr + " : " + err.Error())
+		return http.Request{}, fmt.Errorf("failed to parse URL %s: %w", urlStr, err)
 	}
 	if URL.Host == "" {
 		return http.Request{}, errors.New("empty hostname")
@@ -76,10 +77,10 @@ func buildRequest(t Target) (http.Request, error) {
 	if t.Options.DNSPrefetch {
 		addrs, err := net.LookupHost(URL.Hostname())
 		if err != nil {
-			return http.Request{}, errors.New("failed to prefetch host " + URL.Host)
+			return http.Request{}, fmt.Errorf("failed to prefetch host %s", URL.Host)
 		}
 		if len(addrs) == 0 {
-			return http.Request{}, errors.New("no addresses found for " + URL.Host)
+			return http.Request{}, fmt.Errorf("no addresses found for %s", URL.Host)
 		}
 		URL.Host = addrs[0]
 	}
@@ -89,7 +90,7 @@ func buildRequest(t Target) (http.Request, error) {
 	if t.Options.BodyFilename != "" {
 		fileContents, fileErr := ioutil.ReadFile(t.Options.BodyFilename)
 		if fileErr != nil {
-			return http.Request{}, errors.New("failed to read contents of file " + t.Options.BodyFilename + ": " + fileErr.Error())
+			return http.Request{}, fmt.Errorf("failed to read contents of file %s: %w", t.Options.BodyFilename, fileErr)
 		}
 		req, err = http.NewRequest(t.Options.Method, URL.String(), bytes.NewBuffer(fileContents))
 	} else if t.Options.Body != "" {
@@ -97,7 +98,7 @@ func buildRequest(t Target) (http.Request, error) {
 		if t.Options.RegexBody {
 			bodyStr, err = reggen.Generate(t.Options.Body, 10)
 			if err != nil {
-				return http.Request{}, errors.New("failed to parse regex: " + err.Error())
+				return http.Request{}, fmt.Errorf("failed to parse regex: %w", err)
 			}
 		}
 		req, err = http.NewRequest(t.Options.Method, URL.String(), bytes.NewBuffer([]byte(bodyStr)))
@@ -105,13 +106,13 @@ func buildRequest(t Target) (http.Request, error) {
 		req, err = http.NewRequest(t.Options.Method, URL.String(), nil)
 	}
 	if err != nil {
-		return http.Request{}, errors.New("failed to create request: " + err.Error())
+		return http.Request{}, fmt.Errorf("failed to create request: %w", err)
 	}
 	//add headers
 	if t.Options.Headers != "" {
 		headerMap, err := parseKeyValString(t.Options.Headers, ",", ":")
 		if err != nil {
-			return http.Request{}, errors.New("could not parse headers: " + err.Error())
+			return http.Request{}, fmt.Errorf("could not parse headers: %w", err)
 		}
 		for key, val := range headerMap {
 			req.Header.Add(key, val)
@@ -124,7 +125,7 @@ func buildRequest(t Target) (http.Request, error) {
 	if t.Options.Cookies != "" {
 		cookieMap, err := parseKeyValString(t.Options.Cookies, ";", "=")
 		if err != nil {
-			return http.Request{}, errors.New("could not parse cookies: " + err.Error())
+			return http.Request{}, fmt.Errorf("could not parse cookies: %w", err)
 		}
 		for key, val := range cookieMap {
 			req.AddCookie(&http.Cookie{Name: key, Value: val})
@@ -134,7 +135,7 @@ func buildRequest(t Target) (http.Request, error) {
 	if t.Options.BasicAuth != "" {
 		authMap, err := parseKeyValString(t.Options.BasicAuth, ",", ":")
 		if err != nil {
-			return http.Request{}, errors.New("could not parse basic auth: " + err.Error())
+			return http.Request{}, fmt.Errorf("could not parse basic auth: %w", err)
 		}
 		for key, val := range authMap {
 			req.SetBasicAuth(key, val)

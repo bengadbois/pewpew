@@ -158,8 +158,7 @@ var stressCmd = &cobra.Command{
 			json, _ := json.MarshalIndent(globalStats, "", "    ")
 			err = ioutil.WriteFile(filename, json, 0644)
 			if err != nil {
-				return errors.New("failed to write full result data to " +
-					filename + ": " + err.Error())
+				return fmt.Errorf("failed to write full result data to %s: %w", filename, err)
 			}
 			fmt.Println("finished!")
 		}
@@ -169,8 +168,7 @@ var stressCmd = &cobra.Command{
 			fmt.Print("Writing full result data to: " + filename + " ...")
 			file, err := os.Create(filename)
 			if err != nil {
-				return errors.New("failed to write full result data to " +
-					filename + ": " + err.Error())
+				return fmt.Errorf("failed to write full result data to %s: %w", filename, err)
 			}
 			defer file.Close()
 
@@ -185,8 +183,7 @@ var stressCmd = &cobra.Command{
 				}
 				err := writer.Write(line)
 				if err != nil {
-					return errors.New("failed to write full result data to " +
-						filename + ": " + err.Error())
+					return fmt.Errorf("failed to write full result data to %s: %w", filename, err)
 				}
 			}
 			defer writer.Flush()
@@ -199,8 +196,7 @@ var stressCmd = &cobra.Command{
 			xml, _ := xml.MarshalIndent(globalStats, "", "    ")
 			err = ioutil.WriteFile(viper.GetString("output-xml"), xml, 0644)
 			if err != nil {
-				return errors.New("failed to write full result data to " +
-					filename + ": " + err.Error())
+				return fmt.Errorf("failed to write full result data to %s: %w", filename, err)
 			}
 			fmt.Println("finished!")
 		}

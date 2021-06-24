@@ -2,7 +2,7 @@ package pewpew
 
 import (
 	"bytes"
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
@@ -64,7 +64,7 @@ func createRequestQueue(count int, target Target) (chan http.Request, error) {
 	//attempt to build one request - if passes, the rest should too
 	_, err := buildRequest(target)
 	if err != nil {
-		return nil, errors.New("failed to create request with target configuration: " + err.Error())
+		return nil, fmt.Errorf("failed to create request with target configuration: %s", err)
 	}
 	go func() {
 		for i := 0; i < count; i++ {

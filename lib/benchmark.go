@@ -54,7 +54,7 @@ func RunBenchmark(b BenchmarkConfig, w io.Writer) ([][]RequestStat, error) {
 	}
 	err := validateBenchmarkConfig(b)
 	if err != nil {
-		return nil, errors.New("invalid configuration: " + err.Error())
+		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
 	targetCount := len(b.Targets)
 
