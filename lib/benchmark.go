@@ -21,21 +21,7 @@ type (
 		Targets  []Target
 
 		//global target settings
-
-		DNSPrefetch     bool
-		Timeout         string
-		Method          string
-		Body            string
-		BodyFilename    string
-		Headers         string
-		Cookies         string
-		UserAgent       string
-		BasicAuth       string
-		Compress        bool
-		KeepAlive       bool
-		FollowRedirects bool
-		NoHTTP2         bool
-		EnforceSSL      bool
+		Options TargetOptions
 	}
 )
 
@@ -47,11 +33,13 @@ func NewBenchmarkConfig() (b *BenchmarkConfig) {
 		Duration: DefaultDuration,
 		Targets: []Target{
 			{
-				URL:             DefaultURL,
-				Timeout:         DefaultTimeout,
-				Method:          DefaultMethod,
-				UserAgent:       DefaultUserAgent,
-				FollowRedirects: true,
+				URL: DefaultURL,
+				Options: TargetOptions{
+					Timeout:         DefaultTimeout,
+					Method:          DefaultMethod,
+					UserAgent:       DefaultUserAgent,
+					FollowRedirects: true,
+				},
 			},
 		},
 	}
@@ -66,7 +54,7 @@ func RunBenchmark(b BenchmarkConfig, w io.Writer) ([][]RequestStat, error) {
 	}
 	err := validateBenchmarkConfig(b)
 	if err != nil {
-		return nil, errors.New("invalid configuration: " + err.Error())
+		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
 	targetCount := len(b.Targets)
 

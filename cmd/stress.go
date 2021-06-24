@@ -48,21 +48,21 @@ var stressCmd = &cobra.Command{
 				stressCfg.Targets[i].URL = args[i]
 				//use global configs instead of the config file's individual target settings
 				stressCfg.Targets[i].RegexURL = viper.GetBool("regex")
-				stressCfg.Targets[i].DNSPrefetch = viper.GetBool("dns-prefetch")
-				stressCfg.Targets[i].Timeout = viper.GetString("timeout")
-				stressCfg.Targets[i].Method = viper.GetString("request-method")
-				stressCfg.Targets[i].Body = viper.GetString("body")
-				stressCfg.Targets[i].RegexBody = viper.GetBool("body-regex")
-				stressCfg.Targets[i].BodyFilename = viper.GetString("body-file")
-				stressCfg.Targets[i].Headers = viper.GetString("headers")
-				stressCfg.Targets[i].Cookies = viper.GetString("cookies")
-				stressCfg.Targets[i].UserAgent = viper.GetString("user-agent")
-				stressCfg.Targets[i].BasicAuth = viper.GetString("basic-auth")
-				stressCfg.Targets[i].Compress = viper.GetBool("compress")
-				stressCfg.Targets[i].KeepAlive = viper.GetBool("keepalive")
-				stressCfg.Targets[i].FollowRedirects = viper.GetBool("follow-redirects")
-				stressCfg.Targets[i].NoHTTP2 = viper.GetBool("no-http2")
-				stressCfg.Targets[i].EnforceSSL = viper.GetBool("enforce-ssl")
+				stressCfg.Targets[i].Options.DNSPrefetch = viper.GetBool("dns-prefetch")
+				stressCfg.Targets[i].Options.Timeout = viper.GetString("timeout")
+				stressCfg.Targets[i].Options.Method = viper.GetString("request-method")
+				stressCfg.Targets[i].Options.Body = viper.GetString("body")
+				stressCfg.Targets[i].Options.RegexBody = viper.GetBool("body-regex")
+				stressCfg.Targets[i].Options.BodyFilename = viper.GetString("body-file")
+				stressCfg.Targets[i].Options.Headers = viper.GetString("headers")
+				stressCfg.Targets[i].Options.Cookies = viper.GetString("cookies")
+				stressCfg.Targets[i].Options.UserAgent = viper.GetString("user-agent")
+				stressCfg.Targets[i].Options.BasicAuth = viper.GetString("basic-auth")
+				stressCfg.Targets[i].Options.Compress = viper.GetBool("compress")
+				stressCfg.Targets[i].Options.KeepAlive = viper.GetBool("keepalive")
+				stressCfg.Targets[i].Options.FollowRedirects = viper.GetBool("follow-redirects")
+				stressCfg.Targets[i].Options.NoHTTP2 = viper.GetBool("no-http2")
+				stressCfg.Targets[i].Options.EnforceSSL = viper.GetBool("enforce-ssl")
 			}
 		} else {
 			//set non-URL target settings
@@ -75,49 +75,49 @@ var stressCmd = &cobra.Command{
 					stressCfg.Targets[i].RegexURL = viper.GetBool("regex")
 				}
 				if _, set := targetMapVals["DNSPrefetch"]; !set {
-					stressCfg.Targets[i].DNSPrefetch = viper.GetBool("dns-prefetch")
+					stressCfg.Targets[i].Options.DNSPrefetch = viper.GetBool("dns-prefetch")
 				}
 				if _, set := targetMapVals["Timeout"]; !set {
-					stressCfg.Targets[i].Timeout = viper.GetString("timeout")
+					stressCfg.Targets[i].Options.Timeout = viper.GetString("timeout")
 				}
 				if _, set := targetMapVals["Method"]; !set {
-					stressCfg.Targets[i].Method = viper.GetString("request-method")
+					stressCfg.Targets[i].Options.Method = viper.GetString("request-method")
 				}
 				if _, set := targetMapVals["Body"]; !set {
-					stressCfg.Targets[i].Body = viper.GetString("body")
+					stressCfg.Targets[i].Options.Body = viper.GetString("body")
 				}
 				if _, set := targetMapVals["RegexBody"]; !set {
-					stressCfg.Targets[i].RegexBody = viper.GetBool("body-regex")
+					stressCfg.Targets[i].Options.RegexBody = viper.GetBool("body-regex")
 				}
 				if _, set := targetMapVals["BodyFilename"]; !set {
-					stressCfg.Targets[i].BodyFilename = viper.GetString("bodyFile")
+					stressCfg.Targets[i].Options.BodyFilename = viper.GetString("bodyFile")
 				}
 				if _, set := targetMapVals["Headers"]; !set {
-					stressCfg.Targets[i].Headers = viper.GetString("headers")
+					stressCfg.Targets[i].Options.Headers = viper.GetString("headers")
 				}
 				if _, set := targetMapVals["Cookies"]; !set {
-					stressCfg.Targets[i].Cookies = viper.GetString("cookies")
+					stressCfg.Targets[i].Options.Cookies = viper.GetString("cookies")
 				}
 				if _, set := targetMapVals["UserAgent"]; !set {
-					stressCfg.Targets[i].UserAgent = viper.GetString("userAgent")
+					stressCfg.Targets[i].Options.UserAgent = viper.GetString("userAgent")
 				}
 				if _, set := targetMapVals["BasicAuth"]; !set {
-					stressCfg.Targets[i].BasicAuth = viper.GetString("basicAuth")
+					stressCfg.Targets[i].Options.BasicAuth = viper.GetString("basicAuth")
 				}
 				if _, set := targetMapVals["Compress"]; !set {
-					stressCfg.Targets[i].Compress = viper.GetBool("compress")
+					stressCfg.Targets[i].Options.Compress = viper.GetBool("compress")
 				}
 				if _, set := targetMapVals["KeepAlive"]; !set {
-					stressCfg.Targets[i].KeepAlive = viper.GetBool("keepalive")
+					stressCfg.Targets[i].Options.KeepAlive = viper.GetBool("keepalive")
 				}
 				if _, set := targetMapVals["FollowRedirects"]; !set {
-					stressCfg.Targets[i].FollowRedirects = viper.GetBool("followredirects")
+					stressCfg.Targets[i].Options.FollowRedirects = viper.GetBool("followredirects")
 				}
 				if _, set := targetMapVals["NoHTTP2"]; !set {
-					stressCfg.Targets[i].NoHTTP2 = viper.GetBool("no-http2")
+					stressCfg.Targets[i].Options.NoHTTP2 = viper.GetBool("no-http2")
 				}
 				if _, set := targetMapVals["EnforceSSL"]; !set {
-					stressCfg.Targets[i].EnforceSSL = viper.GetBool("enforce-ssl")
+					stressCfg.Targets[i].Options.EnforceSSL = viper.GetBool("enforce-ssl")
 				}
 			}
 		}
@@ -133,7 +133,7 @@ var stressCmd = &cobra.Command{
 		if len(stressCfg.Targets) > 1 {
 			for idx, target := range stressCfg.Targets {
 				//info about the request
-				fmt.Printf("----Target %d: %s %s\n", idx+1, target.Method, target.URL)
+				fmt.Printf("----Target %d: %s %s\n", idx+1, target.Options.Method, target.URL)
 				reqStats := pewpew.CreateRequestsStats(targetRequestStats[idx])
 				fmt.Println(pewpew.CreateTextSummary(reqStats))
 			}
@@ -158,8 +158,7 @@ var stressCmd = &cobra.Command{
 			json, _ := json.MarshalIndent(globalStats, "", "    ")
 			err = ioutil.WriteFile(filename, json, 0644)
 			if err != nil {
-				return errors.New("failed to write full result data to " +
-					filename + ": " + err.Error())
+				return fmt.Errorf("failed to write full result data to %s: %w", filename, err)
 			}
 			fmt.Println("finished!")
 		}
@@ -169,8 +168,7 @@ var stressCmd = &cobra.Command{
 			fmt.Print("Writing full result data to: " + filename + " ...")
 			file, err := os.Create(filename)
 			if err != nil {
-				return errors.New("failed to write full result data to " +
-					filename + ": " + err.Error())
+				return fmt.Errorf("failed to write full result data to %s: %w", filename, err)
 			}
 			defer file.Close()
 
@@ -185,8 +183,7 @@ var stressCmd = &cobra.Command{
 				}
 				err := writer.Write(line)
 				if err != nil {
-					return errors.New("failed to write full result data to " +
-						filename + ": " + err.Error())
+					return fmt.Errorf("failed to write full result data to %s: %w", filename, err)
 				}
 			}
 			defer writer.Flush()
@@ -199,8 +196,7 @@ var stressCmd = &cobra.Command{
 			xml, _ := xml.MarshalIndent(globalStats, "", "    ")
 			err = ioutil.WriteFile(viper.GetString("output-xml"), xml, 0644)
 			if err != nil {
-				return errors.New("failed to write full result data to " +
-					filename + ": " + err.Error())
+				return fmt.Errorf("failed to write full result data to %s: %w", filename, err)
 			}
 			fmt.Println("finished!")
 		}

@@ -101,48 +101,11 @@ pewpew stress
 
 There are examples config files in `examples/`.
 
-Available global settings:
-- Count (default 10)
-- Concurrency (default 1)
-- NoHTTP2 (default false)
-- EnforceSSL (default false)
-- Quiet (default false)
-- Verbose (default false)
-- DNSPrefetch (default defer to Target)
-- Timeout (default defer to Target)
-- Method (default defer to Target)
-- Body (default defer to Target)
-- BodyFilename (default defer to Target)
-- Headers (default defer to Target)
-- Cookies (default defer to Target)
-- UserAgent (default defer to Target)
-- BasicAuth (default defer to Target)
-- Compress (default defer to Target)
-- KeepAlive (default defer to Target)
-- FollowRedirects (default defer to Target)
+Pewpew allows combining config file and command line settings, to maximize flexibility. Pewpew uses [https://github.com/spf13/viper](Viper) and follows its rules of config precedence.
 
-Available individual target settings:
-- URL (default "http://localhost")
-- RegexURL (default false)
-- DNSPrefetch (default false)
-- Timeout (default 10s)
-- Method (default GET)
-- Body (default empty)
-- RegexBody (default false)
-- BodyFilename (default none)
-- Headers (default none)
-- Cookies (default none)
-- UserAgent (default "pewpew")
-- BasicAuth (default none)
-- Compress (default false)
-- KeepAlive (default false)
-- FollowRedirects (default true)
+### Other Options
 
-Pewpew allows combining config file and command line settings, to maximize flexibility.
-
-Individual target settings in the config file override any other setting, then command line flags (applied to all targets) override others, then global settings in the config file override the Pewpew's defaults.
-
-If target URL(s) are specified on the command line, they override all targets in the config file.
+The full list of options for each command can be viewed by running Pewpew with the `--help` flag.
 
 ## Using as a Go library
 ```go
@@ -157,27 +120,25 @@ import (
 
 func main() {
     stressCfg := pewpew.StressConfig{
-        //global settings
         Count:       1,
         Concurrency: 1,
         Verbose:     false,
-        //setup one target
         Targets: []pewpew.Target{{
-            URL:     "https://127.0.0.1:443/home",
-            Timeout: "2s",
-            Method:  "GET",
-            Body:    `{"field": "data", "work": true}`,
+            URL: "https://127.0.0.1:443/home",
+            Options: pewpew.TargetOptions{
+                Timeout: "2s",
+                Method:  "GET",
+                Body:    `{"field": "data", "work": true}`,
+            },
         }},
     }
 
-    //begin stress test
-    output := os.Stdout //can be any io.Writer, such as a file
+    output := os.Stdout
     stats, err := pewpew.RunStress(stressCfg, output)
     if err != nil {
         fmt.Printf("pewpew stress failed:  %s", err.Error())
     }
 
-    //do whatever you want with the raw stats
     fmt.Printf("%+v", stats)
 }
 ```

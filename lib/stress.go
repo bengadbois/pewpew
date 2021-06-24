@@ -7,7 +7,6 @@ import (
 	"net/http"
 )
 
-//TODO move to other file
 type workerDone struct{}
 
 type (
@@ -23,21 +22,7 @@ type (
 		Targets     []Target
 
 		//global target settings
-
-		DNSPrefetch     bool
-		Timeout         string
-		Method          string
-		Body            string
-		BodyFilename    string
-		Headers         string
-		Cookies         string
-		UserAgent       string
-		BasicAuth       string
-		Compress        bool
-		KeepAlive       bool
-		FollowRedirects bool
-		NoHTTP2         bool
-		EnforceSSL      bool
+		Options TargetOptions
 	}
 )
 
@@ -49,11 +34,13 @@ func NewStressConfig() (s *StressConfig) {
 		Concurrency: DefaultConcurrency,
 		Targets: []Target{
 			{
-				URL:             DefaultURL,
-				Timeout:         DefaultTimeout,
-				Method:          DefaultMethod,
-				UserAgent:       DefaultUserAgent,
-				FollowRedirects: true,
+				URL: DefaultURL,
+				Options: TargetOptions{
+					Timeout:         DefaultTimeout,
+					Method:          DefaultMethod,
+					UserAgent:       DefaultUserAgent,
+					FollowRedirects: true,
+				},
 			},
 		},
 	}
@@ -68,7 +55,7 @@ func RunStress(s StressConfig, w io.Writer) ([][]RequestStat, error) {
 	}
 	err := validateStressConfig(s)
 	if err != nil {
-		return nil, errors.New("invalid configuration: " + err.Error())
+		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
 	targetCount := len(s.Targets)
 

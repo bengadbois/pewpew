@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -60,81 +61,81 @@ func buildRequest(t Target) (http.Request, error) {
 	if t.RegexURL {
 		urlStr, err = reggen.Generate(t.URL, 10)
 		if err != nil {
-			return http.Request{}, errors.New("failed to parse regex: " + err.Error())
+			return http.Request{}, fmt.Errorf("failed to parse regex: %w", err)
 		}
 	} else {
 		urlStr = t.URL
 	}
 	URL, err := url.Parse(urlStr)
 	if err != nil {
-		return http.Request{}, errors.New("failed to parse URL " + urlStr + " : " + err.Error())
+		return http.Request{}, fmt.Errorf("failed to parse URL %s: %w", urlStr, err)
 	}
 	if URL.Host == "" {
 		return http.Request{}, errors.New("empty hostname")
 	}
 
-	if t.DNSPrefetch {
+	if t.Options.DNSPrefetch {
 		addrs, err := net.LookupHost(URL.Hostname())
 		if err != nil {
-			return http.Request{}, errors.New("failed to prefetch host " + URL.Host)
+			return http.Request{}, fmt.Errorf("failed to prefetch host %s", URL.Host)
 		}
 		if len(addrs) == 0 {
-			return http.Request{}, errors.New("no addresses found for " + URL.Host)
+			return http.Request{}, fmt.Errorf("no addresses found for %s", URL.Host)
 		}
 		URL.Host = addrs[0]
 	}
 
 	//setup the request
 	var req *http.Request
-	if t.BodyFilename != "" {
-		fileContents, fileErr := ioutil.ReadFile(t.BodyFilename)
+	if t.Options.BodyFilename != "" {
+		fileContents, fileErr := ioutil.ReadFile(t.Options.BodyFilename)
 		if fileErr != nil {
-			return http.Request{}, errors.New("failed to read contents of file " + t.BodyFilename + ": " + fileErr.Error())
+			return http.Request{}, fmt.Errorf("failed to read contents of file %s: %w", t.Options.BodyFilename, fileErr)
 		}
-		req, err = http.NewRequest(t.Method, URL.String(), bytes.NewBuffer(fileContents))
-	} else if t.Body != "" {
-		bodyStr := t.Body
-		if t.RegexBody {
-			bodyStr, err = reggen.Generate(t.Body, 10)
+		req, err = http.NewRequest(t.Options.Method, URL.String(), bytes.NewBuffer(fileContents))
+	} else if t.Options.Body != "" {
+		bodyStr := t.Options.Body
+		if t.Options.RegexBody {
+			bodyStr, err = reggen.Generate(t.Options.Body, 10)
 			if err != nil {
-				return http.Request{}, errors.New("failed to parse regex: " + err.Error())
+				return http.Request{}, fmt.Errorf("failed to parse regex: %w", err)
 			}
 		}
-		req, err = http.NewRequest(t.Method, URL.String(), bytes.NewBuffer([]byte(bodyStr)))
+		req, err = http.NewRequest(t.Options.Method, URL.String(), bytes.NewBuffer([]byte(bodyStr)))
 	} else {
-		req, err = http.NewRequest(t.Method, URL.String(), nil)
+		req, err = http.NewRequest(t.Options.Method, URL.String(), nil)
 	}
 	if err != nil {
-		return http.Request{}, errors.New("failed to create request: " + err.Error())
+		return http.Request{}, fmt.Errorf("failed to create request: %w", err)
 	}
 	//add headers
-	if t.Headers != "" {
-		headerMap, err := parseKeyValString(t.Headers, ",", ":")
+	if t.Options.Headers != "" {
+		headerMap, err := parseKeyValString(t.Options.Headers, ",", ":")
 		if err != nil {
-			return http.Request{}, errors.New("could not parse headers: " + err.Error())
+			return http.Request{}, fmt.Errorf("could not parse headers: %w", err)
 		}
 		for key, val := range headerMap {
 			req.Header.Add(key, val)
 		}
 	}
 
-	req.Header.Set("User-Agent", t.UserAgent)
+	req.Header.Set("User-Agent", t.Options.UserAgent)
 
 	//add cookies
-	if t.Cookies != "" {
-		cookieMap, err := parseKeyValString(t.Cookies, ";", "=")
+	if t.Options.Cookies != "" {
+		cookieMap, err := parseKeyValString(t.Options.Cookies, ";", "=")
 		if err != nil {
-			return http.Request{}, errors.New("could not parse cookies: " + err.Error())
+			return http.Request{}, fmt.Errorf("could not parse cookies: %w", err)
 		}
 		for key, val := range cookieMap {
 			req.AddCookie(&http.Cookie{Name: key, Value: val})
 		}
 	}
 
-	if t.BasicAuth != "" {
-		authMap, err := parseKeyValString(t.BasicAuth, ",", ":")
+	if t.Options.BasicAuth != "" {
+		authMap, err := parseKeyValString(t.Options.BasicAuth, ",", ":")
 		if err != nil {
-			return http.Request{}, errors.New("could not parse basic auth: " + err.Error())
+			return http.Request{}, fmt.Errorf("could not parse basic auth: %w", err)
 		}
 		for key, val := range authMap {
 			req.SetBasicAuth(key, val)
@@ -146,22 +147,22 @@ func buildRequest(t Target) (http.Request, error) {
 
 func createClient(target Target) *http.Client {
 	tr := &http.Transport{}
-	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: !target.EnforceSSL}
-	tr.DisableCompression = !target.Compress
-	tr.DisableKeepAlives = !target.KeepAlive
-	if target.NoHTTP2 {
+	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: !target.Options.EnforceSSL}
+	tr.DisableCompression = !target.Options.Compress
+	tr.DisableKeepAlives = !target.Options.KeepAlive
+	if target.Options.NoHTTP2 {
 		tr.TLSNextProto = make(map[string](func(string, *tls.Conn) http.RoundTripper))
 	} else {
 		_ = http2.ConfigureTransport(tr)
 	}
 	var timeout time.Duration
-	if target.Timeout != "" {
-		timeout, _ = time.ParseDuration(target.Timeout)
+	if target.Options.Timeout != "" {
+		timeout, _ = time.ParseDuration(target.Options.Timeout)
 	} else {
 		timeout = time.Duration(0)
 	}
 	client := &http.Client{Timeout: timeout, Transport: tr}
-	if !target.FollowRedirects {
+	if !target.Options.FollowRedirects {
 		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		}
