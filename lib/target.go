@@ -27,6 +27,7 @@ type Target struct {
 	Options TargetOptions
 }
 
+//TargetOptions is the configuration for a Target
 type TargetOptions struct {
 	//whether or not to resolve hostname to IP address before making request,
 	//eliminating that aspect of timing

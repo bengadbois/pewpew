@@ -26,82 +26,240 @@ func TestRunBenchmark(t *testing.T) {
 			expectErr:       true,
 		},
 		{
-			name:            "empty target",
-			benchmarkConfig: BenchmarkConfig{Targets: []Target{{}}},
-			writer:          ioutil.Discard,
-			expectErr:       true,
+			name: "empty target",
+			benchmarkConfig: BenchmarkConfig{
+				Targets: []Target{{}},
+			},
+			writer:    ioutil.Discard,
+			expectErr: true,
 		},
 		{
-			name:            "invalid regex",
-			benchmarkConfig: BenchmarkConfig{RPS: 10, Duration: 1, Targets: []Target{{URL: "*(", RegexURL: true, Method: "GET"}}},
-			writer:          ioutil.Discard,
-			expectErr:       true,
+			name: "invalid regex",
+			benchmarkConfig: BenchmarkConfig{
+				RPS:      10,
+				Duration: 1,
+				Targets: []Target{
+					{
+						URL:      "*(",
+						RegexURL: true,
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: true,
 		},
 		{
-			name:            "invalid url",
-			benchmarkConfig: BenchmarkConfig{RPS: 10, Duration: 1, Targets: []Target{{URL: ":::fail", Method: "GET"}}},
-			writer:          ioutil.Discard,
-			expectErr:       true,
+			name: "invalid url",
+			benchmarkConfig: BenchmarkConfig{
+				RPS:      10,
+				Duration: 1,
+				Targets: []Target{
+					{
+						URL: ":::fail",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: true,
 		},
 		{
-			name:            "multiple targets",
-			benchmarkConfig: BenchmarkConfig{RPS: 1, Duration: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}, {URL: "http://localhost", Method: "GET"}}},
-			writer:          ioutil.Discard,
-			expectErr:       false,
+			name: "multiple targets",
+			benchmarkConfig: BenchmarkConfig{
+				RPS:      1,
+				Duration: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:            "single target",
-			benchmarkConfig: BenchmarkConfig{RPS: 1, Duration: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}}},
-			writer:          ioutil.Discard,
-			expectErr:       false,
+			name: "single target",
+			benchmarkConfig: BenchmarkConfig{
+				RPS:      1,
+				Duration: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:            "expected http error",
-			benchmarkConfig: BenchmarkConfig{RPS: 1, Duration: 1, Targets: []Target{{URL: "http://localhost:999999999", Method: "GET"}}},
-			writer:          ioutil.Discard,
-			expectErr:       false,
+			name: "expected http error",
+			benchmarkConfig: BenchmarkConfig{
+				RPS:      1,
+				Duration: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost:999999999",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:            "No HTTP2",
-			benchmarkConfig: BenchmarkConfig{RPS: 1, Duration: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}}, NoHTTP2: true},
-			writer:          ioutil.Discard,
-			expectErr:       false,
+			name: "No HTTP2",
+			benchmarkConfig: BenchmarkConfig{
+				RPS:      1,
+				Duration: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+				Options: TargetOptions{
+					NoHTTP2: true,
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:            "timeout",
-			benchmarkConfig: BenchmarkConfig{RPS: 1, Duration: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}}, Timeout: "2s"},
-			writer:          ioutil.Discard,
-			expectErr:       false,
+			name: "timeout",
+			benchmarkConfig: BenchmarkConfig{
+				RPS:      1,
+				Duration: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+				Options: TargetOptions{
+					Timeout: "2s",
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:            "follow redirects",
-			benchmarkConfig: BenchmarkConfig{RPS: 1, Duration: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}}, FollowRedirects: true},
-			writer:          ioutil.Discard,
-			expectErr:       false,
+			name: "follow redirects",
+			benchmarkConfig: BenchmarkConfig{
+				RPS:      1,
+				Duration: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+				Options: TargetOptions{
+					FollowRedirects: true,
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:            "don't follow redirects",
-			benchmarkConfig: BenchmarkConfig{RPS: 1, Duration: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}}, FollowRedirects: false},
-			writer:          ioutil.Discard,
-			expectErr:       false,
+			name: "don't follow redirects",
+			benchmarkConfig: BenchmarkConfig{
+				RPS:      1,
+				Duration: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+				Options: TargetOptions{
+					FollowRedirects: false,
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:            "verbose",
-			benchmarkConfig: BenchmarkConfig{RPS: 1, Duration: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}}, Verbose: true},
-			writer:          ioutil.Discard,
-			expectErr:       false,
+			name: "verbose",
+			benchmarkConfig: BenchmarkConfig{
+				RPS:      1,
+				Duration: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+				Verbose: true,
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:            "quiet",
-			benchmarkConfig: BenchmarkConfig{RPS: 1, Duration: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}}, Quiet: true},
-			writer:          ioutil.Discard,
-			expectErr:       false,
+			name: "quiet",
+			benchmarkConfig: BenchmarkConfig{
+				RPS:      1,
+				Duration: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+				Quiet: true,
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:            "body file",
-			benchmarkConfig: BenchmarkConfig{RPS: 1, Duration: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}}, BodyFilename: tempFilename},
-			writer:          ioutil.Discard,
-			expectErr:       false,
+			name: "body file",
+			benchmarkConfig: BenchmarkConfig{
+				RPS:      1,
+				Duration: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+				Options: TargetOptions{
+					BodyFilename: tempFilename,
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
 			name:            "BenchmarkConfig constructor",
@@ -140,9 +298,11 @@ func TestValidateBenchmarkConfig(t *testing.T) {
 				Duration: DefaultDuration,
 				Targets: []Target{
 					{
-						URL:     DefaultURL,
-						Timeout: DefaultTimeout,
-						Method:  DefaultMethod,
+						URL: DefaultURL,
+						Options: TargetOptions{
+							Timeout: DefaultTimeout,
+							Method:  DefaultMethod,
+						},
 					},
 				},
 			},
@@ -155,9 +315,11 @@ func TestValidateBenchmarkConfig(t *testing.T) {
 				Duration: 0,
 				Targets: []Target{
 					{
-						URL:     DefaultURL,
-						Timeout: DefaultTimeout,
-						Method:  DefaultMethod,
+						URL: DefaultURL,
+						Options: TargetOptions{
+							Timeout: DefaultTimeout,
+							Method:  DefaultMethod,
+						},
 					},
 				},
 			},
@@ -170,9 +332,11 @@ func TestValidateBenchmarkConfig(t *testing.T) {
 				Duration: DefaultDuration,
 				Targets: []Target{
 					{
-						URL:     DefaultURL,
-						Timeout: DefaultTimeout,
-						Method:  "",
+						URL: DefaultURL,
+						Options: TargetOptions{
+							Timeout: DefaultTimeout,
+							Method:  "",
+						},
 					},
 				},
 			},
@@ -185,9 +349,11 @@ func TestValidateBenchmarkConfig(t *testing.T) {
 				Duration: DefaultDuration,
 				Targets: []Target{
 					{
-						URL:     DefaultURL,
-						Timeout: "",
-						Method:  DefaultMethod,
+						URL: DefaultURL,
+						Options: TargetOptions{
+							Timeout: "",
+							Method:  DefaultMethod,
+						},
 					},
 				},
 			},
@@ -200,9 +366,11 @@ func TestValidateBenchmarkConfig(t *testing.T) {
 				Duration: DefaultDuration,
 				Targets: []Target{
 					{
-						URL:     DefaultURL,
-						Timeout: "unparseable",
-						Method:  DefaultMethod,
+						URL: DefaultURL,
+						Options: TargetOptions{
+							Timeout: "unparseable",
+							Method:  DefaultMethod,
+						},
 					},
 				},
 			},
@@ -215,9 +383,11 @@ func TestValidateBenchmarkConfig(t *testing.T) {
 				Duration: DefaultDuration,
 				Targets: []Target{
 					{
-						URL:     DefaultURL,
-						Timeout: "1ms",
-						Method:  DefaultMethod,
+						URL: DefaultURL,
+						Options: TargetOptions{
+							Timeout: "1ms",
+							Method:  DefaultMethod,
+						},
 					},
 				},
 			},

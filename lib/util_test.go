@@ -126,128 +126,212 @@ func TestBuildRequest(t *testing.T) {
 		},
 		{
 			name: "attached non-existent body file",
-			target: Target{URL: "http://localhost",
-				BodyFilename: "/thisfiledoesnotexist"},
+			target: Target{
+				URL: "http://localhost",
+				Options: TargetOptions{
+					BodyFilename: "/thisfiledoesnotexist",
+				},
+			},
 			expectErr: true,
 		},
 		{
 			name: "invalid headers, empty key-values",
-			target: Target{URL: "http://localhost",
-				Headers: ",,,"},
+			target: Target{
+				URL: "http://localhost",
+				Options: TargetOptions{
+					Headers: ",,,",
+				},
+			},
 			expectErr: true,
 		},
 		{
 			name: "invalid headers, invalid key-value format",
-			target: Target{URL: "http://localhost",
-				Headers: "a:b,c,d"},
+			target: Target{
+				URL: "http://localhost",
+				Options: TargetOptions{
+					Headers: "a:b,c,d",
+				},
+			},
 			expectErr: true,
 		},
 		{
 			name: "invalid cookies, empty key-values",
-			target: Target{URL: "http://localhost",
-				Cookies: ";;;"},
+			target: Target{
+				URL: "http://localhost",
+				Options: TargetOptions{
+					Cookies: ";;;",
+				},
+			},
 			expectErr: true,
 		},
 		{
 			name: "invalid cookies, invalid key-value format",
-			target: Target{URL: "http://localhost",
-				Cookies: "a=b;c;d"},
+			target: Target{
+				URL: "http://localhost",
+				Options: TargetOptions{
+					Cookies: "a=b;c;d",
+				},
+			},
 			expectErr: true,
 		},
 		{
 			name: "invalid basic auth, missing password",
-			target: Target{URL: "http://localhost",
-				BasicAuth: "user:"},
+			target: Target{
+				URL: "http://localhost",
+				Options: TargetOptions{
+					BasicAuth: "user:",
+				},
+			},
 			expectErr: true,
 		},
 		{
 			name: "invalid basic auth, missing user",
-			target: Target{URL: "http://localhost",
-				BasicAuth: ":pass"},
+			target: Target{
+				URL: "http://localhost",
+				Options: TargetOptions{
+					BasicAuth: ":pass",
+				},
+			},
 			expectErr: true,
 		},
 		{
 			name: "invalid basic auth, missing user and password",
-			target: Target{URL: "http://localhost",
-				BasicAuth: "::"},
+			target: Target{
+				URL: "http://localhost",
+				Options: TargetOptions{
+					BasicAuth: "::",
+				},
+			},
 			expectErr: true,
 		},
 		{
 			name: "invalid method",
-			target: Target{URL: "http://localhost",
-				Method: "@"},
+			target: Target{
+				URL: "http://localhost",
+				Options: TargetOptions{
+					Method: "@",
+				},
+			},
 			expectErr: true,
 		},
 		{
 			name: "invalid address",
-			target: Target{URL: "https://invaliddomain.invalidtld",
-				DNSPrefetch: true},
+			target: Target{
+				URL: "https://invaliddomain.invalidtld",
+				Options: TargetOptions{
+					DNSPrefetch: true,
+				},
+			},
 			expectErr: true,
 		},
 		{
-			name:      "valid omitted scheme",
-			target:    Target{URL: "localhost"},
+			name: "valid omitted scheme",
+			target: Target{
+				URL: "localhost",
+				Options: TargetOptions{
+					DNSPrefetch: true,
+				},
+			},
 			expectErr: false,
 		},
 		{
-			name:      "valid localhost and port",
-			target:    Target{URL: "http://localhost:80"},
+			name: "valid localhost and port",
+			target: Target{
+				URL: "http://localhost:80",
+				Options: TargetOptions{
+					DNSPrefetch: true,
+				},
+			},
 			expectErr: false,
 		},
 		{
 			name: "valid localhost without port",
-			target: Target{URL: "http://localhost",
-				Method: "POST",
-				Body:   "data"},
+			target: Target{
+				URL: "http://localhost",
+				Options: TargetOptions{
+					DNSPrefetch: true,
+				},
+			},
 			expectErr: false,
 		},
 		{
-			name:      "valid http address with www",
-			target:    Target{URL: "https://www.github.com"},
+			name: "valid http address with www",
+			target: Target{
+				URL: "https://www.github.com",
+				Options: TargetOptions{
+					DNSPrefetch: true,
+				},
+			},
 			expectErr: false,
 		},
 		{
-			name:      "valid http address without www",
-			target:    Target{URL: "http://github.com"},
+			name: "valid http address without www",
+			target: Target{
+				URL: "http://github.com",
+				Options: TargetOptions{
+					DNSPrefetch: true,
+				},
+			},
 			expectErr: false,
 		},
 		{
 			name: "valid https address",
-			target: Target{URL: "https://www.github.com",
-				DNSPrefetch: true},
+			target: Target{
+				URL: "https://www.github.com",
+				Options: TargetOptions{
+					DNSPrefetch: true,
+				},
+			},
 			expectErr: false,
 		},
 		{
 			name: "valid https address with port",
-			target: Target{URL: "https://www.github.com:80",
-				DNSPrefetch: true},
+			target: Target{
+				URL: "https://www.github.com:80",
+				Options: TargetOptions{
+					DNSPrefetch: true,
+				},
+			},
 			expectErr: false,
 		},
 		{
 			name: "valid https address with port and path",
-			target: Target{URL: "https://www.github.com:80/path/",
-				DNSPrefetch: true},
+			target: Target{
+				URL: "https://www.github.com:80/path/",
+			},
 			expectErr: false,
 		},
 		{
 			name: "valid empty body file",
-			target: Target{URL: "http://localhost",
-				BodyFilename: ""},
+			target: Target{
+				URL: "http://localhost",
+				Options: TargetOptions{
+					BodyFilename: "",
+				},
+			},
 			expectErr: false,
 		},
 		{
 			name: "valid non-empty body file",
-			target: Target{URL: "http://localhost",
-				BodyFilename: tempFilename},
+			target: Target{
+				URL: "http://localhost",
+				Options: TargetOptions{
+					BodyFilename: tempFilename,
+				},
+			},
 			expectErr: false,
 		},
 		{
 			name: "valid headers, cookies, useragent, and basicauth",
-			target: Target{URL: "http://localhost:80/path/?param=val&another=one",
-				Headers:   "Accept-Encoding:gzip, Content-Type:application/json",
-				Cookies:   "a=b;c=d",
-				UserAgent: "pewpewpew",
-				BasicAuth: "user:pass"},
+			target: Target{
+				URL: "http://localhost:80/path/?param=val&another=one",
+				Options: TargetOptions{
+					Headers:   "Accept-Encoding:gzip, Content-Type:application/json",
+					Cookies:   "a=b;c=d",
+					UserAgent: "pewpewpew",
+					BasicAuth: "user:pass",
+				},
+			},
 			expectErr: false,
 		},
 	}
@@ -273,52 +357,100 @@ func TestCreateClient(t *testing.T) {
 			target: Target{},
 		},
 		{
-			name:   "enforce ssl",
-			target: Target{EnforceSSL: true},
+			name: "enforce ssl",
+			target: Target{
+				Options: TargetOptions{
+					EnforceSSL: true,
+				},
+			},
 		},
 		{
-			name:   "don't enforce ssl",
-			target: Target{EnforceSSL: false},
+			name: "don't enforce ssl",
+			target: Target{
+				Options: TargetOptions{
+					EnforceSSL: false,
+				},
+			},
 		},
 		{
-			name:   "compress",
-			target: Target{Compress: true},
+			name: "compress",
+			target: Target{
+				Options: TargetOptions{
+					Compress: true,
+				},
+			},
 		},
 		{
-			name:   "don't compress",
-			target: Target{Compress: false},
+			name: "don't compress",
+			target: Target{
+				Options: TargetOptions{
+					Compress: false,
+				},
+			},
 		},
 		{
-			name:   "keealive",
-			target: Target{KeepAlive: true},
+			name: "keealive",
+			target: Target{
+				Options: TargetOptions{
+					KeepAlive: true,
+				},
+			},
 		},
 		{
-			name:   "don't keepalive",
-			target: Target{KeepAlive: false},
+			name: "don't keepalive",
+			target: Target{
+				Options: TargetOptions{
+					KeepAlive: false,
+				},
+			},
 		},
 		{
-			name:   "no HTTP2",
-			target: Target{NoHTTP2: true},
+			name: "no HTTP2",
+			target: Target{
+				Options: TargetOptions{
+					NoHTTP2: true,
+				},
+			},
 		},
 		{
-			name:   "allow HTTP2",
-			target: Target{NoHTTP2: false},
+			name: "allow HTTP2",
+			target: Target{
+				Options: TargetOptions{
+					NoHTTP2: false,
+				},
+			},
 		},
 		{
-			name:   "empty timeout",
-			target: Target{Timeout: ""},
+			name: "empty timeout",
+			target: Target{
+				Options: TargetOptions{
+					Timeout: "",
+				},
+			},
 		},
 		{
-			name:   "non-empty timeout",
-			target: Target{Timeout: "1s"},
+			name: "non-empty timeout",
+			target: Target{
+				Options: TargetOptions{
+					Timeout: "1s",
+				},
+			},
 		},
 		{
-			name:   "follow redirects",
-			target: Target{FollowRedirects: true},
+			name: "follow redirects",
+			target: Target{
+				Options: TargetOptions{
+					FollowRedirects: true,
+				},
+			},
 		},
 		{
-			name:   "don't follow redirects",
-			target: Target{FollowRedirects: false},
+			name: "don't follow redirects",
+			target: Target{
+				Options: TargetOptions{
+					FollowRedirects: false,
+				},
+			},
 		},
 	}
 	for _, tc := range tests {
