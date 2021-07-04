@@ -18,36 +18,44 @@ func TestValidateTarget(t *testing.T) {
 		{
 			name: "empty method",
 			t: Target{
-				URL:     DefaultURL,
-				Timeout: DefaultTimeout,
-				Method:  "",
+				URL: DefaultURL,
+				Options: TargetOptions{
+					Timeout: DefaultTimeout,
+					Method:  "",
+				},
 			},
 			expectErr: true,
 		},
 		{
 			name: "valid empty timeout",
 			t: Target{
-				URL:     DefaultURL,
-				Timeout: "",
-				Method:  DefaultMethod,
+				URL: DefaultURL,
+				Options: TargetOptions{
+					Timeout: "",
+					Method:  DefaultMethod,
+				},
 			},
 			expectErr: false,
 		},
 		{
 			name: "unparseable string",
 			t: Target{
-				URL:     DefaultURL,
-				Timeout: "unparseable",
-				Method:  DefaultMethod,
+				URL: DefaultURL,
+				Options: TargetOptions{
+					Timeout: "unparseable",
+					Method:  DefaultMethod,
+				},
 			},
 			expectErr: true,
 		},
 		{
 			name: "timeout too short",
 			t: Target{
-				URL:     DefaultURL,
-				Timeout: "1ms",
-				Method:  DefaultMethod,
+				URL: DefaultURL,
+				Options: TargetOptions{
+					Timeout: "1ms",
+					Method:  DefaultMethod,
+				},
 			},
 			expectErr: true,
 		},

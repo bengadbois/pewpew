@@ -48,82 +48,241 @@ func TestRunStress(t *testing.T) {
 			expectErr:    true,
 		},
 		{
-			name:         "invalid target",
-			stressConfig: StressConfig{Targets: []Target{{}}},
-			writer:       ioutil.Discard,
-			expectErr:    true,
+			name: "invalid target",
+			stressConfig: StressConfig{
+				Targets: []Target{
+					{},
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: true,
 		},
 		{
-			name:         "invalid regex",
-			stressConfig: StressConfig{Count: 10, Concurrency: 1, Targets: []Target{{URL: "*(", RegexURL: true, Method: "GET"}}},
-			writer:       ioutil.Discard,
-			expectErr:    true,
+			name: "invalid regex",
+			stressConfig: StressConfig{
+				Count:       10,
+				Concurrency: 1,
+				Targets: []Target{
+					{
+						URL:      "*(",
+						RegexURL: true,
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: true,
 		},
 		{
-			name:         "invalid url",
-			stressConfig: StressConfig{Count: 10, Concurrency: 1, Targets: []Target{{URL: ":::fail", Method: "GET"}}},
-			writer:       ioutil.Discard,
-			expectErr:    true,
+			name: "invalid url",
+			stressConfig: StressConfig{
+				Count:       10,
+				Concurrency: 1,
+				Targets: []Target{
+					{
+						URL: ":::fail",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: true,
 		},
 		{
-			name:         "valid single targets",
-			stressConfig: StressConfig{Count: 1, Concurrency: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}}},
-			writer:       ioutil.Discard,
-			expectErr:    false,
+			name: "valid single targets",
+			stressConfig: StressConfig{
+				Count:       1,
+				Concurrency: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:         "valid multiple targets",
-			stressConfig: StressConfig{Count: 1, Concurrency: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}, {URL: "http://localhost", Method: "GET"}}},
-			writer:       ioutil.Discard,
-			expectErr:    false,
+			name: "valid multiple targets",
+			stressConfig: StressConfig{
+				Count:       1,
+				Concurrency: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET"},
+					},
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:         "valid config, handleable http error",
-			stressConfig: StressConfig{Count: 1, Concurrency: 1, Targets: []Target{{URL: "http://localhost:999999999", Method: "GET"}}},
-			writer:       ioutil.Discard,
-			expectErr:    false,
+			name: "valid config, handleable http error",
+			stressConfig: StressConfig{
+				Count:       1,
+				Concurrency: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost:999999999",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:         "valid no HTTP2",
-			stressConfig: StressConfig{Count: 1, Concurrency: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}}, NoHTTP2: true},
-			writer:       ioutil.Discard,
-			expectErr:    false,
+			name: "valid no HTTP2",
+			stressConfig: StressConfig{
+				Count:       1,
+				Concurrency: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+				Options: TargetOptions{
+					NoHTTP2: true,
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:         "valid timeout",
-			stressConfig: StressConfig{Count: 1, Concurrency: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}}, Timeout: "2s"},
-			writer:       ioutil.Discard,
-			expectErr:    false,
+			name: "valid timeout",
+			stressConfig: StressConfig{
+				Count:       1,
+				Concurrency: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+				Options: TargetOptions{
+					Timeout: "2s",
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:         "valid following redirects",
-			stressConfig: StressConfig{Count: 1, Concurrency: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}}, FollowRedirects: true},
-			writer:       ioutil.Discard,
-			expectErr:    false,
+			name: "valid following redirects",
+			stressConfig: StressConfig{
+				Count:       1,
+				Concurrency: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+				Options: TargetOptions{
+					FollowRedirects: true,
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:         "valid not following redirects",
-			stressConfig: StressConfig{Count: 1, Concurrency: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}}, FollowRedirects: false},
-			writer:       ioutil.Discard,
-			expectErr:    false,
+			name: "valid not following redirects",
+			stressConfig: StressConfig{
+				Count:       1,
+				Concurrency: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+				Options: TargetOptions{
+					FollowRedirects: false,
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:         "valid verbose",
-			stressConfig: StressConfig{Count: 1, Concurrency: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}}, Verbose: true},
-			writer:       ioutil.Discard,
-			expectErr:    false,
+			name: "valid verbose",
+			stressConfig: StressConfig{
+				Count:       1,
+				Concurrency: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+				Verbose: true,
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:         "valid quiet",
-			stressConfig: StressConfig{Count: 1, Concurrency: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}}, Quiet: true},
-			writer:       ioutil.Discard,
-			expectErr:    false,
+			name: "valid quiet",
+			stressConfig: StressConfig{
+				Count:       1,
+				Concurrency: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+				Quiet: true,
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
-			name:         "valid body file",
-			stressConfig: StressConfig{Count: 1, Concurrency: 1, Targets: []Target{{URL: "http://localhost", Method: "GET"}}, BodyFilename: tempFilename},
-			writer:       ioutil.Discard,
-			expectErr:    false,
+			name: "valid body file",
+			stressConfig: StressConfig{
+				Count:       1,
+				Concurrency: 1,
+				Targets: []Target{
+					{
+						URL: "http://localhost",
+						Options: TargetOptions{
+							Method: "GET",
+						},
+					},
+				},
+				Options: TargetOptions{
+					BodyFilename: tempFilename,
+				},
+			},
+			writer:    ioutil.Discard,
+			expectErr: false,
 		},
 		{
 			name:         "valid stressConfig constructor",
@@ -162,9 +321,11 @@ func TestValidateStressConfig(t *testing.T) {
 				Concurrency: DefaultConcurrency,
 				Targets: []Target{
 					{
-						URL:     DefaultURL,
-						Timeout: DefaultTimeout,
-						Method:  DefaultMethod,
+						URL: DefaultURL,
+						Options: TargetOptions{
+							Timeout: DefaultTimeout,
+							Method:  DefaultMethod,
+						},
 					},
 				},
 			},
@@ -177,9 +338,11 @@ func TestValidateStressConfig(t *testing.T) {
 				Concurrency: 0,
 				Targets: []Target{
 					{
-						URL:     DefaultURL,
-						Timeout: DefaultTimeout,
-						Method:  DefaultMethod,
+						URL: DefaultURL,
+						Options: TargetOptions{
+							Timeout: DefaultTimeout,
+							Method:  DefaultMethod,
+						},
 					},
 				},
 			},
@@ -192,9 +355,11 @@ func TestValidateStressConfig(t *testing.T) {
 				Concurrency: 20,
 				Targets: []Target{
 					{
-						URL:     DefaultURL,
-						Timeout: DefaultTimeout,
-						Method:  DefaultMethod,
+						URL: DefaultURL,
+						Options: TargetOptions{
+							Timeout: DefaultTimeout,
+							Method:  DefaultMethod,
+						},
 					},
 				},
 			},
@@ -207,9 +372,11 @@ func TestValidateStressConfig(t *testing.T) {
 				Concurrency: DefaultConcurrency,
 				Targets: []Target{
 					{
-						URL:     DefaultURL,
-						Timeout: DefaultTimeout,
-						Method:  "",
+						URL: DefaultURL,
+						Options: TargetOptions{
+							Timeout: DefaultTimeout,
+							Method:  "",
+						},
 					},
 				},
 			},
@@ -222,9 +389,11 @@ func TestValidateStressConfig(t *testing.T) {
 				Concurrency: DefaultConcurrency,
 				Targets: []Target{
 					{
-						URL:     DefaultURL,
-						Timeout: "",
-						Method:  DefaultMethod,
+						URL: DefaultURL,
+						Options: TargetOptions{
+							Timeout: "",
+							Method:  DefaultMethod,
+						},
 					},
 				},
 			},
@@ -237,9 +406,11 @@ func TestValidateStressConfig(t *testing.T) {
 				Concurrency: DefaultConcurrency,
 				Targets: []Target{
 					{
-						URL:     DefaultURL,
-						Timeout: "unparseable",
-						Method:  DefaultMethod,
+						URL: DefaultURL,
+						Options: TargetOptions{
+							Timeout: "unparseable",
+							Method:  DefaultMethod,
+						},
 					},
 				},
 			},
@@ -252,9 +423,11 @@ func TestValidateStressConfig(t *testing.T) {
 				Concurrency: DefaultConcurrency,
 				Targets: []Target{
 					{
-						URL:     DefaultURL,
-						Timeout: "1ms",
-						Method:  DefaultMethod,
+						URL: DefaultURL,
+						Options: TargetOptions{
+							Timeout: "1ms",
+							Method:  DefaultMethod,
+						},
 					},
 				},
 			},
