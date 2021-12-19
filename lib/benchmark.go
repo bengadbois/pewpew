@@ -82,7 +82,7 @@ func RunBenchmark(b BenchmarkConfig, w io.Writer) ([][]RequestStat, error) {
 	targetStats := make(chan []RequestStat)
 	for idx, target := range b.Targets {
 		go func(target Target, requestQueue chan http.Request, errChan chan error, targetStats chan []RequestStat) {
-			p.writeString(fmt.Sprintf("- Benchmarking %s at %d RSP, for %d seconds\n", target.URL, b.RPS, b.Duration))
+			p.writeString(fmt.Sprintf("- Benchmarking %s at %d RPS, for %d seconds\n", target.URL, b.RPS, b.Duration))
 
 			requestStatChan := make(chan RequestStat) //workers communicate each requests' info
 
