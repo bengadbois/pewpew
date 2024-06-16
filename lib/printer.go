@@ -60,6 +60,8 @@ func CreateTextSummary(reqStatSummary RequestStatSummary) string {
 		}
 		summary += " (" + fmt.Sprintf("%.2f", 100*float64(reqStatSummary.statusCodes[code])/float64(totalResponses)) + "%)\n"
 	}
+
+	summary += fmt.Sprintf("\nErrors\nFailed requests: %d\n", reqStatSummary.errorCount)
 	return summary
 }
 

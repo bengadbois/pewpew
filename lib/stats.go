@@ -33,6 +33,7 @@ type RequestStatSummary struct {
 	maxDataTransferred   int         //bytes
 	minDataTransferred   int         //bytes
 	totalDataTransferred int         //bytes
+	errorCount           int
 }
 
 //CreateRequestsStats creates a statistical summary out of the individual RequestStats
@@ -55,6 +56,7 @@ func CreateRequestsStats(requestStats []RequestStat) RequestStatSummary {
 	nonErrCount := 0
 	for i := 0; i < len(requestStats); i++ {
 		if requestStats[i].Error != nil {
+			summary.errorCount++
 			continue
 		}
 		nonErrCount++
