@@ -31,6 +31,7 @@ func TestCreateRequestsStats(t *testing.T) {
 				startTime:   time.Unix(1000, 0),
 				endTime:     time.Unix(2000, 0),
 				statusCodes: map[int]int{200: 1},
+				errorCount:  0,
 			},
 		},
 		{
@@ -47,6 +48,7 @@ func TestCreateRequestsStats(t *testing.T) {
 				startTime:   time.Unix(1000, 0),
 				endTime:     time.Unix(2000, 0),
 				statusCodes: map[int]int{200: 2},
+				errorCount:  0,
 			},
 		},
 		{
@@ -63,6 +65,7 @@ func TestCreateRequestsStats(t *testing.T) {
 				startTime:   time.Unix(1000, 0),
 				endTime:     time.Unix(2000, 0),
 				statusCodes: map[int]int{},
+				errorCount:  2,
 			},
 		},
 		{
@@ -88,6 +91,7 @@ func TestCreateRequestsStats(t *testing.T) {
 				maxDataTransferred:   600,
 				minDataTransferred:   100,
 				totalDataTransferred: 2100,
+				errorCount:           1,
 			},
 		},
 		{
@@ -113,6 +117,7 @@ func TestCreateRequestsStats(t *testing.T) {
 				maxDataTransferred:   600,
 				minDataTransferred:   100,
 				totalDataTransferred: 2100,
+				errorCount:           1,
 			},
 		},
 	}
