@@ -20,7 +20,7 @@ type printer struct {
 	output io.Writer
 }
 
-//CreateTextSummary creates a human friendly summary of entire test
+// CreateTextSummary creates a human friendly summary of entire test
 func CreateTextSummary(reqStatSummary RequestStatSummary) string {
 	summary := "\n"
 
@@ -65,7 +65,7 @@ func CreateTextSummary(reqStatSummary RequestStatSummary) string {
 	return summary
 }
 
-//print colored single line stats per RequestStat
+// print colored single line stats per RequestStat
 func (p *printer) printStat(stat RequestStat) {
 	p.writeLock.Lock()
 	defer p.writeLock.Unlock()
@@ -98,7 +98,7 @@ func (p *printer) printStat(stat RequestStat) {
 	color.Unset()
 }
 
-//print tons of info about the request, response and response body
+// print tons of info about the request, response and response body
 func (p *printer) printVerbose(req *http.Request, response *http.Response) {
 	if req == nil {
 		return
@@ -126,7 +126,7 @@ func (p *printer) printVerbose(req *http.Request, response *http.Response) {
 	p.writeLock.Unlock()
 }
 
-//writeString is a generic output string printer
+// writeString is a generic output string printer
 func (p *printer) writeString(s string) {
 	p.writeLock.Lock()
 	fmt.Fprint(p.output, s)

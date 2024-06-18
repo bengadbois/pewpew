@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-//Reasonable default values for a target
+// Reasonable default values for a target
 const (
 	DefaultURL         = "http://localhost"
 	DefaultTimeout     = "10s"
@@ -17,7 +17,7 @@ const (
 	DefaultDuration    = 15
 )
 
-//Target is location of where send the HTTP request and how to send it.
+// Target is location of where send the HTTP request and how to send it.
 type Target struct {
 	URL string
 	//Whether or not to interpret the URL as a regular expression string
@@ -27,7 +27,7 @@ type Target struct {
 	Options TargetOptions
 }
 
-//TargetOptions is the configuration for a Target
+// TargetOptions is the configuration for a Target
 type TargetOptions struct {
 	//whether or not to resolve hostname to IP address before making request,
 	//eliminating that aspect of timing

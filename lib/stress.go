@@ -26,8 +26,8 @@ type (
 	}
 )
 
-//NewStressConfig creates a new StressConfig
-//with package defaults
+// NewStressConfig creates a new StressConfig
+// with package defaults
 func NewStressConfig() (s *StressConfig) {
 	s = &StressConfig{
 		Count:       DefaultCount,
@@ -47,8 +47,8 @@ func NewStressConfig() (s *StressConfig) {
 	return
 }
 
-//RunStress starts the stress tests with the provided StressConfig.
-//Throughout the test, data is sent to w, useful for live updates.
+// RunStress starts the stress tests with the provided StressConfig.
+// Throughout the test, data is sent to w, useful for live updates.
 func RunStress(s StressConfig, w io.Writer) ([][]RequestStat, error) {
 	if w == nil {
 		return nil, errors.New("nil writer")
