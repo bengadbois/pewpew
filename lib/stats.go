@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-//RequestStat is the saved information about an individual completed HTTP request
+// RequestStat is the saved information about an individual completed HTTP request
 type RequestStat struct {
 	Proto     string
 	URL       string
@@ -20,7 +20,7 @@ type RequestStat struct {
 	DataTransferred int   //bytes
 }
 
-//RequestStatSummary is an aggregate statistical summary of a set of RequestStats
+// RequestStatSummary is an aggregate statistical summary of a set of RequestStats
 type RequestStatSummary struct {
 	avgRPS               float64 //requests per nanoseconds
 	avgDuration          time.Duration
@@ -35,7 +35,7 @@ type RequestStatSummary struct {
 	totalDataTransferred int         //bytes
 }
 
-//CreateRequestsStats creates a statistical summary out of the individual RequestStats
+// CreateRequestsStats creates a statistical summary out of the individual RequestStats
 func CreateRequestsStats(requestStats []RequestStat) RequestStatSummary {
 	if len(requestStats) == 0 {
 		return RequestStatSummary{}

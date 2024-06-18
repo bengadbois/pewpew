@@ -25,8 +25,8 @@ type (
 	}
 )
 
-//NewBenchmarkConfig creates a new BenchmarkConfig
-//with package defaults
+// NewBenchmarkConfig creates a new BenchmarkConfig
+// with package defaults
 func NewBenchmarkConfig() (b *BenchmarkConfig) {
 	b = &BenchmarkConfig{
 		RPS:      DefaultRPS,
@@ -46,8 +46,8 @@ func NewBenchmarkConfig() (b *BenchmarkConfig) {
 	return
 }
 
-//RunBenchmark starts the benchmark tests with the provided BenchmarkConfig.
-//Throughout the test, data is sent to w, useful for live updates.
+// RunBenchmark starts the benchmark tests with the provided BenchmarkConfig.
+// Throughout the test, data is sent to w, useful for live updates.
 func RunBenchmark(b BenchmarkConfig, w io.Writer) ([][]RequestStat, error) {
 	if w == nil {
 		return nil, errors.New("nil writer")

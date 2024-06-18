@@ -139,9 +139,7 @@ var benchmarkCmd = &cobra.Command{
 		//combine individual targets to a total one
 		globalStats := []pewpew.RequestStat{}
 		for i := range benchmarkCfg.Targets {
-			for j := range targetRequestStats[i] {
-				globalStats = append(globalStats, targetRequestStats[i][j])
-			}
+			globalStats = append(globalStats, targetRequestStats[i]...)
 		}
 		if len(benchmarkCfg.Targets) > 1 {
 			fmt.Println("----Global----")

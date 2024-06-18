@@ -16,12 +16,12 @@ import (
 	http2 "golang.org/x/net/http2"
 )
 
-//splits on delim into parts and trims whitespace
-//delim1 splits the pairs, delim2 splits amongst the pairs
-//like parseKeyValString("key1: val2, key3 : val4,key5:val6 ", ",", ":") becomes
-//["key1"]->"val2"
-//["key3"]->"val4"
-//["key5"]->"val6"
+// splits on delim into parts and trims whitespace
+// delim1 splits the pairs, delim2 splits amongst the pairs
+// like parseKeyValString("key1: val2, key3 : val4,key5:val6 ", ",", ":") becomes
+// ["key1"]->"val2"
+// ["key3"]->"val4"
+// ["key5"]->"val6"
 func parseKeyValString(keyValStr, delim1, delim2 string) (map[string]string, error) {
 	m := make(map[string]string)
 	if delim1 == delim2 {
@@ -42,7 +42,7 @@ func parseKeyValString(keyValStr, delim1, delim2 string) (map[string]string, err
 	return m, nil
 }
 
-//build the http request out of the target's config
+// build the http request out of the target's config
 func buildRequest(t Target) (http.Request, error) {
 	if t.URL == "" {
 		return http.Request{}, errors.New("empty URL")

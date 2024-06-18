@@ -142,9 +142,7 @@ var stressCmd = &cobra.Command{
 		//combine individual targets to a total one
 		globalStats := []pewpew.RequestStat{}
 		for i := range stressCfg.Targets {
-			for j := range targetRequestStats[i] {
-				globalStats = append(globalStats, targetRequestStats[i][j])
-			}
+			globalStats = append(globalStats, targetRequestStats[i]...)
 		}
 		if len(stressCfg.Targets) > 1 {
 			fmt.Println("----Global----")
