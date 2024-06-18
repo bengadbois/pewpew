@@ -4,21 +4,23 @@ on:
   push:
     branches:
       - master
-      - main
   pull_request:
 
 jobs:
   golangci:
     strategy:
       matrix:
-        go-version: [1.18.2]
-        os: [macos-latest, ubuntu-latest]
+        go: [stable]
+        os: [ubuntu-latest, macos-latest]
     name: lint
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
-          version: v1.41.1
-          args: --disable-all -E errcheck -E vet -E gofmt -E misspell -E ineffassign -E goimports -E deadcode -E structcheck -E varcheck -E typecheck -E staticcheck -E gosimple ./...
+          go-version: ${{ matrix.go }}
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.58
+          args: --disable-all -E errcheck -E govet -E gofmt -E misspell -E ineffassign -E goimports -E unused -E typecheck -E staticcheck -E gosimple ./...
