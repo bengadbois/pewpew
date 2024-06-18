@@ -1,3 +1,5 @@
+version: 2
+
 before:
   hooks:
     - go mod tidy
@@ -10,13 +12,6 @@ builds:
       - darwin
     ldflags:
       - -s -w -X "github.com/bengadbois/pewpew/cmd.buildTime={{.Date}}" -X "github.com/bengadbois/pewpew/cmd.version={{.Version}}"
-archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: i386
-      amd64: x86_64
 checksum:
   name_template: 'checksums.txt'
 snapshot:
