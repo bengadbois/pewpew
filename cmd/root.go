@@ -66,6 +66,7 @@ func init() {
 	RootCmd.PersistentFlags().String("output-xml", "", "Path to file to write full data as XML")
 	RootCmd.PersistentFlags().BoolP("quiet", "q", false, "Do not print while requests are running.")
 	RootCmd.PersistentFlags().BoolP("verbose", "v", false, "Print extra troubleshooting info.")
+	RootCmd.PersistentFlags().StringP("targets-file", "f", "", "Path to file with newline-separated target URLs.")
 	RootCmd.PersistentFlags().Int("cpu", runtime.GOMAXPROCS(0), "Number of CPUs to use.")
 
 	err = viper.BindPFlags(RootCmd.PersistentFlags())

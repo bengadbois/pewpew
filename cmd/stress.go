@@ -35,6 +35,12 @@ var stressCmd = &cobra.Command{
 		//URLs are handled differently that other config options
 		//command line specifying URLs take higher precedence than config URLs
 
+		extraURLs, err := readURLs()
+		if err != nil {
+			return err
+		}
+		args = append(args, extraURLs...)
+
 		//check either set via config or command line
 		if len(stressCfg.Targets) == 0 && len(args) < 1 {
 			return errors.New("requires URL")
