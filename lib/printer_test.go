@@ -2,7 +2,7 @@ package pewpew
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 	"time"
@@ -81,7 +81,7 @@ func TestPrintStat(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			p := printer{output: ioutil.Discard}
+			p := printer{output: io.Discard}
 			p.printStat(tc.r)
 
 		})
@@ -119,7 +119,7 @@ func TestPrintVerbose(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			p := printer{output: ioutil.Discard}
+			p := printer{output: io.Discard}
 			p.printVerbose(tc.req, tc.resp)
 		})
 	}

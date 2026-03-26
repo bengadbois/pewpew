@@ -5,10 +5,10 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -27,7 +27,7 @@ func parseKeyValString(keyValStr, delim1, delim2 string) (map[string]string, err
 	if delim1 == delim2 {
 		return m, errors.New("delimiters can't be equal")
 	}
-	pairs := strings.SplitN(keyValStr, delim1, -1)
+	pairs := strings.Split(keyValStr, delim1)
 	for _, pair := range pairs {
 		parts := strings.SplitN(pair, delim2, 2)
 		if len(parts) != 2 {
@@ -88,7 +88,7 @@ func buildRequest(t Target) (http.Request, error) {
 	//setup the request
 	var req *http.Request
 	if t.Options.BodyFilename != "" {
-		fileContents, fileErr := ioutil.ReadFile(t.Options.BodyFilename)
+		fileContents, fileErr := os.ReadFile(t.Options.BodyFilename)
 		if fileErr != nil {
 			return http.Request{}, fmt.Errorf("failed to read contents of file %s: %w", t.Options.BodyFilename, fileErr)
 		}
