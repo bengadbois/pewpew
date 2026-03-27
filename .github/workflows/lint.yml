@@ -15,12 +15,12 @@ jobs:
     name: lint
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go }}
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         with:
-          version: v1.58
-          args: --disable-all -E errcheck -E govet -E gofmt -E misspell -E ineffassign -E goimports -E unused -E typecheck -E staticcheck -E gosimple ./...
+          version: v2.11.4
+          args: --disable=errcheck

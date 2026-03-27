@@ -6,7 +6,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	pewpew "github.com/bengadbois/pewpew/lib"
@@ -151,7 +150,7 @@ var benchmarkCmd = &cobra.Command{
 			filename := viper.GetString("output-json")
 			fmt.Print("Writing full result data to: " + filename + " ...")
 			json, _ := json.MarshalIndent(globalStats, "", "    ")
-			err = ioutil.WriteFile(filename, json, 0644)
+			err = os.WriteFile(filename, json, 0644)
 			if err != nil {
 				return fmt.Errorf("failed to write full result data to %s: %w", filename, err)
 			}
@@ -189,7 +188,7 @@ var benchmarkCmd = &cobra.Command{
 			filename := viper.GetString("output-xml")
 			fmt.Print("Writing full result data to: " + filename + " ...")
 			xml, _ := xml.MarshalIndent(globalStats, "", "    ")
-			err = ioutil.WriteFile(viper.GetString("output-xml"), xml, 0644)
+			err = os.WriteFile(viper.GetString("output-xml"), xml, 0644)
 			if err != nil {
 				return fmt.Errorf("failed to write full result data to %s: %w", filename, err)
 			}
@@ -209,7 +208,7 @@ func init() {
 		os.Exit(-1)
 	}
 
-	benchmarkCmd.Flags().IntP("duration", "d", pewpew.DefaultConcurrency, "Number of seconds to send requests. Total benchmark test duration will be longer due to waiting for requests to finish.")
+	benchmarkCmd.Flags().IntP("duration", "d", pewpew.DefaultDuration, "Number of seconds to send requests. Total benchmark test duration will be longer due to waiting for requests to finish.")
 	err = viper.BindPFlag("duration", benchmarkCmd.Flags().Lookup("duration"))
 	if err != nil {
 		fmt.Println("failed to configure flags")

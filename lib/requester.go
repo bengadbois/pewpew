@@ -3,7 +3,7 @@ package pewpew
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httputil"
 	"time"
@@ -16,8 +16,8 @@ func runRequest(req http.Request, client *http.Client) (response *http.Response,
 	reqDump, _ := httputil.DumpRequestOut(&req, false)
 	var reqBody []byte
 	if req.Body != nil {
-		reqBody, _ = ioutil.ReadAll(req.Body)
-		req.Body = ioutil.NopCloser(bytes.NewBuffer(reqBody)) // reset due to read
+		reqBody, _ = io.ReadAll(req.Body)
+		req.Body = io.NopCloser(bytes.NewBuffer(reqBody)) // reset due to read
 	}
 	totalSizeSentBytes := len(reqDump) + len(reqBody)
 
@@ -41,7 +41,7 @@ func runRequest(req http.Request, client *http.Client) (response *http.Response,
 
 	// get size of response
 	respDump, _ := httputil.DumpResponse(response, false)
-	respBody, _ := ioutil.ReadAll(response.Body)
+	respBody, _ := io.ReadAll(response.Body)
 	totalSizeReceivedBytes := len(respDump) + len(respBody)
 
 	stat = RequestStat{

@@ -6,7 +6,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	pewpew "github.com/bengadbois/pewpew/lib"
@@ -154,7 +153,7 @@ var stressCmd = &cobra.Command{
 			filename := viper.GetString("output-json")
 			fmt.Print("Writing full result data to: " + filename + " ...")
 			json, _ := json.MarshalIndent(globalStats, "", "    ")
-			err = ioutil.WriteFile(filename, json, 0644)
+			err = os.WriteFile(filename, json, 0644)
 			if err != nil {
 				return fmt.Errorf("failed to write full result data to %s: %w", filename, err)
 			}
@@ -192,7 +191,7 @@ var stressCmd = &cobra.Command{
 			filename := viper.GetString("output-xml")
 			fmt.Print("Writing full result data to: " + filename + " ...")
 			xml, _ := xml.MarshalIndent(globalStats, "", "    ")
-			err = ioutil.WriteFile(viper.GetString("output-xml"), xml, 0644)
+			err = os.WriteFile(viper.GetString("output-xml"), xml, 0644)
 			if err != nil {
 				return fmt.Errorf("failed to write full result data to %s: %w", filename, err)
 			}

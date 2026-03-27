@@ -2,7 +2,6 @@ package pewpew
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -12,7 +11,7 @@ const tempFilename = "/tmp/testdata"
 func TestMain(m *testing.M) {
 	//setup
 	//create a temp file on disk for use as post body filename
-	err := ioutil.WriteFile(tempFilename, []byte(""), 0644)
+	err := os.WriteFile(tempFilename, []byte(""), 0644)
 	if err != nil {
 		os.Exit(1)
 	}
@@ -38,7 +37,7 @@ func TestRunStress(t *testing.T) {
 		{
 			name:         "empty config",
 			stressConfig: StressConfig{},
-			writer:       ioutil.Discard,
+			writer:       io.Discard,
 			expectErr:    true,
 		},
 		{
@@ -54,7 +53,7 @@ func TestRunStress(t *testing.T) {
 					{},
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: true,
 		},
 		{
@@ -72,7 +71,7 @@ func TestRunStress(t *testing.T) {
 					},
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: true,
 		},
 		{
@@ -89,7 +88,7 @@ func TestRunStress(t *testing.T) {
 					},
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: true,
 		},
 		{
@@ -106,7 +105,7 @@ func TestRunStress(t *testing.T) {
 					},
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -128,7 +127,7 @@ func TestRunStress(t *testing.T) {
 					},
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -145,7 +144,7 @@ func TestRunStress(t *testing.T) {
 					},
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -165,7 +164,7 @@ func TestRunStress(t *testing.T) {
 					NoHTTP2: true,
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -185,7 +184,7 @@ func TestRunStress(t *testing.T) {
 					Timeout: "2s",
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -205,7 +204,7 @@ func TestRunStress(t *testing.T) {
 					FollowRedirects: true,
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -225,7 +224,7 @@ func TestRunStress(t *testing.T) {
 					FollowRedirects: false,
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -243,7 +242,7 @@ func TestRunStress(t *testing.T) {
 				},
 				Verbose: true,
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -261,7 +260,7 @@ func TestRunStress(t *testing.T) {
 				},
 				Quiet: true,
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -281,13 +280,13 @@ func TestRunStress(t *testing.T) {
 					BodyFilename: tempFilename,
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
 			name:         "valid stressConfig constructor",
 			stressConfig: *NewStressConfig(),
-			writer:       ioutil.Discard,
+			writer:       io.Discard,
 			expectErr:    false,
 		},
 	}

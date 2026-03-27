@@ -2,7 +2,6 @@ package pewpew
 
 import (
 	"io"
-	"io/ioutil"
 	"testing"
 )
 
@@ -16,7 +15,7 @@ func TestRunBenchmark(t *testing.T) {
 		{
 			name:            "empty config",
 			benchmarkConfig: BenchmarkConfig{},
-			writer:          ioutil.Discard,
+			writer:          io.Discard,
 			expectErr:       true,
 		},
 		{
@@ -30,7 +29,7 @@ func TestRunBenchmark(t *testing.T) {
 			benchmarkConfig: BenchmarkConfig{
 				Targets: []Target{{}},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: true,
 		},
 		{
@@ -48,7 +47,7 @@ func TestRunBenchmark(t *testing.T) {
 					},
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: true,
 		},
 		{
@@ -65,7 +64,7 @@ func TestRunBenchmark(t *testing.T) {
 					},
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: true,
 		},
 		{
@@ -88,7 +87,7 @@ func TestRunBenchmark(t *testing.T) {
 					},
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -105,7 +104,7 @@ func TestRunBenchmark(t *testing.T) {
 					},
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -122,7 +121,7 @@ func TestRunBenchmark(t *testing.T) {
 					},
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -142,7 +141,7 @@ func TestRunBenchmark(t *testing.T) {
 					NoHTTP2: true,
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -162,7 +161,7 @@ func TestRunBenchmark(t *testing.T) {
 					Timeout: "2s",
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -182,7 +181,7 @@ func TestRunBenchmark(t *testing.T) {
 					FollowRedirects: true,
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -202,7 +201,7 @@ func TestRunBenchmark(t *testing.T) {
 					FollowRedirects: false,
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -220,7 +219,7 @@ func TestRunBenchmark(t *testing.T) {
 				},
 				Verbose: true,
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -238,7 +237,7 @@ func TestRunBenchmark(t *testing.T) {
 				},
 				Quiet: true,
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
@@ -258,13 +257,13 @@ func TestRunBenchmark(t *testing.T) {
 					BodyFilename: tempFilename,
 				},
 			},
-			writer:    ioutil.Discard,
+			writer:    io.Discard,
 			expectErr: false,
 		},
 		{
 			name:            "BenchmarkConfig constructor",
 			benchmarkConfig: *NewBenchmarkConfig(),
-			writer:          ioutil.Discard,
+			writer:          io.Discard,
 			expectErr:       false,
 		},
 	}
