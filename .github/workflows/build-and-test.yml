@@ -15,6 +15,6 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-go@v6
         with:
-          go-version: stable
+          go-version-file: 'go.mod'
       - run: go build -v ./...
       - run: go test -v ./...

@@ -13,6 +13,8 @@ jobs:
         with:
           fetch-depth: 0
       - uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
       - uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
